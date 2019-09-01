@@ -321,7 +321,7 @@ namespace wg {
       present_queue,
       compute_queue;
 
-    uint32_t present_queue_index,
+    int32_t present_queue_index,
       graphics_queue_index,
       compute_queue_index;
 

@@ -34,7 +34,8 @@ static _debugCallbackFun(VkDebugReportFlagsEXT flags,
 			 void* pUserData) {
   
   std::cout << "[" << pLayerPrefix << "] Message: " << pMessage << std::endl;
-  
+
+  return false;
 }
 
 
@@ -85,6 +86,8 @@ static vk::Format _get_format(wg::ComponentType type, int num_components) {
   case wg::tInt64:
     return vk::Format(95 + num_components * 3);
   }
+
+  return vk::Format::eR32Sfloat;
 }
 
 namespace wg {
@@ -660,8 +663,6 @@ namespace wg {
     std::vector<const char*> instance_extension_names;
     std::vector<const char*> instance_layer_names;
 
-    vk::Result result;
-    
     instance_extension_names.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 
 #ifdef WIN32
@@ -990,8 +991,8 @@ namespace wg {
       .setQueueFamilyIndexCount(0)
       .setPQueueFamilyIndices(nullptr);
 
-    uint32_t queue_indices[2] = {this->graphics_queue_index,
-			    this->present_queue_index};
+    uint32_t queue_indices[2] = {(uint32_t)this->graphics_queue_index,
+				 (uint32_t)this->present_queue_index};
     if(this->graphics_queue_index != this->present_queue_index) {
 
       sci.setImageSharingMode(vk::SharingMode::eConcurrent)

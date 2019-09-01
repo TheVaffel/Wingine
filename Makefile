@@ -13,7 +13,7 @@ LIB_DIRS=-L $(VULKAN_SDK)/lib -L $(HCONLIB_ROOT)/lib -L $(SPURV_ROOT)/lib
 
 LIBS=-lspurv -lWinval -lX11 -lvulkan -lFlatAlg 
 
-OPTIONS=-g -O0 -std=c++1z
+OPTIONS=-g -O0 -std=c++1z -Wall -Wno-delete-non-virtual-dtor
 
 TEST_BIN=test
 

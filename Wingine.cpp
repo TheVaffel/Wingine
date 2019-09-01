@@ -357,6 +357,37 @@ namespace wg {
 						    {createInfo})[0];
   }
 
+  _Framebuffer::_Framebuffer() { }
+  
+  _Framebuffer::_Framebuffer(Wingine& wing,
+			   int width, int height,
+			   bool depthOnly) {
+    wing.cons_image_image(this->depthImage,
+			  width, height,
+			  vk::Format::eD32Sfloat,
+			  vk::ImageUsageFlagBits::eDepthStencilAttachment |
+			  vk::ImageUsageFlagBits::eTransferSrc,
+			  vk::ImageTiling::eOptimal);
+			  
+    wing.cons_image_memory(this->depthImage,
+			   vk::MemoryPropertyFlagBits::eDeviceLocal);
+    wing.cons_image_view(this->depthImage,
+			 wImageViewDepth);
+
+    if (!depthOnly) {
+      wing.cons_image_image(this->colorImage,
+			    width, height,
+			    vk::Format::eB8G8R8A8Unorm,
+			    vk::ImageUsageFlagBits::eColorAttachment |
+			    vk::ImageUsageFlagBits::eTransferSrc,
+			    vk::ImageTiling::eOptimal);
+      wing.cons_image_memory(this->colorImage,
+			     vk::MemoryPropertyFlagBits::eDeviceLocal);
+      wing.cons_image_view(this->colorImage,
+			   wImageViewColor);
+    }
+  }
+
   vk::RenderPass Wingine::create_render_pass(RenderPassType type,
 					     bool clear) {
     std::vector<vk::AttachmentDescription> descriptions;
@@ -618,8 +649,12 @@ namespace wg {
     this->buffer_info = nullptr;
   }
 
-  void RenderFamily::startRecording() {
+  void RenderFamily::startRecording(_Framebuffer* framebuffer) {
 
+    if (framebuffer == nullptr) {
+      framebuffer = wing->getCurrentFramebuffer();
+    }
+    
     vk::CommandBufferBeginInfo begin;
     
     vk::Rect2D renderRect;
@@ -630,10 +665,10 @@ namespace wg {
     rpb.setRenderPass(this->render_pass)
       .setClearValueCount(0)
       .setPClearValues(nullptr)
-      .setFramebuffer(wing->getCurrentFramebuffer())
+      .setFramebuffer(framebuffer->framebuffer)
       .setRenderArea(renderRect);
 
-        // Size is number of attachments
+    // Size is number of attachments
     std::vector<vk::ClearValue> clear_values;
 
     if(this->clears) {
@@ -723,7 +758,6 @@ namespace wg {
       .setSignalSemaphoreCount(0)
       .setPSignalSemaphores(nullptr);
 
-
     device.resetFences(1, &this->command.fence);
     queue.submit(1, &si, this->command.fence);
     	
@@ -758,15 +792,15 @@ namespace wg {
     return this->view;
   }
 
-  const Image& Framebuffer::getColorImage() const {
+  const Image& _Framebuffer::getColorImage() const {
     return this->colorImage;
   }
 
-  const Image& Framebuffer::getDepthImage() const {
+  const Image& _Framebuffer::getDepthImage() const {
     return this->depthImage;
   }
 
-  const vk::Framebuffer& Framebuffer::getFramebuffer() const {
+  const vk::Framebuffer& _Framebuffer::getFramebuffer() const {
     return this->framebuffer;
   }
   
@@ -1138,7 +1172,7 @@ namespace wg {
 
     for(vk::Image sim : this->swapchain_images) {
 
-      Framebuffer framebuffer;
+      _Framebuffer framebuffer;
       
       framebuffer.colorImage.image = sim;
       this->cons_image_memory(framebuffer.colorImage,
@@ -1339,8 +1373,8 @@ namespace wg {
     return this->descriptor_pool;
   }
 
-  vk::Framebuffer Wingine::getCurrentFramebuffer() {
-    return this->framebuffers[this->current_swapchain_image].framebuffer;
+  _Framebuffer* Wingine::getCurrentFramebuffer() {
+    return &this->framebuffers[this->current_swapchain_image];
   }
   
   IndexBuffer Wingine::createIndexBuffer(uint32_t numIndices) {
@@ -1373,6 +1407,15 @@ namespace wg {
 		    depthOnly);
   }
 
+  _Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
+					   bool depthOnly) {
+    _Framebuffer* framebuffer = new _Framebuffer(*this,
+						 width, height,
+						 depthOnly);
+    return framebuffer;
+    
+  }
+
   RenderFamily Wingine::createRenderFamily(Pipeline& pipeline, bool clear) {
     return RenderFamily(*this,
 			pipeline, clear);
@@ -1383,11 +1426,11 @@ namespace wg {
     this->device.destroy(image.view);
   }
   
-  void Wingine::destroySwapchainFramebuffer(Framebuffer& framebuffer) {
-    this->destroySwapchainImage(framebuffer.colorImage);
-    this->destroy(framebuffer.depthImage);
+  void Wingine::destroySwapchainFramebuffer(_Framebuffer* framebuffer) {
+    this->destroySwapchainImage(framebuffer->colorImage);
+    this->destroy(framebuffer->depthImage);
     
-    this->device.destroy(framebuffer.framebuffer);
+    this->device.destroy(framebuffer->framebuffer);
   }
 
   void Wingine::destroy(RenderFamily& family) {
@@ -1426,11 +1469,12 @@ namespace wg {
     this->device.destroy(image.view);
   }
   
-  void Wingine::destroy(Framebuffer& framebuffer) {
-    this->destroy(framebuffer.colorImage);
-    this->destroy(framebuffer.depthImage);
+  void Wingine::destroy(_Framebuffer* framebuffer) {
+    this->destroy(framebuffer->colorImage);
+    this->destroy(framebuffer->depthImage);
 
-    this->device.destroy(framebuffer.framebuffer);
+    this->device.destroy(framebuffer->framebuffer);
+    delete framebuffer;
   }
   
   Wingine::~Wingine() {
@@ -1438,8 +1482,8 @@ namespace wg {
     this->device.destroy(this->descriptor_pool);
     this->device.destroy(this->pipeline_cache);
 
-    for(Framebuffer fb : this->framebuffers) {
-      this->destroySwapchainFramebuffer(fb);
+    for(_Framebuffer& fb : this->framebuffers) {
+      this->destroySwapchainFramebuffer(&fb);
     }
     
     this->device.destroyCommandPool(this->present_command_pool);

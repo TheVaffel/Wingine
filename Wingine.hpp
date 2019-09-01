@@ -55,6 +55,7 @@ namespace wg {
   class Wingine;
   class Resource;
   class RenderFamily;
+  class _Framebuffer;
 
   template<typename Type>
   class Uniform;
@@ -162,6 +163,7 @@ namespace wg {
     const vk::DeviceMemory& getMemory() const;
     const vk::ImageView& getView() const;
 
+    friend class _Framebuffer;
     friend class Wingine;
   };
 
@@ -231,11 +233,16 @@ namespace wg {
   };
   
   
-  class Framebuffer {
+  class _Framebuffer {
     Image colorImage;
     Image depthImage;
     vk::Framebuffer framebuffer;
 
+    _Framebuffer(Wingine& wing,
+		 int width, int height,
+		 bool depthOnly);
+    _Framebuffer();
+    
   public:
 
     void destroy();
@@ -244,6 +251,7 @@ namespace wg {
     const Image& getDepthImage() const;
     const vk::Framebuffer& getFramebuffer() const;
 
+    friend class RenderFamily;
     friend class Wingine;
   };
 
@@ -290,7 +298,7 @@ namespace wg {
     void submit_command();
     
   public:
-    void startRecording();
+    void startRecording(_Framebuffer* framebuffer = nullptr);
     void recordDraw(RenderObject& obj,
 		    std::vector<ResourceSet> sets);
     void endRecording();
@@ -319,7 +327,7 @@ namespace wg {
     vk::Semaphore draw_semaphore;
 
     uint32_t current_swapchain_image;
-    std::vector<Framebuffer> framebuffers;
+    std::vector<_Framebuffer> framebuffers;
     
     vk::DescriptorPool descriptor_pool;
 
@@ -374,7 +382,7 @@ namespace wg {
 			 ImageViewType type);
 
     // Don't delete color images, those are handled by swapchain
-    void destroySwapchainFramebuffer(Framebuffer& framebuffer);
+    void destroySwapchainFramebuffer(_Framebuffer* framebuffer);
     void destroySwapchainImage(Image& image);
 
     vk::Queue getGraphicsQueue();
@@ -382,7 +390,7 @@ namespace wg {
     Command getCommand();
     vk::DescriptorPool getDescriptorPool();
     vk::CommandPool getDefaultCommandPool();
-    vk::Framebuffer getCurrentFramebuffer();
+    _Framebuffer* getCurrentFramebuffer();
 
     void register_compatible_render_pass(RenderPassType type);
     vk::RenderPass create_render_pass(RenderPassType type,
@@ -407,7 +415,10 @@ namespace wg {
     Pipeline createPipeline(std::vector<VertexAttribDesc>& descriptions,
 			    std::vector<std::vector<uint64_t>* > resourceSetLayout,
 			    std::vector<Shader*> shaders,
-			    bool depthOnly = false) ;
+			    bool depthOnly = false);
+    
+    _Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
+				    bool depthOnly = false);
     
     void present();
 
@@ -421,7 +432,7 @@ namespace wg {
     void destroy(Uniform<Type>& uniform);
     
     void destroy(Image& image);
-    void destroy(Framebuffer& framebuffer);
+    void destroy(_Framebuffer* framebuffer);
     
     Wingine(Winval& win);
   
@@ -435,6 +446,7 @@ namespace wg {
 
     friend class Buffer;
     friend class Pipeline;
+    friend class _Framebuffer;
     friend class RenderFamily;
     friend class ResourceSetLayout;
     friend class ResourceSet;
@@ -492,7 +504,9 @@ namespace wg {
   void Wingine::destroy(Uniform<Type>& uniform) {
     this->destroy(uniform.buffer);
   }
-  
+
+  typedef _Framebuffer* Framebuffer;  
+
 };
-  
+
 #endif // __WINGINE_HPP

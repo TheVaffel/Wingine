@@ -726,7 +726,6 @@ namespace wg {
 
     device.resetFences(1, &this->command.fence);
     queue.submit(1, &si, this->command.fence);
-
     	
   }
 
@@ -1215,7 +1214,6 @@ namespace wg {
 				     this->image_acquired_semaphore, nullptr,
 				     &(this->current_swapchain_image));
 
-    // graphics_queue.waitIdle();
   }
   
   void Wingine::init_vulkan(int width, int height,

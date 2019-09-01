@@ -7,7 +7,6 @@ namespace wgut {
 
   Camera::Camera(float horizontalFOVRadians, float invAspect, float near, float far){
     view = Matrix4(FLATALG_MATRIX_IDENTITY);
-    // projection = flatalg::projection(horizontalFOVRadians, invAspect, near, far);
     projection = Matrix4(FLATALG_MATRIX_PROJECTION, horizontalFOVRadians, invAspect, near, far);
     altered = true;
   }
@@ -22,7 +21,6 @@ namespace wgut {
   void Camera::setLookAt(const Vector3& pos,
 			 const Vector3& target,
 			 const Vector3& up){
-    // view = flatalg::lookAt(pos, target, up);
     view = Matrix4(FLATALG_MATRIX_LOOK_AT, pos, target, up);
     altered = true;
   }

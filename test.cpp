@@ -115,7 +115,7 @@ int main() {
 		   {&resourceSetLayout},
 		   {&vertex_shader, &fragment_shader});
 
-  wg::RenderFamily family = wing.createRenderFamily(pipeline);
+  wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
   
   wgut::Camera camera(M_PI / 3, 9.0 / 16.0, 0.01f, 100.0f);
 

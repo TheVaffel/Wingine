@@ -180,12 +180,12 @@ namespace wg {
     this->shader_info.module = device.createShaderModule(smci);
     
   }
-  
+
   Pipeline::Pipeline(Wingine& wing,
 		     int width, int height,
 		     std::vector<VertexAttribDesc>& descriptions,
 		     std::vector<ResourceSetLayout>& resourceSetLayouts,
-		     std::vector<Shader*>& shaders) {
+		     std::vector<Shader*>& shaders, bool depthOnly) {
 
     vk::Device device = wing.getDevice();
     
@@ -321,6 +321,20 @@ namespace wg {
     for(uint i = 0; i < shaders.size(); i++) {
       pssci[i] = shaders[i]->shader_info;
     }
+
+    
+    RenderPassType rpt;
+      
+    if (depthOnly) {
+      rpt = renDepth;
+    } else {
+      rpt = renColorDepth;
+    }
+
+    if(wing.compatibleRenderPassMap.find(rpt) == wing.compatibleRenderPassMap.end()) {
+      wing.register_compatible_render_pass(rpt);
+    }
+    
     
     createInfo.setLayout(this->layout)
       .setBasePipelineHandle(nullptr)
@@ -336,19 +350,106 @@ namespace wg {
       .setPDepthStencilState(&ds)
       .setPStages(pssci.data())
       .setStageCount(pssci.size())
-      .setRenderPass(wing.getDefaultRenderPass())
+      .setRenderPass(wing.compatibleRenderPassMap[rpt])
       .setSubpass(0);
 
     this->pipeline = device.createGraphicsPipelines(wing.pipeline_cache,
 						    {createInfo})[0];
   }
 
+  vk::RenderPass Wingine::create_render_pass(RenderPassType type,
+					     bool clear) {
+    std::vector<vk::AttachmentDescription> descriptions;
+    std::vector<vk::AttachmentReference> references;
+
+    switch(type) {
+    case renColorDepth:
+      descriptions.resize(2);
+      descriptions[0].setLoadOp(vk::AttachmentLoadOp::eLoad)
+	.setStoreOp(vk::AttachmentStoreOp::eStore)
+	.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+	.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+	.setInitialLayout(vk::ImageLayout::ePresentSrcKHR)
+	.setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
+	.setFormat(vk::Format::eB8G8R8A8Unorm);
+      descriptions[1].setLoadOp(vk::AttachmentLoadOp::eLoad)
+	.setStoreOp(vk::AttachmentStoreOp::eStore)
+	.setStencilLoadOp(vk::AttachmentLoadOp::eLoad)
+	.setStencilStoreOp(vk::AttachmentStoreOp::eStore)
+	.setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+	.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+	.setFormat(vk::Format::eD32Sfloat);
+      references.resize(2);
+      references[0].setAttachment(0)
+	.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+      references[1].setAttachment(1)
+	.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+      break;
+    case renDepth:
+      descriptions.resize(1);
+      descriptions[0].setLoadOp(vk::AttachmentLoadOp::eLoad)
+	.setStoreOp(vk::AttachmentStoreOp::eStore)
+	.setStencilLoadOp(vk::AttachmentLoadOp::eLoad)
+	.setStencilStoreOp(vk::AttachmentStoreOp::eStore)
+	.setInitialLayout(vk::ImageLayout::eUndefined)
+	.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+	.setFormat(vk::Format::eD32Sfloat);
+      references.resize(1);
+      references[0].setAttachment(0)
+	.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+      break;
+    }
+
+    if (clear) {
+      for(vk::AttachmentDescription& ds : descriptions) {
+	ds.setLoadOp(vk::AttachmentLoadOp::eClear);
+	ds.setStencilLoadOp(vk::AttachmentLoadOp::eClear);
+	ds.setInitialLayout(vk::ImageLayout::eUndefined);
+      }
+    }
+
+    vk::SubpassDescription spd;
+    spd.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+    if(type == renColorDepth) {
+      
+      spd.setColorAttachmentCount(1)
+	.setPColorAttachments(references.data())
+	.setPDepthStencilAttachment(references.data() + 1);
+    } else if (type == renDepth) {
+      spd.setColorAttachmentCount(0)
+	.setPDepthStencilAttachment(references.data());
+    }
+
+    vk::RenderPassCreateInfo rpci;
+    rpci.setAttachmentCount(descriptions.size())
+      .setPAttachments(descriptions.data())
+      .setSubpassCount(1)
+      .setPSubpasses(&spd);
+
+    return this->device.createRenderPass(rpci);
+  }
+					     
+  
+  void Wingine::register_compatible_render_pass(RenderPassType type) {
+    
+    this->compatibleRenderPassMap[type] =
+      this->create_render_pass(type, false);
+  }
   
   RenderFamily::RenderFamily(Wingine& wing,
-			     Pipeline& pipeline) :
+			     Pipeline& pipeline,
+			     bool clear) :
+    wing(&wing), pipeline(&pipeline) {
 
-    pipeline(&pipeline), wing(&wing) {
-
+    this->clears = clear;
+    
+    if(!clear) {
+      this->render_pass = wing.compatibleRenderPassMap[pipeline.render_pass_type];
+    } else {
+      this->render_pass = wing.create_render_pass(pipeline.render_pass_type,
+						  clear);
+    }
+    
     vk::CommandPool pool = wing.getDefaultCommandPool();
     vk::Device device = wing.getDevice();
     
@@ -521,28 +622,39 @@ namespace wg {
 
     vk::CommandBufferBeginInfo begin;
     
-    // Size is number of attachments
-    std::vector<vk::ClearValue> clear_values(2);
-
-    vk::ClearColorValue val;
-    val.setFloat32({0.3f, 0.3f,
-	  0.3f, 1.0f});
-    
-    clear_values[0].setColor(val);
-    clear_values[1].depthStencil.depth = 1.0f;
-    clear_values[1].depthStencil.stencil = 0.0f;
-
     vk::Rect2D renderRect;
     renderRect.setOffset({0, 0})
       .setExtent({wing->window_width, wing->window_height});
     
     vk::RenderPassBeginInfo rpb;
-    rpb.setRenderPass(wing->getDefaultRenderPass())
-      .setClearValueCount(2)
-      .setPClearValues(clear_values.data())
+    rpb.setRenderPass(this->render_pass)
+      .setClearValueCount(0)
+      .setPClearValues(nullptr)
       .setFramebuffer(wing->getCurrentFramebuffer())
       .setRenderArea(renderRect);
 
+        // Size is number of attachments
+    std::vector<vk::ClearValue> clear_values;
+
+    if(this->clears) {
+      switch (this->pipeline->render_pass_type) {
+      case renDepth:
+	clear_values.resize(1);
+	clear_values[0].depthStencil.depth = 1.0f;
+	clear_values[0].depthStencil.stencil = 0.0f;
+	break;
+      case renColorDepth:
+	clear_values.resize(2);
+	clear_values[0].color.setFloat32({0.3f, 0.3f,
+	      0.3f, 1.0f});
+	clear_values[1].depthStencil.depth = 1.0f;
+	clear_values[1].depthStencil.stencil = 0.0f;
+      }
+
+      rpb.setClearValueCount(clear_values.size())
+	.setPClearValues(clear_values.data());
+    }
+    
     vk::Device device = this->wing->getDevice();
     
     device.waitForFences(1, &this->command.fence, true, (uint64_t)(1000000));
@@ -1020,47 +1132,7 @@ namespace wg {
   }
 
   void Wingine::init_generic_render_pass() {
-    
-    std::vector<vk::AttachmentDescription> descriptions(2);
-    std::vector<vk::AttachmentReference> references(2);
-
-    descriptions[0].setLoadOp(vk::AttachmentLoadOp::eClear)
-      .setStoreOp(vk::AttachmentStoreOp::eStore)
-      .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-      .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-      .setInitialLayout(vk::ImageLayout::eUndefined)
-      .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
-      .setFormat(vk::Format::eB8G8R8A8Unorm);
-
-    descriptions[1].setLoadOp(vk::AttachmentLoadOp::eClear)
-      .setStoreOp(vk::AttachmentStoreOp::eStore)
-      .setStencilLoadOp(vk::AttachmentLoadOp::eLoad)
-      .setStencilStoreOp(vk::AttachmentStoreOp::eStore)
-      .setInitialLayout(vk::ImageLayout::eUndefined)
-      .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-      .setFormat(vk::Format::eD32Sfloat);
-
-    references[0].setAttachment(0)
-      .setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    references[1].setAttachment(1)
-      .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-    vk::SubpassDescription spd;
-    spd.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
-      .setColorAttachmentCount(1)
-      .setPColorAttachments(references.data())
-      .setPDepthStencilAttachment(references.data() + 1);
-
-    vk::RenderPassCreateInfo rpci;
-    rpci.setAttachmentCount(2)
-      .setPAttachments(descriptions.data())
-      .setSubpassCount(1)
-      .setPSubpasses(&spd);
-
-    this->generic_render_pass = this->device.createRenderPass(rpci);
-
-    
+    this->register_compatible_render_pass(renColorDepth);
   }
 
   void Wingine::init_framebuffers() {
@@ -1094,7 +1166,7 @@ namespace wg {
       };
       
       vk::FramebufferCreateInfo finf;
-      finf.setRenderPass(this->generic_render_pass)
+      finf.setRenderPass(this->compatibleRenderPassMap[renColorDepth])
 	.setAttachmentCount(2)
 	.setPAttachments(attachments)
 	.setWidth(this->window_width)
@@ -1269,10 +1341,6 @@ namespace wg {
     return this->descriptor_pool;
   }
 
-  vk::RenderPass Wingine::getDefaultRenderPass() {
-    return this->generic_render_pass;
-  }
-  
   vk::Framebuffer Wingine::getCurrentFramebuffer() {
     return this->framebuffers[this->current_swapchain_image].framebuffer;
   }
@@ -1291,7 +1359,8 @@ namespace wg {
   
   Pipeline Wingine::createPipeline(std::vector<VertexAttribDesc>& descriptions,
 				   std::vector<std::vector<uint64_t>* > resourceSetLayout,
-				   std::vector<Shader*> shaders) {
+				   std::vector<Shader*> shaders,
+				   bool depthOnly) {
     std::vector<ResourceSetLayout> rsl;
     for(uint i = 0; i < resourceSetLayout.size(); i++) {
       rsl.push_back(this->resourceSetLayoutMap[*(resourceSetLayout[i])]);
@@ -1302,12 +1371,13 @@ namespace wg {
 		    this->window_height,
 		    descriptions,
 		    rsl,
-		    shaders);
+		    shaders,
+		    depthOnly);
   }
 
-  RenderFamily Wingine::createRenderFamily(Pipeline& pipeline) {
+  RenderFamily Wingine::createRenderFamily(Pipeline& pipeline, bool clear) {
     return RenderFamily(*this,
-			pipeline);
+			pipeline, clear);
   }
   
   void Wingine::destroySwapchainImage(Image& image) {
@@ -1325,6 +1395,10 @@ namespace wg {
   void Wingine::destroy(RenderFamily& family) {
     this->device.waitForFences(1, &family.command.fence, true, UINT64_MAX);
     this->device.destroy(family.command.fence);
+
+    if(family.render_pass != this->compatibleRenderPassMap[family.pipeline->render_pass_type]) {
+      this->device.destroy(family.render_pass);
+    }
   }
 
   void Wingine::destroy(Shader& shader) {
@@ -1392,12 +1466,13 @@ namespace wg {
     this->device.destroy(this->swapchain);
     
     this->vulkan_instance.destroy(this->surface);
-
-    this->device.destroy(this->generic_render_pass);
-
-    // for( auto it = resourceSetLayoutMap.iterator(); it != resourceSetLayoutMap.end(); ++it) {
+    
     for (auto it : this->resourceSetLayoutMap) {
       this->device.destroy(it.second.layout);
+    }
+
+    for(auto it : this->compatibleRenderPassMap) {
+      this->device.destroy(it.second);
     }
     
     this->device.destroy();

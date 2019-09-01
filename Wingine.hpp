@@ -47,6 +47,11 @@ namespace wg {
     wImageViewDepth
   };
 
+  enum RenderPassType {
+    renColorDepth,
+    renDepth
+  };
+
   class Wingine;
   class Resource;
   class RenderFamily;
@@ -257,12 +262,14 @@ namespace wg {
   class Pipeline {
     vk::Pipeline pipeline;
     vk::PipelineLayout layout;
+    RenderPassType render_pass_type;
     
     Pipeline(Wingine& wing,
 	     int width, int height,
 	     std::vector<VertexAttribDesc>& descriptions,
 	     std::vector<ResourceSetLayout>& resourceSetLayout,
-	     std::vector<Shader*>& shaders);
+	     std::vector<Shader*>& shaders,
+	     bool depthOnly);
 
     friend class RenderFamily;
     friend class Wingine;
@@ -273,9 +280,12 @@ namespace wg {
 
     Command command;
     Pipeline* pipeline;
-
+    vk::RenderPass render_pass;
+    bool clears;
+    
     RenderFamily(Wingine& wing,
-		 Pipeline& pipeline);
+		 Pipeline& pipeline,
+		 bool clear);
 
     void submit_command();
     
@@ -311,8 +321,6 @@ namespace wg {
     uint32_t current_swapchain_image;
     std::vector<Framebuffer> framebuffers;
     
-    vk::RenderPass generic_render_pass;
-    
     vk::DescriptorPool descriptor_pool;
 
     vk::PipelineCache pipeline_cache;
@@ -336,7 +344,7 @@ namespace wg {
     uint32_t window_width, window_height;
 
     std::map<std::vector<uint64_t>, ResourceSetLayout> resourceSetLayoutMap;
-    
+    std::map<RenderPassType, vk::RenderPass> compatibleRenderPassMap;
     
     void init_vulkan(int width, int height,
 		     _win_arg_type_0 arg0,
@@ -373,9 +381,12 @@ namespace wg {
     vk::Device getDevice();
     Command getCommand();
     vk::DescriptorPool getDescriptorPool();
-    vk::RenderPass getDefaultRenderPass();
     vk::CommandPool getDefaultCommandPool();
     vk::Framebuffer getCurrentFramebuffer();
+
+    void register_compatible_render_pass(RenderPassType type);
+    vk::RenderPass create_render_pass(RenderPassType type,
+					       bool clear);
     
   public:
 
@@ -387,7 +398,7 @@ namespace wg {
     template<typename Type>
     Uniform<Type> createUniform();
 
-    RenderFamily createRenderFamily(Pipeline& pipeline);
+    RenderFamily createRenderFamily(Pipeline& pipeline, bool clear);
       
     ResourceSet createResourceSet(std::vector<uint64_t>& resourceLayout);
 
@@ -395,7 +406,8 @@ namespace wg {
 
     Pipeline createPipeline(std::vector<VertexAttribDesc>& descriptions,
 			    std::vector<std::vector<uint64_t>* > resourceSetLayout,
-			    std::vector<Shader*> shaders) ;
+			    std::vector<Shader*> shaders,
+			    bool depthOnly = false) ;
     
     void present();
 

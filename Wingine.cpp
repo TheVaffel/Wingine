@@ -388,6 +388,237 @@ namespace wg {
     }
   }
 
+  _Texture::_Texture(Wingine& wing,
+		     uint32_t width, uint32_t height) {
+
+    this->wing = &wing;
+    vk::Device device = wing.getDevice();
+    
+    wing.cons_image_image(*this,
+			  width, height,
+			  vk::Format::eB8G8R8A8Unorm,
+			  vk::ImageUsageFlagBits::eSampled |
+			  vk::ImageUsageFlagBits::eTransferDst,
+			  vk::ImageTiling::eOptimal);
+    wing.cons_image_memory(*this,
+			   vk::MemoryPropertyFlagBits::eDeviceLocal);
+    wing.cons_image_view(*this,
+			 wImageViewColor);
+
+    Image pseudo;
+    wing.cons_image_image(pseudo,
+			  width, height,
+			  vk::Format::eB8G8R8A8Unorm,
+			  vk::ImageUsageFlagBits::eTransferSrc,
+			  vk::ImageTiling::eLinear,
+			  vk::ImageLayout::ePreinitialized);
+    wing.cons_image_memory(pseudo,
+			   vk::MemoryPropertyFlagBits::eHostCoherent |
+			   vk::MemoryPropertyFlagBits::eHostVisible);
+
+    this->staging_image = pseudo.image;
+    this->staging_memory = pseudo.memory;
+
+    this->staging_memory_memreq = device.getImageMemoryRequirements(this->staging_image);
+    
+    this->width = width;
+    this->height = height;
+
+    vk::ImageSubresource subres;
+    subres.setMipLevel(0)
+      .setArrayLayer(0);
+    
+    vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
+
+    this->stride_in_bytes = lay.rowPitch;
+      
+    vk::SamplerCreateInfo sci;
+    sci.setMagFilter(vk::Filter::eLinear)
+      .setMinFilter(vk::Filter::eLinear)
+      .setMipmapMode(vk::SamplerMipmapMode::eNearest)
+      .setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
+      .setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
+      .setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
+      .setMipLodBias(0.0f)
+      .setAnisotropyEnable(false)
+      .setMaxAnisotropy(1)
+      .setCompareOp(vk::CompareOp::eLess)
+      .setMinLod(0.0f)
+      .setMaxLod(1.0f)
+      .setCompareEnable(false)
+      .setBorderColor(vk::BorderColor::eFloatOpaqueWhite);
+
+    this->sampler = device.createSampler(sci);
+  }
+
+  // Returns stride in bytes
+  uint32_t _Texture::getStride() {
+    return this->stride_in_bytes;
+  }
+   
+  void _Texture::set(unsigned char* pixels, bool fixed_stride) {
+    void* mapped_memory;
+    uint32_t mem_size = this->staging_memory_memreq.size;
+
+    vk::Device device = this->wing->getDevice();
+    device.mapMemory(this->staging_memory, 0, mem_size, {}, &mapped_memory);
+
+    if (fixed_stride) {
+      memcpy(mapped_memory, pixels, mem_size);
+    } else {
+      unsigned char* curr_mapped = (unsigned char*)mapped_memory;
+      unsigned char* curr_pixels = pixels;
+      for (uint i = 0; i < this->height; i++) {
+	memcpy(curr_mapped, curr_pixels, this->width * 4);
+	curr_mapped += this->stride_in_bytes;
+	curr_pixels += this->width * 4;
+      }
+    }
+
+    device.unmapMemory(this->staging_memory);
+
+    this->wing->copy_image(this->width, this->height, this->staging_image,
+			  this->current_staging_layout, vk::ImageLayout::ePreinitialized,
+			  this->width, this->height, this->image,
+			  this->current_layout, vk::ImageLayout::eShaderReadOnlyOptimal,
+			  vk::ImageAspectFlagBits::eColor);
+  }
+
+  void Wingine::cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
+			       vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
+			       vk::ImageLayout finalLayout) {
+    vk::ImageMemoryBarrier image_memory_barrier;
+
+    vk::ImageSubresourceRange sbr;
+    sbr.setAspectMask(aspect)
+      .setBaseMipLevel(0)
+      .setLevelCount(1)
+      .setBaseArrayLayer(0)
+      .setLayerCount(1);
+    
+    image_memory_barrier.setOldLayout(currentLayout)
+      .setNewLayout(finalLayout)
+      .setImage(image)
+      .setSubresourceRange(sbr);
+
+    vk::PipelineStageFlags srcStage, destStage;
+    
+    switch(currentLayout) {
+    case vk::ImageLayout::eColorAttachmentOptimal:
+      image_memory_barrier.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+      srcStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+      break;
+    case vk::ImageLayout::eTransferDstOptimal:
+      image_memory_barrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
+      srcStage = vk::PipelineStageFlagBits::eTransfer;
+      break;
+    case vk::ImageLayout::ePreinitialized:
+      image_memory_barrier.setSrcAccessMask(vk::AccessFlagBits::eHostWrite);
+      srcStage = vk::PipelineStageFlagBits::eHost;
+      break;
+    case vk::ImageLayout::eShaderReadOnlyOptimal:
+      image_memory_barrier.setSrcAccessMask(vk::AccessFlagBits::eShaderRead);
+      srcStage = vk::PipelineStageFlagBits::eComputeShader |
+	vk::PipelineStageFlagBits::eFragmentShader;
+      break;
+    case vk::ImageLayout::eTransferSrcOptimal:
+      image_memory_barrier.setSrcAccessMask(vk::AccessFlagBits::eTransferRead);
+      srcStage = vk::PipelineStageFlagBits::eTransfer;
+      break;
+    default:
+      srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
+    }
+
+    switch (finalLayout) {
+    case vk::ImageLayout::eTransferDstOptimal:
+      image_memory_barrier.setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
+      destStage = vk::PipelineStageFlagBits::eTransfer;
+      break;
+    case vk::ImageLayout::eTransferSrcOptimal:
+      image_memory_barrier.setDstAccessMask(vk::AccessFlagBits::eTransferRead);
+      destStage = vk::PipelineStageFlagBits::eTransfer;
+      break;
+    case vk::ImageLayout::eShaderReadOnlyOptimal:
+      image_memory_barrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+      destStage = vk::PipelineStageFlagBits::eComputeShader |
+	vk::PipelineStageFlagBits::eFragmentShader;
+      break;
+    case vk::ImageLayout::eColorAttachmentOptimal:
+      image_memory_barrier.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+      destStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+      break;
+    case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+      image_memory_barrier.setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+      destStage = vk::PipelineStageFlagBits::eLateFragmentTests;
+      break;
+    default:
+      destStage = vk::PipelineStageFlagBits::eBottomOfPipe;
+    }
+
+    commandBuffer.pipelineBarrier(srcStage, destStage, {}, 0,  nullptr, 0, nullptr, 1, &image_memory_barrier);
+  }
+			       
+
+  void Wingine::copy_image(uint32_t w1, uint32_t h1, vk::Image src,
+			   vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
+			   uint32_t w2, uint32_t h2, vk::Image dst,
+			   vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
+			   vk::ImageAspectFlagBits aspect) {
+    vk::CommandBufferBeginInfo bg;
+    this->device.waitForFences(1, &general_purpose_command.fence,
+			       true, (uint64_t)1e9);
+
+    this->device.resetFences(1, &general_purpose_command.fence);
+
+    general_purpose_command.buffer.begin(bg);
+
+    cmd_set_layout(general_purpose_command.buffer, src,
+		   aspect, srcCurrentLayout, vk::ImageLayout::eTransferSrcOptimal);
+
+    cmd_set_layout(general_purpose_command.buffer, dst,
+		   aspect, dstCurrentLayout, vk::ImageLayout::eTransferDstOptimal);
+
+        vk::ImageBlit blit;
+    blit.srcSubresource.setAspectMask(aspect)
+      .setMipLevel(0)
+      .setBaseArrayLayer(0)
+      .setLayerCount(1);
+    blit.setSrcOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w1, (int)h1, 1}});
+
+    blit.dstSubresource.setAspectMask(aspect)
+      .setMipLevel(0)
+      .setBaseArrayLayer(0)
+      .setLayerCount(1);
+    blit.setDstOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w2, (int)h2, 1}});
+    
+    vk::Filter filter = (aspect == vk::ImageAspectFlagBits::eDepth ||
+			 aspect == vk::ImageAspectFlagBits::eStencil) ?
+      vk::Filter::eNearest : vk::Filter::eLinear;
+
+    general_purpose_command.buffer.blitImage(src, vk::ImageLayout::eTransferSrcOptimal,
+					     dst, vk::ImageLayout::eTransferDstOptimal,
+					     1, &blit, filter);
+
+    // Perhaps not necessary, but very convenient
+    cmd_set_layout(general_purpose_command.buffer, src,
+		   aspect, vk::ImageLayout::eTransferSrcOptimal, srcFinalLayout);
+
+    cmd_set_layout(general_purpose_command.buffer, dst,
+		   aspect, vk::ImageLayout::eTransferDstOptimal, dstFinalLayout);
+
+    general_purpose_command.buffer.end();
+
+    vk::SubmitInfo si;
+    si.setCommandBufferCount(1)
+      .setPCommandBuffers(&general_purpose_command.buffer);
+
+    this->graphics_queue.submit(1, &si, general_purpose_command.fence);
+
+    // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
+    this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9);
+    
+  }
+  
   vk::RenderPass Wingine::create_render_pass(RenderPassType type,
 					     bool clear) {
     std::vector<vk::AttachmentDescription> descriptions;
@@ -1175,6 +1406,9 @@ namespace wg {
       _Framebuffer framebuffer;
       
       framebuffer.colorImage.image = sim;
+      framebuffer.colorImage.width = this->window_width;
+      framebuffer.colorImage.height = this->window_height;
+      
       this->cons_image_memory(framebuffer.colorImage,
 			      vk::MemoryPropertyFlagBits::eDeviceLocal);
       this->cons_image_view(framebuffer.colorImage,
@@ -1275,24 +1509,30 @@ namespace wg {
 
   void Wingine::cons_image_image(Image& image, uint32_t width, uint32_t height,
 				 vk::Format format, vk::ImageUsageFlags usage,
-				 vk::ImageTiling tiling) {
+				 vk::ImageTiling tiling,
+				 vk::ImageLayout layout) {
     vk::ImageCreateInfo inf;
     inf.setExtent({width, height, 1})
       .setImageType(vk::ImageType::e2D)
       .setTiling(tiling)
-      .setInitialLayout(vk::ImageLayout::eUndefined)
+      .setInitialLayout(layout)
       .setUsage(usage)
       .setSharingMode(vk::SharingMode::eExclusive)
       .setFormat(format)
       .setSamples(vk::SampleCountFlagBits::e1)
       .setMipLevels(1)
       .setArrayLayers(1);
+
+    image.width = width;
+    image.height = height;
+
+    image.current_layout = inf.initialLayout;
     
     image.image = this->device.createImage(inf);
   }
 
   void Wingine::cons_image_memory(Image& image,
-				  vk::MemoryPropertyFlagBits memProps) {
+				  vk::MemoryPropertyFlags memProps) {
     vk::MemoryAllocateInfo mai;
 
     vk::MemoryRequirements mr;
@@ -1414,6 +1654,12 @@ namespace wg {
 						 depthOnly);
     return framebuffer;
     
+  }
+
+  _Texture* Wingine::createTexture(uint32_t width, uint32_t height) {
+    _Texture* texture = new _Texture(*this,
+				     width, height);
+    return texture;
   }
 
   RenderFamily Wingine::createRenderFamily(Pipeline& pipeline, bool clear) {

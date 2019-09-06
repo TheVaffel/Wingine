@@ -56,6 +56,7 @@ namespace wg {
   class Resource;
   class RenderFamily;
   class _Framebuffer;
+  class _Texture;
 
   template<typename Type>
   class Uniform;
@@ -152,18 +153,46 @@ namespace wg {
   };
   
   class Image {
-    
+  protected:
     vk::Image image;
     vk::DeviceMemory memory;
     vk::ImageView view;
+    
+    vk::ImageLayout current_layout;
 
-  public:
-
+    uint32_t width, height;
+    
     const vk::Image& getImage() const;
     const vk::DeviceMemory& getMemory() const;
     const vk::ImageView& getView() const;
-
+    
     friend class _Framebuffer;
+    friend class _Texture;
+    friend class Wingine;
+  };
+
+  class _Texture : public Image {
+    Wingine* wing;
+    
+    vk::Sampler sampler;
+
+    vk::Image staging_image;
+    vk::DeviceMemory staging_memory;
+    vk::MemoryRequirements staging_memory_memreq;
+
+    vk::ImageLayout current_staging_layout;
+    
+    uint32_t stride_in_bytes;
+
+    _Texture(Wingine& wing,
+	     uint32_t width, uint32_t height);
+  public:
+
+    // Returns stride in bytes
+    uint32_t getStride();
+    
+    void set(unsigned char* pixels, bool fixed_stride = false);
+
     friend class Wingine;
   };
 
@@ -348,7 +377,7 @@ namespace wg {
       compute_command;
 
     Command general_purpose_command;
-    
+
     uint32_t window_width, window_height;
 
     std::map<std::vector<uint64_t>, ResourceSetLayout> resourceSetLayoutMap;
@@ -374,13 +403,24 @@ namespace wg {
 			  uint32_t width, uint32_t height,
 			  vk::Format format,
 			  vk::ImageUsageFlags usage,
-			  vk::ImageTiling tiling = vk::ImageTiling::eOptimal);
+			  vk::ImageTiling tiling = vk::ImageTiling::eOptimal,
+			  vk::ImageLayout layout = vk::ImageLayout::eUndefined);
 			  
     void cons_image_memory(Image& image,
-			   vk::MemoryPropertyFlagBits memProps);
+			   vk::MemoryPropertyFlags memProps);
     void cons_image_view(Image& image,
 			 ImageViewType type);
 
+    void copy_image(uint32_t w1, uint32_t h1, vk::Image src,
+		   vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
+		   uint32_t w2, uint32_t h2, vk::Image dst,
+		   vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
+		   vk::ImageAspectFlagBits flag);
+
+    void cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
+			vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
+			vk::ImageLayout finalLayout);
+    
     // Don't delete color images, those are handled by swapchain
     void destroySwapchainFramebuffer(_Framebuffer* framebuffer);
     void destroySwapchainImage(Image& image);
@@ -419,6 +459,8 @@ namespace wg {
     
     _Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
 				    bool depthOnly = false);
+
+    _Texture* createTexture(uint32_t width, uint32_t height);
     
     void present();
 
@@ -450,6 +492,7 @@ namespace wg {
     friend class RenderFamily;
     friend class ResourceSetLayout;
     friend class ResourceSet;
+    friend class _Texture;
   };
 
 
@@ -506,7 +549,8 @@ namespace wg {
   }
 
   typedef _Framebuffer* Framebuffer;  
-
+  typedef _Texture* Texture;
+  
 };
 
 #endif // __WINGINE_HPP

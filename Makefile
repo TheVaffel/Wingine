@@ -15,10 +15,12 @@ LIBS=-lspurv -lWinval -lX11 -lvulkan -lFlatAlg
 
 OPTIONS=-g -O0 -std=c++1z -Wall -Wno-delete-non-virtual-dtor
 
-TEST_BIN=test
+all: texture_test test
 
+test: $(WG_OBJS) test.o
+	g++ -o $@ $^ $(LIB_DIRS) $(LIBS) $(OPTIONS)
 
-$(TEST_BIN): $(WG_OBJS) $(TEST_OBJS)
+texture_test: $(WG_OBJS) texture_test.o
 	g++ -o $@ $^ $(LIB_DIRS) $(LIBS) $(OPTIONS)
 
 %.o: %.cpp $(HDRS)
@@ -27,4 +29,4 @@ $(TEST_BIN): $(WG_OBJS) $(TEST_OBJS)
 
 
 clean:
-	rm test *.o
+	rm texture_test test *.o

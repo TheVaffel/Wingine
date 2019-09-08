@@ -228,8 +228,6 @@ namespace wg {
 			       descriptions[i].num_elements))
 	.setOffset(descriptions[i].offset_in_bytes);
     }
-
-    
     
     vk::Viewport viewport;
     viewport.setWidth(width)
@@ -389,8 +387,9 @@ namespace wg {
   }
 
   _Texture::_Texture(Wingine& wing,
-		     uint32_t width, uint32_t height) {
-
+		     uint32_t width, uint32_t height) :
+    Resource(vk::DescriptorType::eCombinedImageSampler) {
+    
     this->wing = &wing;
     vk::Device device = wing.getDevice();
     
@@ -420,13 +419,16 @@ namespace wg {
     this->staging_memory = pseudo.memory;
 
     this->staging_memory_memreq = device.getImageMemoryRequirements(this->staging_image);
+
+    this->current_staging_layout = vk::ImageLayout::eUndefined;
     
     this->width = width;
     this->height = height;
 
     vk::ImageSubresource subres;
     subres.setMipLevel(0)
-      .setArrayLayer(0);
+      .setArrayLayer(0)
+      .setAspectMask(vk::ImageAspectFlagBits::eColor);
     
     vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
 
@@ -449,6 +451,12 @@ namespace wg {
       .setBorderColor(vk::BorderColor::eFloatOpaqueWhite);
 
     this->sampler = device.createSampler(sci);
+
+    
+    this->image_info = new vk::DescriptorImageInfo();
+    this->image_info->setSampler(this->sampler)
+      .setImageView(this->view)
+      .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
   }
 
   // Returns stride in bytes
@@ -478,10 +486,13 @@ namespace wg {
     device.unmapMemory(this->staging_memory);
 
     this->wing->copy_image(this->width, this->height, this->staging_image,
-			  this->current_staging_layout, vk::ImageLayout::ePreinitialized,
+			  this->current_staging_layout, vk::ImageLayout::eGeneral,
 			  this->width, this->height, this->image,
 			  this->current_layout, vk::ImageLayout::eShaderReadOnlyOptimal,
 			  vk::ImageAspectFlagBits::eColor);
+
+    this->current_staging_layout = vk::ImageLayout::eGeneral;
+    this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
   }
 
   void Wingine::cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
@@ -991,11 +1002,12 @@ namespace wg {
 
     device.resetFences(1, &this->command.fence);
     queue.submit(1, &si, this->command.fence);
-    	
+    
+    device.waitForFences(1, &this->command.fence, true, (uint64_t)1e9);
   }
 
   void Wingine::present() {
-    
+
     vk::PresentInfoKHR presentInfo;
 
     presentInfo.setSwapchainCount(1)
@@ -1690,6 +1702,17 @@ namespace wg {
 
   void Wingine::destroy(Shader& shader) {
     this->device.destroy(shader.shader_info.module);
+  }
+
+  void Wingine::destroy(_Texture* texture) {
+    delete texture->image_info;
+
+    this->device.destroy(texture->sampler);
+    this->destroy(*(Image*)texture);
+
+    this->device.destroy(texture->staging_image);
+    this->device.free(texture->staging_memory);
+    delete texture;
   }
   
   void Wingine::destroy(ResourceSet& resourceSet) { }

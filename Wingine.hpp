@@ -31,7 +31,7 @@ namespace wg {
 
   enum ResourceType {
     resUniform = (uint64_t)VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-    resTexture = (uint64_t)VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+    resTexture = (uint64_t)VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
     resStoreImage = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
   };
 
@@ -170,32 +170,6 @@ namespace wg {
     friend class _Texture;
     friend class Wingine;
   };
-
-  class _Texture : public Image {
-    Wingine* wing;
-    
-    vk::Sampler sampler;
-
-    vk::Image staging_image;
-    vk::DeviceMemory staging_memory;
-    vk::MemoryRequirements staging_memory_memreq;
-
-    vk::ImageLayout current_staging_layout;
-    
-    uint32_t stride_in_bytes;
-
-    _Texture(Wingine& wing,
-	     uint32_t width, uint32_t height);
-  public:
-
-    // Returns stride in bytes
-    uint32_t getStride();
-    
-    void set(unsigned char* pixels, bool fixed_stride = false);
-
-    friend class Wingine;
-  };
-
   
   class ResourceSet {
     vk::Device device;
@@ -220,6 +194,31 @@ namespace wg {
 
     friend class ResourceSet;
     
+    friend class Wingine;
+  };
+
+  class _Texture : public Image, public Resource {
+    Wingine* wing;
+    
+    vk::Sampler sampler;
+
+    vk::Image staging_image;
+    vk::DeviceMemory staging_memory;
+    vk::MemoryRequirements staging_memory_memreq;
+
+    vk::ImageLayout current_staging_layout;
+    
+    uint32_t stride_in_bytes;
+
+    _Texture(Wingine& wing,
+	     uint32_t width, uint32_t height);
+  public:
+
+    // Returns stride in bytes
+    uint32_t getStride();
+    
+    void set(unsigned char* pixels, bool fixed_stride = false);
+
     friend class Wingine;
   };
 
@@ -469,6 +468,7 @@ namespace wg {
     void destroy(ResourceSet& set);
     void destroy(Buffer& buffer);
     void destroy(Shader& shader);
+    void destroy(_Texture* texture);
     
     template<typename Type>
     void destroy(Uniform<Type>& uniform);

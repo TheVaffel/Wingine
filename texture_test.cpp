@@ -107,18 +107,8 @@ int main() {
 		   {&vertex_shader, &fragment_shader});
 
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
-  
-  // wgut::Camera camera(M_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
-  float a = 0;
   while (win.isOpen()) {
-    // Matrix4 renderMatrix = camera.getRenderMatrix();
-    a += 0.03;
-    if(a > 1.0) {
-      a = 0;
-    }
-    
-    // cameraUniform.set(renderMatrix);
     
     family.startRecording();
     family.recordDraw(triangle, {resourceSet});
@@ -146,7 +136,6 @@ int main() {
   wing.destroy(tex_coord_buffer);
   wing.destroy(index_buffer);
 
-  // wing.destroy(cameraUniform);
   wing.destroy(texture);
 
 }

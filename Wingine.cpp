@@ -90,6 +90,10 @@ static vk::Format _get_format(wg::ComponentType type, int num_components) {
   return vk::Format::eR32Sfloat;
 }
 
+/*
+ * O boi here we go
+ */
+
 namespace wg {
 
   ResourceSetLayout::ResourceSetLayout(Wingine& wing, const std::vector<uint64_t>& flags) {
@@ -183,9 +187,9 @@ namespace wg {
 
   Pipeline::Pipeline(Wingine& wing,
 		     int width, int height,
-		     std::vector<VertexAttribDesc>& descriptions,
-		     std::vector<ResourceSetLayout>& resourceSetLayouts,
-		     std::vector<Shader*>& shaders, bool depthOnly) {
+		     const std::vector<VertexAttribDesc>& descriptions,
+		     const std::vector<ResourceSetLayout>& resourceSetLayouts,
+		     const std::vector<Shader*>& shaders, bool depthOnly) {
 
     vk::Device device = wing.getDevice();
     
@@ -329,6 +333,8 @@ namespace wg {
       rpt = renColorDepth;
     }
 
+    
+
     if(wing.compatibleRenderPassMap.find(rpt) == wing.compatibleRenderPassMap.end()) {
       wing.register_compatible_render_pass(rpt);
     }
@@ -351,15 +357,39 @@ namespace wg {
       .setRenderPass(wing.compatibleRenderPassMap[rpt])
       .setSubpass(0);
 
+    this->render_pass_type = rpt;
+    
     this->pipeline = device.createGraphicsPipelines(wing.pipeline_cache,
 						    {createInfo})[0];
+
+    
   }
 
   _Framebuffer::_Framebuffer() { }
   
   _Framebuffer::_Framebuffer(Wingine& wing,
-			   int width, int height,
-			   bool depthOnly) {
+			     int width, int height,
+			     bool depthOnly,
+			     bool withoutReadyToDrawSemaphore) {
+
+    std::vector<vk::ImageView> attachments;
+    
+    if (!depthOnly) {
+      wing.cons_image_image(this->colorImage,
+			    width, height,
+			    vk::Format::eB8G8R8A8Unorm,
+			    vk::ImageUsageFlagBits::eColorAttachment |
+			    vk::ImageUsageFlagBits::eTransferSrc,
+			    vk::ImageTiling::eOptimal);
+      wing.cons_image_memory(this->colorImage,
+			     vk::MemoryPropertyFlagBits::eDeviceLocal);
+      wing.cons_image_view(this->colorImage,
+			   wImageViewColor);
+
+      attachments.push_back(this->colorImage.view);
+    }
+
+    
     wing.cons_image_image(this->depthImage,
 			  width, height,
 			  vk::Format::eD32Sfloat,
@@ -372,42 +402,69 @@ namespace wg {
     wing.cons_image_view(this->depthImage,
 			 wImageViewDepth);
 
-    if (!depthOnly) {
-      wing.cons_image_image(this->colorImage,
-			    width, height,
-			    vk::Format::eB8G8R8A8Unorm,
-			    vk::ImageUsageFlagBits::eColorAttachment |
-			    vk::ImageUsageFlagBits::eTransferSrc,
-			    vk::ImageTiling::eOptimal);
-      wing.cons_image_memory(this->colorImage,
-			     vk::MemoryPropertyFlagBits::eDeviceLocal);
-      wing.cons_image_view(this->colorImage,
-			   wImageViewColor);
+    attachments.push_back(this->depthImage.view);
+
+    RenderPassType render_pass_type =
+      depthOnly ?
+      renDepth :
+      renColorDepth;
+
+    if(wing.compatibleRenderPassMap.find(render_pass_type) ==
+       wing.compatibleRenderPassMap.end()) {
+      wing.register_compatible_render_pass(render_pass_type);
     }
+    
+    vk::FramebufferCreateInfo finf;
+    finf.setRenderPass(wing.compatibleRenderPassMap[render_pass_type])
+      .setAttachmentCount(attachments.size())
+      .setPAttachments(attachments.data())
+      .setWidth(width)
+      .setHeight(height)
+      .setLayers(1);
+
+    vk::Device device = wing.getDevice();
+
+    vk::SemaphoreCreateInfo sci;
+    
+    if (!withoutReadyToDrawSemaphore) {
+      this->ready_for_draw_semaphore = new vk::Semaphore();
+      
+      *this->ready_for_draw_semaphore = wing.device.createSemaphore(sci);
+    } else {
+      this->ready_for_draw_semaphore = nullptr;
+    }
+
+    this->has_been_drawn_semaphore = new vk::Semaphore();
+
+    *this->has_been_drawn_semaphore = wing.device.createSemaphore(sci);
+    
+    this->framebuffer = device.createFramebuffer(finf);
   }
 
   _Texture::_Texture(Wingine& wing,
-		     uint32_t width, uint32_t height) :
+		     uint32_t width, uint32_t height,
+		     bool depth) :
     Resource(vk::DescriptorType::eCombinedImageSampler) {
     
     this->wing = &wing;
+    this->aspect = depth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
     vk::Device device = wing.getDevice();
     
     wing.cons_image_image(*this,
 			  width, height,
-			  vk::Format::eB8G8R8A8Unorm,
+			  depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
 			  vk::ImageUsageFlagBits::eSampled |
 			  vk::ImageUsageFlagBits::eTransferDst,
 			  vk::ImageTiling::eOptimal);
     wing.cons_image_memory(*this,
 			   vk::MemoryPropertyFlagBits::eDeviceLocal);
     wing.cons_image_view(*this,
-			 wImageViewColor);
+			 depth ? wImageViewDepth : wImageViewColor);
 
     Image pseudo;
     wing.cons_image_image(pseudo,
 			  width, height,
-			  vk::Format::eB8G8R8A8Unorm,
+			  depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
 			  vk::ImageUsageFlagBits::eTransferSrc,
 			  vk::ImageTiling::eLinear,
 			  vk::ImageLayout::ePreinitialized);
@@ -428,7 +485,7 @@ namespace wg {
     vk::ImageSubresource subres;
     subres.setMipLevel(0)
       .setArrayLayer(0)
-      .setAspectMask(vk::ImageAspectFlagBits::eColor);
+      .setAspectMask(this->aspect);
     
     vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
 
@@ -489,10 +546,30 @@ namespace wg {
 			  this->current_staging_layout, vk::ImageLayout::eGeneral,
 			  this->width, this->height, this->image,
 			  this->current_layout, vk::ImageLayout::eShaderReadOnlyOptimal,
-			  vk::ImageAspectFlagBits::eColor);
+			  this->aspect);
 
     this->current_staging_layout = vk::ImageLayout::eGeneral;
     this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+  }
+
+  void _Texture::set(_Framebuffer* framebuffer) {
+    bool depth = this->aspect == vk::ImageAspectFlagBits::eDepth;
+    
+    this->wing->copy_image(depth ? framebuffer->depthImage.width
+			   : framebuffer->colorImage.width,
+			   depth ? framebuffer->depthImage.height
+			   : framebuffer->colorImage.height,
+			   depth ? framebuffer->depthImage.image
+			   : framebuffer->colorImage.image,
+			   depth ? framebuffer->depthImage.current_layout
+			   : framebuffer->colorImage.current_layout,
+			   vk::ImageLayout::eDepthStencilAttachmentOptimal,
+			   this->width, this->height,
+			   this->image, this->current_layout,
+			   vk::ImageLayout::eShaderReadOnlyOptimal,
+			   this->aspect,
+			   framebuffer->has_been_drawn_semaphore);
+			   
   }
 
   void Wingine::cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
@@ -574,7 +651,8 @@ namespace wg {
 			   vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
 			   uint32_t w2, uint32_t h2, vk::Image dst,
 			   vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
-			   vk::ImageAspectFlagBits aspect) {
+			   vk::ImageAspectFlagBits aspect,
+			   vk::Semaphore *wait_semaphore) {
     vk::CommandBufferBeginInfo bg;
     this->device.waitForFences(1, &general_purpose_command.fence,
 			       true, (uint64_t)1e9);
@@ -589,26 +667,59 @@ namespace wg {
     cmd_set_layout(general_purpose_command.buffer, dst,
 		   aspect, dstCurrentLayout, vk::ImageLayout::eTransferDstOptimal);
 
-        vk::ImageBlit blit;
-    blit.srcSubresource.setAspectMask(aspect)
-      .setMipLevel(0)
-      .setBaseArrayLayer(0)
-      .setLayerCount(1);
-    blit.setSrcOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w1, (int)h1, 1}});
+    if (aspect == vk::ImageAspectFlagBits::eDepth) {
+      _wassert(w1 == w2 && h1 == h2,
+	       "Cannot copy depth image where source and destination have different extents");
+      
+      vk::ImageCopy copy;
+      
+      vk::ImageSubresourceLayers subr;
+      subr.setAspectMask(aspect)
+	.setMipLevel(0)
+	.setBaseArrayLayer(0)
+	.setLayerCount(1);
+      
+      vk::Offset3D offs;
+      offs.setX(0)
+	.setY(0)
+	.setZ(0);
 
-    blit.dstSubresource.setAspectMask(aspect)
-      .setMipLevel(0)
-      .setBaseArrayLayer(0)
-      .setLayerCount(1);
-    blit.setDstOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w2, (int)h2, 1}});
-    
-    vk::Filter filter = (aspect == vk::ImageAspectFlagBits::eDepth ||
-			 aspect == vk::ImageAspectFlagBits::eStencil) ?
-      vk::Filter::eNearest : vk::Filter::eLinear;
+      vk::Extent3D ext;
+      ext.setWidth(w1)
+	.setHeight(h1)
+	.setDepth(1);
+      
+      copy.setSrcSubresource(subr)
+	.setSrcOffset(offs)
+	.setDstSubresource(subr)
+	.setDstOffset(offs)
+	.setExtent(ext);
 
-    general_purpose_command.buffer.blitImage(src, vk::ImageLayout::eTransferSrcOptimal,
-					     dst, vk::ImageLayout::eTransferDstOptimal,
-					     1, &blit, filter);
+      general_purpose_command.buffer.copyImage(src, vk::ImageLayout::eTransferSrcOptimal,
+					       dst, vk::ImageLayout::eTransferDstOptimal,
+					       1, &copy);
+    } else {
+      vk::ImageBlit blit;
+      blit.srcSubresource.setAspectMask(aspect)
+	.setMipLevel(0)
+	.setBaseArrayLayer(0)
+	.setLayerCount(1);
+      blit.setSrcOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w1, (int)h1, 1}});
+
+      blit.dstSubresource.setAspectMask(aspect)
+	.setMipLevel(0)
+	.setBaseArrayLayer(0)
+	.setLayerCount(1);
+      blit.setDstOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w2, (int)h2, 1}});
+
+      vk::Filter filter = (aspect == vk::ImageAspectFlagBits::eDepth ||
+			   aspect == vk::ImageAspectFlagBits::eStencil) ?
+	vk::Filter::eNearest : vk::Filter::eLinear;
+
+      general_purpose_command.buffer.blitImage(src, vk::ImageLayout::eTransferSrcOptimal,
+					       dst, vk::ImageLayout::eTransferDstOptimal,
+					       1, &blit, filter);
+    }
 
     // Perhaps not necessary, but very convenient
     cmd_set_layout(general_purpose_command.buffer, src,
@@ -619,10 +730,20 @@ namespace wg {
 
     general_purpose_command.buffer.end();
 
+    vk::PipelineStageFlags last_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;	
+    
     vk::SubmitInfo si;
     si.setCommandBufferCount(1)
-      .setPCommandBuffers(&general_purpose_command.buffer);
-
+      .setPCommandBuffers(&general_purpose_command.buffer)
+      .setPWaitDstStageMask(&last_stage);
+    
+    if (wait_semaphore != nullptr) {
+      si.setWaitSemaphoreCount(1)
+	.setPWaitSemaphores(wait_semaphore);
+    } else {
+      si.setWaitSemaphoreCount(0);
+    }
+    
     this->graphics_queue.submit(1, &si, general_purpose_command.fence);
 
     // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
@@ -632,6 +753,7 @@ namespace wg {
   
   vk::RenderPass Wingine::create_render_pass(RenderPassType type,
 					     bool clear) {
+
     std::vector<vk::AttachmentDescription> descriptions;
     std::vector<vk::AttachmentReference> references;
 
@@ -664,7 +786,7 @@ namespace wg {
 	.setStoreOp(vk::AttachmentStoreOp::eStore)
 	.setStencilLoadOp(vk::AttachmentLoadOp::eLoad)
 	.setStencilStoreOp(vk::AttachmentStoreOp::eStore)
-	.setInitialLayout(vk::ImageLayout::eUndefined)
+	.setInitialLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
 	.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
 	.setFormat(vk::Format::eD32Sfloat);
       references.resize(1);
@@ -704,7 +826,6 @@ namespace wg {
 					     
   
   void Wingine::register_compatible_render_pass(RenderPassType type) {
-    
     this->compatibleRenderPassMap[type] =
       this->create_render_pass(type, false);
   }
@@ -715,13 +836,15 @@ namespace wg {
     wing(&wing), pipeline(&pipeline) {
 
     this->clears = clear;
-    
+
     if(!clear) {
       this->render_pass = wing.compatibleRenderPassMap[pipeline.render_pass_type];
     } else {
       this->render_pass = wing.create_render_pass(pipeline.render_pass_type,
 						  clear);
     }
+
+    
     
     vk::CommandPool pool = wing.getDefaultCommandPool();
     vk::Device device = wing.getDevice();
@@ -901,7 +1024,7 @@ namespace wg {
     
     vk::Rect2D renderRect;
     renderRect.setOffset({0, 0})
-      .setExtent({wing->window_width, wing->window_height});
+      .setExtent({framebuffer->depthImage.width, framebuffer->depthImage.height});
     
     vk::RenderPassBeginInfo rpb;
     rpb.setRenderPass(this->render_pass)
@@ -910,6 +1033,8 @@ namespace wg {
       .setFramebuffer(framebuffer->framebuffer)
       .setRenderArea(renderRect);
 
+    this->current_framebuffer = framebuffer;
+    
     // Size is number of attachments
     std::vector<vk::ClearValue> clear_values;
 
@@ -990,16 +1115,21 @@ namespace wg {
     vk::Queue queue = this->wing->getGraphicsQueue();
 
     vk::PipelineStageFlags last_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-    
+
     vk::SubmitInfo si;
-    si.setWaitSemaphoreCount(1)
-      .setPWaitSemaphores(&this->wing->image_acquired_semaphore)
-      .setPWaitDstStageMask(&last_stage)
+    si.setPWaitDstStageMask(&last_stage)
       .setCommandBufferCount(1)
       .setPCommandBuffers(&this->command.buffer)
-      .setSignalSemaphoreCount(0)
-      .setPSignalSemaphores(nullptr);
+      .setSignalSemaphoreCount(1)
+      .setPSignalSemaphores(this->current_framebuffer->has_been_drawn_semaphore);
 
+    if (this->current_framebuffer->ready_for_draw_semaphore != nullptr) {
+      si.setWaitSemaphoreCount(1)
+	.setPWaitSemaphores(this->current_framebuffer->ready_for_draw_semaphore);
+    } else {
+      si.setWaitSemaphoreCount(0);
+    }
+    
     device.resetFences(1, &this->command.fence);
     queue.submit(1, &si, this->command.fence);
     
@@ -1013,8 +1143,8 @@ namespace wg {
     presentInfo.setSwapchainCount(1)
       .setPSwapchains(&this->swapchain)
       .setPImageIndices(&this->current_swapchain_image)
-      .setWaitSemaphoreCount(0)
-      .setPWaitSemaphores(nullptr)
+      .setWaitSemaphoreCount(1)
+      .setPWaitSemaphores(&this->image_drawn_semaphore)
       .setPResults(nullptr);
 
     
@@ -1070,11 +1200,11 @@ namespace wg {
     // instance_layer_names.push_back("VK_LAYER_LUNARG_screenshot");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_standard_validation");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_starter_layer");
-    instance_layer_names.push_back("VK_LAYER_LUNARG_parameter_validation");
+    // instance_layer_names.push_back("VK_LAYER_LUNARG_parameter_validation");
     // instance_layer_names.push_back("VK_LAYER_GOOGLE_unique_objects");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_vktrace");
-    instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
-    instance_layer_names.push_back("VK_LAYER_GOOGLE_threading");
+    // instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
+    // instance_layer_names.push_back("VK_LAYER_GOOGLE_threading");
 #endif // DEBUG
 
     vk::ApplicationInfo appInfo;
@@ -1396,14 +1526,9 @@ namespace wg {
     vk::FenceCreateInfo fci;
     fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
-    this->image_acquired_fence = this->device.createFence(fci);
-
     vk::SemaphoreCreateInfo sci2;
-
     this->image_acquired_semaphore = this->device.createSemaphore(sci2);
-    
-    // Create with default values in SemaphoreCreateInfo
-    this->draw_semaphore = this->device.createSemaphore(sci2);
+    this->image_drawn_semaphore = this->device.createSemaphore(sci2);
     
   }
 
@@ -1453,6 +1578,9 @@ namespace wg {
 	.setLayers(1);
       
       framebuffer.framebuffer = this->device.createFramebuffer(finf);
+
+      framebuffer.ready_for_draw_semaphore = &this->image_acquired_semaphore;
+      framebuffer.has_been_drawn_semaphore = &this->image_drawn_semaphore;
       
       this->framebuffers.push_back(framebuffer);
     }
@@ -1641,15 +1769,15 @@ namespace wg {
   }
 
   
-  Pipeline Wingine::createPipeline(std::vector<VertexAttribDesc>& descriptions,
-				   std::vector<std::vector<uint64_t>* > resourceSetLayout,
-				   std::vector<Shader*> shaders,
+  Pipeline Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
+				   const std::vector<std::vector<uint64_t>* >& resourceSetLayout,
+				   const std::vector<Shader*>& shaders,
 				   bool depthOnly) {
     std::vector<ResourceSetLayout> rsl;
     for(uint i = 0; i < resourceSetLayout.size(); i++) {
       rsl.push_back(this->resourceSetLayoutMap[*(resourceSetLayout[i])]);
     }
-    
+
     return Pipeline(*this,
 		    this->window_width,
 		    this->window_height,
@@ -1660,17 +1788,17 @@ namespace wg {
   }
 
   _Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
-					   bool depthOnly) {
+					   bool depthOnly, bool withoutSemaphore) {
     _Framebuffer* framebuffer = new _Framebuffer(*this,
 						 width, height,
-						 depthOnly);
+						 depthOnly, withoutSemaphore);
     return framebuffer;
     
   }
 
-  _Texture* Wingine::createTexture(uint32_t width, uint32_t height) {
+  _Texture* Wingine::createTexture(uint32_t width, uint32_t height, bool depth) {
     _Texture* texture = new _Texture(*this,
-				     width, height);
+				     width, height, depth);
     return texture;
   }
 
@@ -1743,6 +1871,15 @@ namespace wg {
     this->destroy(framebuffer->depthImage);
 
     this->device.destroy(framebuffer->framebuffer);
+    this->device.destroy(*framebuffer->has_been_drawn_semaphore);
+
+    if(framebuffer->ready_for_draw_semaphore != nullptr) {
+          this->device.destroy(*framebuffer->ready_for_draw_semaphore);
+	  delete framebuffer->ready_for_draw_semaphore;    
+    }
+    
+    delete framebuffer->has_been_drawn_semaphore;
+    
     delete framebuffer;
   }
   
@@ -1759,9 +1896,6 @@ namespace wg {
     this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX);
     this->device.destroyFence(this->present_command.fence);
 
-    this->device.waitForFences(1, &(this->image_acquired_fence), true, UINT64_MAX);
-    this->device.destroy(this->image_acquired_fence);
-
     if(this->compute_queue_index >= 0) {
       this->device.destroyCommandPool(this->compute_command_pool);
       this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX);
@@ -1771,8 +1905,8 @@ namespace wg {
     this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX);
     this->device.destroy(this->general_purpose_command.fence);
 
-    this->device.destroy(this->draw_semaphore);
     this->device.destroy(this->image_acquired_semaphore);
+    this->device.destroy(this->image_drawn_semaphore);
     
     this->device.destroy(this->swapchain);
     

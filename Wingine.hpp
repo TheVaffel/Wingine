@@ -169,6 +169,7 @@ namespace wg {
     friend class _Framebuffer;
     friend class _Texture;
     friend class Wingine;
+    friend class RenderFamily;
   };
   
   class ResourceSet {
@@ -207,17 +208,20 @@ namespace wg {
     vk::MemoryRequirements staging_memory_memreq;
 
     vk::ImageLayout current_staging_layout;
+    vk::ImageAspectFlagBits aspect;
     
     uint32_t stride_in_bytes;
 
     _Texture(Wingine& wing,
-	     uint32_t width, uint32_t height);
+	     uint32_t width, uint32_t height,
+	     bool depth);
   public:
 
     // Returns stride in bytes
     uint32_t getStride();
     
     void set(unsigned char* pixels, bool fixed_stride = false);
+    void set(_Framebuffer* framebuffer);
 
     friend class Wingine;
   };
@@ -265,14 +269,16 @@ namespace wg {
     Image colorImage;
     Image depthImage;
     vk::Framebuffer framebuffer;
-
+    vk::Semaphore *ready_for_draw_semaphore,
+      *has_been_drawn_semaphore;
+    
     _Framebuffer(Wingine& wing,
 		 int width, int height,
-		 bool depthOnly);
+		 bool depthOnly, bool withoutSemaphore = false);
     _Framebuffer();
     
   public:
-
+    
     void destroy();
     
     const Image& getColorImage() const;
@@ -281,6 +287,8 @@ namespace wg {
 
     friend class RenderFamily;
     friend class Wingine;
+    friend class _Texture;
+    friend class RenderFamily;
   };
 
   struct Command {
@@ -302,9 +310,9 @@ namespace wg {
     
     Pipeline(Wingine& wing,
 	     int width, int height,
-	     std::vector<VertexAttribDesc>& descriptions,
-	     std::vector<ResourceSetLayout>& resourceSetLayout,
-	     std::vector<Shader*>& shaders,
+	     const std::vector<VertexAttribDesc>& descriptions,
+	     const std::vector<ResourceSetLayout>& resourceSetLayout,
+	     const std::vector<Shader*>& shaders,
 	     bool depthOnly);
 
     friend class RenderFamily;
@@ -317,6 +325,7 @@ namespace wg {
     Command command;
     Pipeline* pipeline;
     vk::RenderPass render_pass;
+    _Framebuffer *current_framebuffer;
     bool clears;
     
     RenderFamily(Wingine& wing,
@@ -350,9 +359,8 @@ namespace wg {
     vk::SwapchainKHR swapchain;
 
     std::vector<vk::Image> swapchain_images;
-    vk::Fence image_acquired_fence;
     vk::Semaphore image_acquired_semaphore;
-    vk::Semaphore draw_semaphore;
+    vk::Semaphore image_drawn_semaphore;
 
     uint32_t current_swapchain_image;
     std::vector<_Framebuffer> framebuffers;
@@ -414,7 +422,8 @@ namespace wg {
 		   vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
 		   uint32_t w2, uint32_t h2, vk::Image dst,
 		   vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
-		   vk::ImageAspectFlagBits flag);
+		    vk::ImageAspectFlagBits flag,
+		    vk::Semaphore *wait_semaphore = nullptr);
 
     void cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
 			vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
@@ -451,15 +460,15 @@ namespace wg {
 
     Shader createShader(uint64_t stage_bit, std::vector<uint32_t>& spirv);
 
-    Pipeline createPipeline(std::vector<VertexAttribDesc>& descriptions,
-			    std::vector<std::vector<uint64_t>* > resourceSetLayout,
-			    std::vector<Shader*> shaders,
+    Pipeline createPipeline(const std::vector<VertexAttribDesc>& descriptions,
+			    const std::vector<std::vector<uint64_t>* >& resourceSetLayout,
+			    const std::vector<Shader*>& shaders,
 			    bool depthOnly = false);
     
     _Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
-				    bool depthOnly = false);
+				    bool depthOnly = false, bool withoutSemaphore = false);
 
-    _Texture* createTexture(uint32_t width, uint32_t height);
+    _Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
     
     void present();
 

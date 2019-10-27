@@ -94,7 +94,7 @@ int main() {
 
     texture2D_v texture = shader.uniformBinding<texture2D_s>(0, 0);
 
-    vec4_v color = texture.lookup<vec4_s, vec2_s>(coord);
+    vec4_v color = texture[coord];
     
     shader.compile(fragment_spirv, color);
   }

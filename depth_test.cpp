@@ -10,6 +10,7 @@
 int main() {
   const int width = 800, height = 800;
   Winval win(width, height);
+  win.setTitle("Wingine - Depth Example");
   wg::Wingine wing(width, height, win.getWindow(), win.getDisplay());
   
   const int num_points = 7;
@@ -58,12 +59,18 @@ int main() {
   wg::RenderObject triangle({&position_buffer, &color_buffer}, index_buffer);
 
   wg::Uniform cameraUniform = wing.createUniform<Matrix4>();
-
+  wg::Uniform lightUniform = wing.createUniform<Matrix4>();
+  
+  // Initialize resource set layout
+  
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
   wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
   resourceSet.set({&cameraUniform});
 
+  wg::ResourceSet lightSet = wing.createResourceSet(resourceSetLayout);
+  lightSet.set({&lightUniform});
+  
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
 					0, // Binding no.
@@ -71,45 +78,6 @@ int main() {
 					4 * sizeof(float), // Stride (in bytes)
 					0}, // Offset (bytes)
 				       {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
-    
-  
-  std::vector<uint32_t> vertex_spirv;
-  {
-    using namespace spurv;
-
-    SShader<SHADER_VERTEX, vec4_s, vec4_s> shader;
-    vec4_v s_pos = shader.input<0>();
-    vec4_v s_col = shader.input<1>();
-
-    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
-    mat4_v trans = trans_bind.member<0>();
-
-    vec4_v transformed_pos = trans * s_pos;
-    
-    shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
-    shader.compile(vertex_spirv, s_col);
-  }
-
-  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
-
-  std::vector<uint32_t> fragment_spirv;
-  {
-    using namespace spurv;
-
-    SShader<SHADER_FRAGMENT, vec4_s> shader;
-    vec4_v in_col = shader.input<0>();
-
-    shader.compile(fragment_spirv, in_col);
-  }
-
-  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-
-  wg::Pipeline pipeline = wing.
-    createPipeline(vertAttrDesc,
-		   {&resourceSetLayout},
-		   {&vertex_shader, &fragment_shader});
-
-
   
   // Some random size
   const uint32_t shadow_buffer_width = 4000,
@@ -119,7 +87,16 @@ int main() {
 							     shadow_buffer_height, true, true);
   wg::Texture shadow_texture = wing.createTexture(shadow_buffer_width,
 						  shadow_buffer_height, true);
+  
 
+  // Initialize texture set layout
+
+  std::vector<uint64_t> lightTextureSetLayout = {wg::resTexture | wg::shaFragment,
+						 wg::resUniform | wg::shaFragment};
+  
+  wg::ResourceSet lightTextureSet = wing.createResourceSet(lightTextureSetLayout);
+  lightTextureSet.set({shadow_texture, &lightUniform});
+  
   std::vector<uint32_t> depth_vertex_shader;
   {
     using namespace spurv;
@@ -138,12 +115,78 @@ int main() {
 
   wg::Shader depth_shader = wing.createShader(wg::shaVertex, depth_vertex_shader);
 
-  
   wg::Pipeline depth_pipeline = wing.createPipeline({vertAttrDesc[0]},
 						    {&resourceSetLayout},
-						    {&depth_shader}, true); 
-						    
+						    {&depth_shader}, true,
+						    shadow_buffer_width, shadow_buffer_height);
   
+  
+  std::vector<uint32_t> vertex_spirv;
+  {
+    using namespace spurv;
+
+    SShader<SHADER_VERTEX, vec4_s, vec4_s> shader;
+    vec4_v s_pos = shader.input<0>();
+    vec4_v s_col = shader.input<1>();
+
+    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    mat4_v trans = trans_bind.member<0>();
+
+    vec4_v transformed_pos = trans * s_pos;
+    vec4_v world_pos = s_pos; // Should be model transformed, but doesn't have one in this example
+    
+    shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
+    shader.compile(vertex_spirv, s_col, world_pos);
+  }
+
+  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+
+  
+  std::vector<uint32_t> fragment_spirv;
+  {
+    using namespace spurv;
+
+    SShader<SHADER_FRAGMENT, vec4_s, vec4_s> shader;
+    vec4_v in_col = shader.input<0>();
+    vec4_v in_wpos = shader.input<1>();
+
+    texture2D_v shadow_tex = shader.uniformBinding<texture2D_s>(1, 0);
+    SUniformBinding<mat4_s> shadow_trans_bind = shader.uniformBinding<mat4_s>(1, 1);
+    mat4_v shadow_trans = shadow_trans_bind.member<0>();
+
+    vec4_v light_pos = shadow_trans * in_wpos;
+
+    vec2_v light_pos2d = (vec2_s::cons(light_pos[0] / light_pos[3],
+				       light_pos[1] / light_pos[3]) +
+				       vec2_s::cons(1.0f, 1.0f)) * 0.5f; 
+      /* vec2_s::cons(light_pos[0] / light_pos[3],
+	 light_pos[1] / light_pos[3]); */
+
+    float_v lookupval = shadow_tex[light_pos2d][0];
+
+    float_v intensity = select(lookupval + 1e-5f >= light_pos[2] / light_pos[3], 1.0f, 0.2f);
+
+    vec4_v mul = intensity * in_col;
+    
+    // vec4_v res = in_col * lookupval;
+    // vec4_v res = vec4_s::cons(light_pos2d[0], light_pos2d[1], 0.0f, 1.0f);
+    // vec4_v res = 50.0f * (shadow_tex[light_pos2d] - vec4_s::cons(0.98f, 0.0f, 0.0f, 0.0f));
+    // vec4_v res = 50.0f * vec4_s::cons(light_pos[2] / light_pos[3] - 0.98f, 0.0f, 0.0f, 1.0f);
+    vec4_v res = vec4_s::cons(mul[0], mul[1], mul[2], 1.0f);
+    // vec4_v res = vec4_s::cons(intensity, intensity, intensity, 1.0f);
+    // vec4_v res = vec4_s::cons(lookupval, lookupval, lookupval, 1.0f);
+
+    shader.compile(fragment_spirv, res);
+  }
+  
+
+  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+
+  wg::Pipeline pipeline = wing.
+    createPipeline(vertAttrDesc,
+		   {&resourceSetLayout, &lightTextureSetLayout},
+		   {&vertex_shader, &fragment_shader});
+						    
   /* for(uint32_t i : depth_vertex_shader) {
     std::cout << i << std::endl;
     } */ 
@@ -157,11 +200,10 @@ int main() {
 		   Vector3(0.0f, 0.0f, -2.5f),
 		   Vector3(0.0f, 1.0f, 0.0f));
 
-  wgut::Camera light_camera(M_PI / 2.f, 1.0f, 0.01f, 100.0f);
-  camera.setLookAt(Vector3(-2.0f, 2.0f, 2.0f),
-		   Vector3(0.0f, 0.0f, -2.5f),
-		   Vector3(0.0f, 1.0f, 0.0f));
-		   
+  wgut::Camera light_camera(M_PI / 3.f, 1.0f, 0.01f, 100.0f);
+  light_camera.setLookAt(Vector3(-1.0f, 3.0f, -1.0f),
+			 Vector3(0.0f, 0.0f, -2.5f),
+			 Vector3(0.0f, 1.0f, 0.0f));
 
   float a = 0;
   while (win.isOpen()) {
@@ -171,10 +213,10 @@ int main() {
       a = 0;
     }
 
-    cameraUniform.set(light_camera.getRenderMatrix());
+    lightUniform.set(light_camera.getRenderMatrix());
 
     depth_family.startRecording(depth_framebuffer);
-    depth_family.recordDraw(triangle, {resourceSet});
+    depth_family.recordDraw(triangle, {lightSet});
     depth_family.endRecording();
 
     shadow_texture->set(depth_framebuffer);
@@ -182,7 +224,7 @@ int main() {
     cameraUniform.set(renderMatrix);
 
     family.startRecording();
-    family.recordDraw(triangle, {resourceSet});
+    family.recordDraw(triangle, {resourceSet, lightTextureSet});
     family.endRecording();
 
     wing.present();
@@ -207,7 +249,9 @@ int main() {
   
   wing.destroy(vertex_shader);
   wing.destroy(fragment_shader);
-  
+
+  wing.destroy(lightTextureSet);
+  wing.destroy(lightSet);
   wing.destroy(resourceSet);
   wing.destroy(pipeline);
   
@@ -216,4 +260,5 @@ int main() {
   wing.destroy(index_buffer);
 
   wing.destroy(cameraUniform);
+  wing.destroy(lightUniform);
 }

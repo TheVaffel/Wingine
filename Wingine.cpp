@@ -1772,15 +1772,15 @@ namespace wg {
   Pipeline Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
 				   const std::vector<std::vector<uint64_t>* >& resourceSetLayout,
 				   const std::vector<Shader*>& shaders,
-				   bool depthOnly) {
+				   bool depthOnly, int width, int height) {
     std::vector<ResourceSetLayout> rsl;
     for(uint i = 0; i < resourceSetLayout.size(); i++) {
       rsl.push_back(this->resourceSetLayoutMap[*(resourceSetLayout[i])]);
     }
 
     return Pipeline(*this,
-		    this->window_width,
-		    this->window_height,
+		    width < 0 ? this->window_width : width,
+		    height < 0 ? this->window_height : height,
 		    descriptions,
 		    rsl,
 		    shaders,

@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.0)
 
 project(Wingine)
 
-add_definitions(-std=c++1z)
+add_definitions(-std=c++1z -fconcepts)
 
 if (NOT WIN32)
-  add_definitions(-Wall -g)
+  add_definitions(-Wall -g -Wno-class-memaccess)
 endif()
 
 set(SPURV_ROOT "${CMAKE_HOME_DIRECTORY}/../spurv")

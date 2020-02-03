@@ -158,23 +158,15 @@ int main() {
 
     vec2_v light_pos2d = (vec2_s::cons(light_pos[0] / light_pos[3],
 				       light_pos[1] / light_pos[3]) +
-				       vec2_s::cons(1.0f, 1.0f)) * 0.5f; 
-      /* vec2_s::cons(light_pos[0] / light_pos[3],
-	 light_pos[1] / light_pos[3]); */
+				       vec2_s::cons(1.0, 1.0)) * 0.5;
 
     float_v lookupval = shadow_tex[light_pos2d][0];
 
-    float_v intensity = select(lookupval + 1e-5f >= light_pos[2] / light_pos[3], 1.0f, 0.2f);
+    float_v intensity = select(lookupval + 1e-5 >= light_pos[2] / light_pos[3], 1.f, 0.2f);
 
     vec4_v mul = intensity * in_col;
-    
-    // vec4_v res = in_col * lookupval;
-    // vec4_v res = vec4_s::cons(light_pos2d[0], light_pos2d[1], 0.0f, 1.0f);
-    // vec4_v res = 50.0f * (shadow_tex[light_pos2d] - vec4_s::cons(0.98f, 0.0f, 0.0f, 0.0f));
-    // vec4_v res = 50.0f * vec4_s::cons(light_pos[2] / light_pos[3] - 0.98f, 0.0f, 0.0f, 1.0f);
+
     vec4_v res = vec4_s::cons(mul[0], mul[1], mul[2], 1.0f);
-    // vec4_v res = vec4_s::cons(intensity, intensity, intensity, 1.0f);
-    // vec4_v res = vec4_s::cons(lookupval, lookupval, lookupval, 1.0f);
 
     shader.compile(fragment_spirv, res);
   }
@@ -186,10 +178,7 @@ int main() {
     createPipeline(vertAttrDesc,
 		   {&resourceSetLayout, &lightTextureSetLayout},
 		   {&vertex_shader, &fragment_shader});
-						    
-  /* for(uint32_t i : depth_vertex_shader) {
-    std::cout << i << std::endl;
-    } */ 
+
   
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
 

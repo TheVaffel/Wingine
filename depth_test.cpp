@@ -58,8 +58,8 @@ int main() {
 
   wg::RenderObject triangle({&position_buffer, &color_buffer}, index_buffer);
 
-  wg::Uniform cameraUniform = wing.createUniform<Matrix4>();
-  wg::Uniform lightUniform = wing.createUniform<Matrix4>();
+  wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
+  wg::Uniform lightUniform = wing.createUniform<falg::Mat4>();
   
   // Initialize resource set layout
   
@@ -185,21 +185,23 @@ int main() {
   wg::RenderFamily depth_family = wing.createRenderFamily(depth_pipeline, true);
   
   wgut::Camera camera(M_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
-  camera.setLookAt(Vector3(2.0f, 2.0f, 2.0f),
-		   Vector3(0.0f, 0.0f, -2.5f),
-		   Vector3(0.0f, 1.0f, 0.0f));
+  camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
+		   falg::Vec3(0.0f, 0.0f, -2.5f),
+		   falg::Vec3(0.0f, 1.0f, 0.0f));
 
   wgut::Camera light_camera(M_PI / 3.f, 1.0f, 0.01f, 100.0f);
-  light_camera.setLookAt(Vector3(-1.0f, 3.0f, -1.0f),
-			 Vector3(0.0f, 0.0f, -2.5f),
-			 Vector3(0.0f, 1.0f, 0.0f));
+  light_camera.setLookAt(falg::Vec3(-1.0f, 3.0f, -1.0f),
+			 falg::Vec3(0.0f, 0.0f, -2.5f),
+			 falg::Vec3(0.0f, 1.0f, 0.0f));
 
   float a = 0;
   while (win.isOpen()) {
-    Matrix4 renderMatrix = camera.getRenderMatrix();
+    
+      std::cout << "Tick a = " << a << std::endl;
+    falg::Mat4 renderMatrix = camera.getRenderMatrix();
     a += 0.03;
     if(a > 1.0) {
-      a = 0;
+      a = 0.0;
     }
 
     lightUniform.set(light_camera.getRenderMatrix());

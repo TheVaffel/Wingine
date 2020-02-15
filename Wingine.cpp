@@ -1,23 +1,26 @@
 #include "Wingine.hpp"
 
-#include <unistd.h>
-
 #ifdef WIN32
 
 #define VK_USE_PLATFORM_WIN32_KHR
-#include "vulkan/vulkan_win32.h"
+#include "external/vulkan_win32.h"
+
+#include <algorithm>
+
+#undef min
+#undef max
 
 #else // WIN32
+#include <unistd.h>
 
 #define VK_USE_PLATFORM_XLIB_KHR
 #include "vulkan/vulkan_xlib.h"
 
 #endif // WIN32
 
+#include <iostream>
 #include "vulkan/vulkan.hpp"
 
-
-#include <iostream>
 
 #define DEBUG
 
@@ -25,8 +28,8 @@
  * Debug callback
  */
 
-VKAPI_ATTR VkBool32 VKAPI_CALL
-static _debugCallbackFun(VkDebugReportFlagsEXT flags,
+static VKAPI_ATTR VkBool32 VKAPI_CALL
+_debugCallbackFun(VkDebugReportFlagsEXT flags,
 			 VkDebugReportObjectTypeEXT objectType,
 			 uint64_t object,
 			 size_t location, int32_t messageCode,
@@ -44,7 +47,7 @@ static _debugCallbackFun(VkDebugReportFlagsEXT flags,
  */
 
 static void _wlog_error(std::string str) {
-  std::cerr << "[Wingine Error] " << str << std::endl;
+  std::cout << "[Wingine Error] " << str << std::endl;
 }
 
 static void _wassert(bool test, std::string str = "Error") {
@@ -113,7 +116,7 @@ namespace wg {
     }
 
     vk::DescriptorSetLayoutCreateInfo dlc;
-    dlc.setBindingCount(lbs.size())
+    dlc.setBindingCount((uint32_t)lbs.size())
       .setPBindings(lbs.data());
 
     this->layout =
@@ -148,7 +151,7 @@ namespace wg {
   void ResourceSet::set(const std::vector<Resource*>& resources) {
     std::vector<vk::WriteDescriptorSet> writes(resources.size());
 
-    for(uint i = 0; i < resources.size(); i++) {
+    for(unsigned int i = 0; i < resources.size(); i++) {
       writes[i].setDstSet(this->descriptor_set)
 	.setDescriptorCount(1)
 	.setDescriptorType(resources[i]->type)
@@ -222,7 +225,7 @@ namespace wg {
 	.setInputRate(vk::VertexInputRate::eVertex);
     }
 
-    for(uint i = 0; i < descriptions.size(); i++) {
+    for(unsigned int i = 0; i < descriptions.size(); i++) {
       vi_bindings[descriptions[i].binding_num]
 	.setStride(descriptions[i].stride_in_bytes); // Set stride of binding structure
 
@@ -234,12 +237,12 @@ namespace wg {
     }
     
     vk::Viewport viewport;
-    viewport.setWidth(width)
-      .setHeight(height)
+    viewport.setWidth((float)width)
+      .setHeight((float)height)
       .setMinDepth(0.0f)
       .setMaxDepth(1.0f)
-      .setX(0)
-      .setY(0);
+      .setX(0.f)
+      .setY(0.f);
 
     vk::Rect2D scissor;
     scissor.setExtent({(uint32_t)width, (uint32_t)height})
@@ -308,7 +311,7 @@ namespace wg {
 
     
     std::vector<vk::DescriptorSetLayout> layouts(resourceSetLayouts.size());
-    for(uint i = 0; i < resourceSetLayouts.size(); i++) {
+    for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
       layouts[i] = resourceSetLayouts[i].layout;
     }
     
@@ -320,7 +323,7 @@ namespace wg {
     this->layout = device.createPipelineLayout(layoutCreateInfo);
 
     std::vector<vk::PipelineShaderStageCreateInfo> pssci(shaders.size());
-    for(uint i = 0; i < shaders.size(); i++) {
+    for(unsigned int i = 0; i < shaders.size(); i++) {
       pssci[i] = shaders[i]->shader_info;
     }
 
@@ -461,35 +464,40 @@ namespace wg {
     wing.cons_image_view(*this,
 			 depth ? wImageViewDepth : wImageViewColor);
 
-    Image pseudo;
-    wing.cons_image_image(pseudo,
-			  width, height,
-			  depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
-			  vk::ImageUsageFlagBits::eTransferSrc,
-			  vk::ImageTiling::eLinear,
-			  vk::ImageLayout::ePreinitialized);
-    wing.cons_image_memory(pseudo,
-			   vk::MemoryPropertyFlagBits::eHostCoherent |
-			   vk::MemoryPropertyFlagBits::eHostVisible);
 
-    this->staging_image = pseudo.image;
-    this->staging_memory = pseudo.memory;
-
-    this->staging_memory_memreq = device.getImageMemoryRequirements(this->staging_image);
-
-    this->current_staging_layout = vk::ImageLayout::eUndefined;
-    
     this->width = width;
     this->height = height;
 
-    vk::ImageSubresource subres;
-    subres.setMipLevel(0)
-      .setArrayLayer(0)
-      .setAspectMask(this->aspect);
-    
-    vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
+    if (!depth) {
+        Image pseudo;
+        wing.cons_image_image(pseudo,
+            width, height,
+            depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
+            vk::ImageUsageFlagBits::eTransferSrc,
+            vk::ImageTiling::eLinear,
+            vk::ImageLayout::ePreinitialized);
+        wing.cons_image_memory(pseudo,
+            vk::MemoryPropertyFlagBits::eHostCoherent |
+            vk::MemoryPropertyFlagBits::eHostVisible);
 
-    this->stride_in_bytes = lay.rowPitch;
+        this->staging_image = pseudo.image;
+        this->staging_memory = pseudo.memory;
+
+        this->staging_memory_memreq = device.getImageMemoryRequirements(this->staging_image);
+
+        this->current_staging_layout = vk::ImageLayout::eUndefined;
+
+
+
+        vk::ImageSubresource subres;
+        subres.setMipLevel(0)
+            .setArrayLayer(0)
+            .setAspectMask(this->aspect);
+
+        vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
+
+        this->stride_in_bytes = lay.rowPitch;
+    }
       
     vk::SamplerCreateInfo sci;
     sci.setMagFilter(vk::Filter::eLinear)
@@ -533,7 +541,7 @@ namespace wg {
     } else {
       unsigned char* curr_mapped = (unsigned char*)mapped_memory;
       unsigned char* curr_pixels = pixels;
-      for (uint i = 0; i < this->height; i++) {
+      for (unsigned int i = 0; i < this->height; i++) {
 	memcpy(curr_mapped, curr_pixels, this->width * 4);
 	curr_mapped += this->stride_in_bytes;
 	curr_pixels += this->width * 4;
@@ -704,13 +712,13 @@ namespace wg {
 	.setMipLevel(0)
 	.setBaseArrayLayer(0)
 	.setLayerCount(1);
-      blit.setSrcOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w1, (int)h1, 1}});
+      blit.setSrcOffsets({vk::Offset3D{0, 0, 0}, vk::Offset3D{(int)w1, (int)h1, 1}});
 
       blit.dstSubresource.setAspectMask(aspect)
 	.setMipLevel(0)
 	.setBaseArrayLayer(0)
 	.setLayerCount(1);
-      blit.setDstOffsets({(vk::Offset3D){0, 0, 0}, (vk::Offset3D){(int)w2, (int)h2, 1}});
+      blit.setDstOffsets({vk::Offset3D{0, 0, 0}, vk::Offset3D{(int)w2, (int)h2, 1}});
 
       vk::Filter filter = (aspect == vk::ImageAspectFlagBits::eDepth ||
 			   aspect == vk::ImageAspectFlagBits::eStencil) ?
@@ -846,7 +854,7 @@ namespace wg {
 
     
     
-    vk::CommandPool pool = wing.getDefaultCommandPool();
+    vk::CommandPool pool = wing.getGraphicsCommandPool();
     vk::Device device = wing.getDevice();
     
     vk::CommandBufferAllocateInfo cbi;
@@ -1073,7 +1081,7 @@ namespace wg {
   void RenderFamily::recordDraw(RenderObject& obj,
 				std::vector<ResourceSet> sets) {
     std::vector<vk::DescriptorSet> d_sets(sets.size());
-    for(uint i = 0; i < sets.size(); i++) {
+    for(unsigned int i = 0; i < sets.size(); i++) {
       d_sets[i] = sets[i].descriptor_set;
     }
 
@@ -1088,7 +1096,7 @@ namespace wg {
     std::vector<vk::Buffer> vertexBuffers(obj.vertexBuffers.size());
     std::vector<vk::DeviceSize> offsets(obj.vertexBuffers.size());
 
-    for(uint i = 0; i < vertexBuffers.size(); i++) {
+    for(unsigned int i = 0; i < vertexBuffers.size(); i++) {
       vertexBuffers[i] = obj.vertexBuffers[i]->buffer;
       offsets[i] = 0;
     }
@@ -1191,11 +1199,13 @@ namespace wg {
 
 #ifdef DEBUG
     instance_extension_names.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+    instance_extension_names.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-    instance_layer_names.push_back("VK_LAYER_LUNARG_core_validation");
+    instance_layer_names.push_back("VK_LAYER_LUNARG_standard_validation");
+
     // instance_layer_names.push_back("VK_LAYER_LUNARG_api_dump");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_device_simulation");
-    // instance_layer_names.push_back("VK_LAYER_LUNARG_monitor");
+    instance_layer_names.push_back("VK_LAYER_LUNARG_monitor");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_object_tracker");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_screenshot");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_standard_validation");
@@ -1203,12 +1213,37 @@ namespace wg {
     // instance_layer_names.push_back("VK_LAYER_LUNARG_parameter_validation");
     // instance_layer_names.push_back("VK_LAYER_GOOGLE_unique_objects");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_vktrace");
-    // instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
+    instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
     // instance_layer_names.push_back("VK_LAYER_GOOGLE_threading");
 #endif // DEBUG
 
+    uint32_t extension_count;
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
+    std::vector<VkExtensionProperties> props(extension_count);
+    vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, props.data() + 0);
+    for (unsigned int i = 0; i < extension_count; i++) {
+        std::cout << "Extension: " << props[i].extensionName << std::endl;
+    }
+
+    for (unsigned int i = 0; i < instance_extension_names.size(); i++) {
+        std::cout << "Tried extension: " << instance_extension_names[i] << std::endl;
+    }
+
+    uint32_t layer_count;
+    vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+
+    std::vector<VkLayerProperties> availableLayers(layer_count);
+    vkEnumerateInstanceLayerProperties(&layer_count, availableLayers.data());
+    for (VkLayerProperties& vv : availableLayers) {
+        std::cout << "Layer: " << vv.layerName << std::endl;
+    }
+
+    for (unsigned int i = 0; i < instance_layer_names.size(); i++) {
+        std::cout << "Tried layer: " << instance_layer_names[i] << std::endl;
+    }
+
     vk::ApplicationInfo appInfo;
-    appInfo.setPApplicationName("lol").setApplicationVersion(1)
+    appInfo.setPApplicationName("Wingine").setApplicationVersion(1)
       .setPEngineName("Wingine").setEngineVersion(1)
       .setApiVersion(VK_API_VERSION_1_0);
 
@@ -1222,6 +1257,9 @@ namespace wg {
 
     this->vulkan_instance = vk::createInstance(cInfo);
 
+    vk::DynamicLoader dl;
+    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+    this->dispatcher.init(vkGetInstanceProcAddr);
     this->dispatcher.init(this->vulkan_instance);
     
 #ifdef DEBUG
@@ -1233,6 +1271,7 @@ namespace wg {
       .setPfnCallback(&_debugCallbackFun);
 
     this->debug_callback = this->vulkan_instance
+      // .createDebugReportCallbackEXT(callbackInfo, nullptr);
       .createDebugReportCallbackEXT(callbackInfo, nullptr, this->dispatcher);
     
 #endif // DEBUG
@@ -1244,7 +1283,7 @@ namespace wg {
   void Wingine::init_surface(_win_arg_type_0 arg0, _win_arg_type_1 arg1) {
 #ifdef WIN32
     vk::Win32SurfaceCreateInfoKHR info;
-    info.setHisnstance(arg0).setHwnd(arg1);
+    info.setHinstance(arg0).setHwnd(arg1);
 
     this->surface = this->vulkan_instance
       .createWin32SurfaceKHR(info, nullptr, this->dispatcher);
@@ -1265,37 +1304,37 @@ namespace wg {
     bool found = false;
 
     for(vk::PhysicalDevice dev : found_devices) {
-      vk::PhysicalDeviceProperties props = dev.getProperties();
-      std::cout << "Device name: " << props.deviceName << std::endl;
+        vk::PhysicalDeviceProperties props = dev.getProperties();
+        std::cout << "Device name: " << props.deviceName << std::endl;
 
 
-      this->graphics_queue_index = -1;
-      this->present_queue_index = -1;
-      this->compute_queue_index = -1;
+        this->graphics_queue_index = -1;
+        this->present_queue_index = -1;
+        this->compute_queue_index = -1;
 
-      std::vector<vk::QueueFamilyProperties> qprops = dev.getQueueFamilyProperties();
-      for(uint i = 0; i <  qprops.size(); i++) {
+        std::vector<vk::QueueFamilyProperties> qprops = dev.getQueueFamilyProperties();
+        for(unsigned int i = 0; i <  qprops.size(); i++) {
 
-	vk::Bool32 supportsGraphics =
-	  (qprops[i].queueFlags & vk::QueueFlagBits::eGraphics) != vk::QueueFlagBits {};
-        if(supportsGraphics) {
-	  this->graphics_queue_index = i;
-	}
+	    vk::Bool32 supportsGraphics =
+	        (qprops[i].queueFlags & vk::QueueFlagBits::eGraphics) != vk::QueueFlagBits {};
+            if(supportsGraphics) {
+	        this->graphics_queue_index = i;
+	    }
 	
-	vk::Bool32 supportsPresent = dev.getSurfaceSupportKHR(i, this->surface);
-	if(supportsPresent) {
-	  this->present_queue_index = i;
-	}
+	    vk::Bool32 supportsPresent = dev.getSurfaceSupportKHR(i, this->surface);
+	    if(supportsPresent) {
+	        this->present_queue_index = i;
+	    }
 
-	bool supportsCompute =
-	  (qprops[i].queueFlags & vk::QueueFlagBits::eCompute) != vk::QueueFlagBits {};
-	if(supportsCompute) {
-	  this->compute_queue_index = i;
-	}
-      }
+	    bool supportsCompute =
+	        (qprops[i].queueFlags & vk::QueueFlagBits::eCompute) != vk::QueueFlagBits {};
+	    if(supportsCompute) {
+	        this->compute_queue_index = i;
+	    }
+    }
 
-      if(this->graphics_queue_index != -1 &&
-	 this->present_queue_index != -1) {
+    if(this->graphics_queue_index != -1 &&
+	    this->present_queue_index != -1) {
 	
 	if(this->compute_queue_index == -1) {
 	  _wlog_error("Chosen graphics device does not support compute kernels");
@@ -1317,28 +1356,52 @@ namespace wg {
     
     std::vector<const char*> device_extension_names;
     device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    device_extension_names.push_back("VK_EXT_debug_marker");
-    device_extension_names.push_back("VK_EXT_validation_cache");
+    // device_extension_names.push_back("VK_EXT_debug_marker");
+    // device_extension_names.push_back("VK_EXT_validation_cache");
+    // device_extension_names.push_back(VK_KHR_BIND_MEMORY_2_EXTENSION_NAME);
     
-    
+    std::vector<vk::DeviceQueueCreateInfo> c_infos;
+    c_infos.reserve(3);
+
     vk::DeviceQueueCreateInfo c_info;
     float queue_priorities[1] = {1.0f};
     c_info.setQueueCount(1).setPQueuePriorities(queue_priorities)
       .setQueueFamilyIndex(this->present_queue_index);
+    c_infos.push_back(c_info);
 
-    vk::PhysicalDeviceFeatures feats;
+    if (this->present_queue_index != this->graphics_queue_index) {
+        c_info.setQueueFamilyIndex(this->graphics_queue_index);
+        c_infos.push_back(c_info);
+    }
+
+    if (this->compute_queue_index >= 0) {
+        c_info.setQueueFamilyIndex(this->compute_queue_index);
+        c_infos.push_back(c_info);
+    }
+
+    vk::PhysicalDeviceFeatures feats = {};
     feats.setShaderClipDistance(VK_TRUE);
 
     vk::DeviceCreateInfo device_info;
-    device_info.setQueueCreateInfoCount(1)
-      .setPQueueCreateInfos(&c_info)
+    device_info.setQueueCreateInfoCount(c_infos.size())
+      .setPQueueCreateInfos(c_infos.data())
       .setEnabledExtensionCount(device_extension_names.size())
       .setPpEnabledExtensionNames(device_extension_names.data())
       .setEnabledLayerCount(0)
       .setPpEnabledLayerNames(nullptr)
       .setPEnabledFeatures(&feats);
 
+    vk::PhysicalDeviceProperties phprops;
+    this->physical_device.getProperties(&phprops);
+
+    std::cout << "Phys props: " << phprops.limits.maxImageArrayLayers << " " <<
+        phprops.limits.maxImageDimension2D << std::endl;
+
     this->device = this->physical_device.createDevice(device_info);
+
+    // this->device
+
+    this->dispatcher.init(this->device);
 
     this->graphics_queue =
       this->device.getQueue(this->graphics_queue_index, 0);
@@ -1363,6 +1426,9 @@ namespace wg {
       setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
     this->present_command_pool = this->device.createCommandPool(cpi);
+    
+    cpi.setQueueFamilyIndex(this->graphics_queue_index);
+    this->graphics_command_pool = this->device.createCommandPool(cpi);
 
     vk::CommandBufferAllocateInfo cbi;
     cbi.setCommandPool(this->present_command_pool)
@@ -1384,6 +1450,7 @@ namespace wg {
     this->general_purpose_command.fence =
       this->device.createFence(fci);
 
+    cbi.setCommandPool(this->graphics_command_pool);
     this->general_purpose_command.buffer =
       this->device.allocateCommandBuffers(cbi)[0];
     
@@ -1449,7 +1516,7 @@ namespace wg {
 
     if(caps.maxImageCount != 0) {
       numSwaps =
-	std::min(caps.maxImageCount, numSwaps);
+	    std::min(caps.maxImageCount, numSwaps);
     }
 
 
@@ -1503,8 +1570,9 @@ namespace wg {
       .setOldSwapchain(nullptr)
       .setClipped(true)
       .setImageColorSpace(colorSpace)
-      .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
-		     vk::ImageUsageFlagBits::eTransferSrc)
+      // .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
+		//      vk::ImageUsageFlagBits::eTransferSrc)
+      .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
       .setImageSharingMode(vk::SharingMode::eExclusive)
       .setQueueFamilyIndexCount(0)
       .setPQueueFamilyIndices(nullptr);
@@ -1537,17 +1605,45 @@ namespace wg {
   }
 
   void Wingine::init_framebuffers() {
-
-    for(vk::Image sim : this->swapchain_images) {
+    for(unsigned int i = 0; i < this->swapchain_images.size(); i++) {
+    // for(vk::Image sim : this->swapchain_images) {
+        vk::Image sim = this->swapchain_images[i];
 
       _Framebuffer framebuffer;
       
       framebuffer.colorImage.image = sim;
       framebuffer.colorImage.width = this->window_width;
       framebuffer.colorImage.height = this->window_height;
+      vk::MemoryAllocateInfo mai;
+
+      vk::MemoryRequirements mr;
+      mr = this->device.getImageMemoryRequirements(sim);
+
+      mai.allocationSize = mr.size;
+      mai.memoryTypeIndex = _get_memory_type_index(mr.memoryTypeBits,
+          vk::MemoryPropertyFlagBits::eDeviceLocal,
+          this->device_memory_props);
+      framebuffer.colorImage.memory = this->device.allocateMemory(mai);
+
+      vk::BindImageMemorySwapchainInfoKHR bims;
+      bims.setImageIndex(i)
+          .setSwapchain(this->swapchain);
+
+      vk::BindImageMemoryInfo vkb;
+      vkb.setImage(sim)
+          .setMemory(vk::DeviceMemory{ nullptr })
+          .setMemoryOffset(0)
+          .setPNext(&bims)
+          ;
+
+      // this->device.bindImageMemory2KHR(1, &vkb, this->dispatcher);
+      // this->dispatcher.vkBindImageMemory2KHR(VkDevice(this->device), 1, &VkBindImageMemoryInfo(vkb));
+      // PFN_vkBindImageMemory2KHR vkBindImageMemory2KHR = PFN_vkBindImageMemory2(vkGetDeviceProcAddr(device, "vkBindImageMemory2KHR"));
+      // std::cout << "Binding function is " << vkBindImageMemory2 << std::endl;
+      // vkBindImageMemory2KHR(VkDevice(this->device), 1, &VkBindImageMemoryInfo(vkb));
       
-      this->cons_image_memory(framebuffer.colorImage,
-			      vk::MemoryPropertyFlagBits::eDeviceLocal);
+      this->device.bindImageMemory(sim, framebuffer.colorImage.memory, 0);
+
       this->cons_image_view(framebuffer.colorImage,
 			    wImageViewColor);
       
@@ -1745,8 +1841,12 @@ namespace wg {
     return this->general_purpose_command;
   }
 
-  vk::CommandPool Wingine::getDefaultCommandPool() {
+  vk::CommandPool Wingine::getPresentCommandPool() {
     return this->present_command_pool;
+  }
+
+  vk::CommandPool Wingine::getGraphicsCommandPool() {
+      return this->graphics_command_pool;
   }
 
   vk::DescriptorPool Wingine::getDescriptorPool() {
@@ -1774,7 +1874,7 @@ namespace wg {
 				   const std::vector<Shader*>& shaders,
 				   bool depthOnly, int width, int height) {
     std::vector<ResourceSetLayout> rsl;
-    for(uint i = 0; i < resourceSetLayout.size(); i++) {
+    for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
       rsl.push_back(this->resourceSetLayoutMap[*(resourceSetLayout[i])]);
     }
 
@@ -1895,6 +1995,8 @@ namespace wg {
     this->device.destroyCommandPool(this->present_command_pool);
     this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX);
     this->device.destroyFence(this->present_command.fence);
+
+    this->device.destroyCommandPool(this->graphics_command_pool);
 
     if(this->compute_queue_index >= 0) {
       this->device.destroyCommandPool(this->compute_command_pool);

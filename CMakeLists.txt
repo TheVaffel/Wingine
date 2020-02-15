@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(Wingine)
 
-add_definitions(-std=c++1z -fconcepts)
 
 if (NOT WIN32)
   add_definitions(-Wall -g -Wno-class-memaccess)
@@ -14,10 +13,12 @@ set(WINGINE_ROOT "${CMAKE_HOME_DIRECTORY}")
 
 
 if(WIN32)
+  add_definitions(/std:c++latest)
   set(lib_search_path "${HCONLIB_ROOT}/lib/Debug")
   set(winval_libs Winval)
   set(VULKAN_LIB_NAME vulkan-1)
 else()
+  add_definitions(-std=c++1z -fconcepts)
   set(lib_search_path "${HCONLIB_ROOT}/lib")
   set(x_libs X11)
   set(winval_libs Winval ${x_libs})
@@ -31,7 +32,7 @@ include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/includ
 
 
 if(WIN32)
-    link_directories($ENV{VULKAN_SDK}/lib32)
+    link_directories($ENV{VULKAN_SDK}/lib)
 else()
     link_directories($ENV{VULKAN_SDK}/lib)
 endif()

@@ -6,7 +6,7 @@
 
 #ifdef WIN32
 
-typedef HINST _win_arg_type_0;
+typedef HINSTANCE _win_arg_type_0;
 typedef HWND _win_arg_type_1;
 
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -20,6 +20,7 @@ typedef Display* _win_arg_type_1;
 
 #endif // WIN32
 
+#include <iostream>
 #include <vulkan/vulkan.hpp>
 
 #include <vector>
@@ -37,10 +38,15 @@ namespace wg {
 
   // These are shifted, because we want to combine them
   // with resource types as a bitmask
-  enum ShaderStage {
-    shaVertex = (uint64_t)VK_SHADER_STAGE_VERTEX_BIT << 32, 
-    shaFragment = (uint64_t)VK_SHADER_STAGE_FRAGMENT_BIT << 32
-  };
+  /* enum ShaderStage {
+      // shaVertex = ((long long unsigned int)VK_SHADER_STAGE_VERTEX_BIT) << 32LL, 
+      // shaFragment = ((long long unsigned int)VK_SHADER_STAGE_FRAGMENT_BIT) << 32LL
+  }; */
+  // Also, turns out we can't really assume compilers support 64-bit
+  // enum values (looking at you, Windows), so we'll go the cheap way
+  // and declare them as integers instead
+  const int64_t shaVertex = (int64_t)VK_SHADER_STAGE_VERTEX_BIT << 32;
+  const int64_t shaFragment = (int64_t)VK_SHADER_STAGE_FRAGMENT_BIT << 32;
   
   enum ImageViewType {
     wImageViewColor,
@@ -378,6 +384,7 @@ namespace wg {
       compute_queue_index;
 
     vk::CommandPool present_command_pool,
+        graphics_command_pool,
       compute_command_pool;
 
     Command present_command,
@@ -437,7 +444,8 @@ namespace wg {
     vk::Device getDevice();
     Command getCommand();
     vk::DescriptorPool getDescriptorPool();
-    vk::CommandPool getDefaultCommandPool();
+    vk::CommandPool getPresentCommandPool();
+    vk::CommandPool getGraphicsCommandPool();
     _Framebuffer* getCurrentFramebuffer();
 
     void register_compatible_render_pass(RenderPassType type);

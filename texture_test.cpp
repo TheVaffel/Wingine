@@ -10,7 +10,7 @@
 int main() {
   const int width = 800, height = 800;
   Winval win(width, height);
-  wg::Wingine wing(width, height, win.getWindow(), win.getDisplay());
+  wg::Wingine wing(width, height, win.getWinType0(), win.getWinType1());
   
   const int num_points = 3;
   const int num_triangles = 1;
@@ -75,7 +75,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SHADER_VERTEX, vec4_s, vec2_s> shader;
+    SShader<SShaderType::SHADER_VERTEX, vec4_s, vec2_s> shader;
     vec4_v s_pos = shader.input<0>();
     vec2_v s_coord = shader.input<1>();
     
@@ -89,7 +89,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SHADER_FRAGMENT, vec2_s> shader;
+    SShader<SShaderType::SHADER_FRAGMENT, vec2_s> shader;
     vec2_v coord = shader.input<0>();
 
     texture2D_v texture = shader.uniformBinding<texture2D_s>(0, 0);

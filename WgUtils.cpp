@@ -5,8 +5,8 @@
 namespace wgut {
 
   Camera::Camera(float horizontalFOVRadians, float invAspect, float near, float far){
-    view = falg::Mat4(FLATALG_MATRIX_IDENTITY);
-    projection = falg::Mat4(FLATALG_MATRIX_PROJECTION, horizontalFOVRadians, invAspect, near, far);
+    view = falg::Mat4(falg::FLATALG_MATRIX_IDENTITY);
+    projection = falg::Mat4(falg::FLATALG_MATRIX_PROJECTION, horizontalFOVRadians, invAspect, near, far);
     altered = true;
   }
 
@@ -20,7 +20,7 @@ namespace wgut {
   void Camera::setLookAt(const falg::Vec3& pos,
 			 const falg::Vec3& target,
 			 const falg::Vec3& up){
-    view = falg::Mat4(FLATALG_MATRIX_LOOK_AT, pos, target, up);
+    view = falg::Mat4(falg::FLATALG_MATRIX_LOOK_AT, pos, target, up);
     altered = true;
   }
 

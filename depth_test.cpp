@@ -16,7 +16,7 @@ int main() {
   std::cout << "After creating Winval" << std::endl;
 
   win.setTitle("Wingine - Depth Example");
-  wg::Wingine wing(width, height, win.getWinType0(), win.getWinType1());
+  wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
   std::cout << "After creating Wingine" << std::endl;
 

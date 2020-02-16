@@ -10,7 +10,7 @@
 int main() {
   const int width = 800, height = 800;
   Winval win(width, height);
-  wg::Wingine wing(width, height, win.getWinType0(), win.getWinType1());
+  wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
   const int num_points = 3;
   const int num_triangles = 1;

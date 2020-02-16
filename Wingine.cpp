@@ -1257,6 +1257,7 @@ namespace wg {
 
     this->vulkan_instance = vk::createInstance(cInfo);
 
+    
     vk::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     this->dispatcher.init(vkGetInstanceProcAddr);
@@ -1358,7 +1359,7 @@ namespace wg {
     device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
     // device_extension_names.push_back("VK_EXT_debug_marker");
     // device_extension_names.push_back("VK_EXT_validation_cache");
-    // device_extension_names.push_back(VK_KHR_BIND_MEMORY_2_EXTENSION_NAME);
+    device_extension_names.push_back(VK_KHR_BIND_MEMORY_2_EXTENSION_NAME);
     
     std::vector<vk::DeviceQueueCreateInfo> c_infos;
     c_infos.reserve(3);
@@ -1374,7 +1375,9 @@ namespace wg {
         c_infos.push_back(c_info);
     }
 
-    if (this->compute_queue_index >= 0) {
+    if (this->compute_queue_index >= 0 &&
+	(this->compute_queue_index != this->present_queue_index &&
+	 this->compute_queue_index != this->graphics_queue_index)) {
         c_info.setQueueFamilyIndex(this->compute_queue_index);
         c_infos.push_back(c_info);
     }
@@ -1636,13 +1639,15 @@ namespace wg {
           .setPNext(&bims)
           ;
 
+      // VkBindImageMemoryInfo bimi = VkBindImageMemoryInfo(vkb);
       // this->device.bindImageMemory2KHR(1, &vkb, this->dispatcher);
-      // this->dispatcher.vkBindImageMemory2KHR(VkDevice(this->device), 1, &VkBindImageMemoryInfo(vkb));
-      // PFN_vkBindImageMemory2KHR vkBindImageMemory2KHR = PFN_vkBindImageMemory2(vkGetDeviceProcAddr(device, "vkBindImageMemory2KHR"));
+      // this->dispatcher.vkBindImageMemory2KHR(VkDevice(this->device), 1, &bimi);
+      // PFN_vkBindImageMemory2KHR vkBindImageMemory2KHR = PFN_vkBindImageMemory2KHR(vkGetDeviceProcAddr(device, "vkBindImageMemory2KHR"));
       // std::cout << "Binding function is " << vkBindImageMemory2 << std::endl;
-      // vkBindImageMemory2KHR(VkDevice(this->device), 1, &VkBindImageMemoryInfo(vkb));
+      // vkBindImageMemory2KHR(VkDevice(this->device), 1, &bimi);
+      this->device.bindImageMemory2KHR(1, &vkb, this->dispatcher);
       
-      this->device.bindImageMemory(sim, framebuffer.colorImage.memory, 0);
+      // this->device.bindImageMemory(sim, framebuffer.colorImage.memory, 0);
 
       this->cons_image_view(framebuffer.colorImage,
 			    wImageViewColor);

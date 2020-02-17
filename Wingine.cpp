@@ -1205,7 +1205,9 @@ namespace wg {
 
     // instance_layer_names.push_back("VK_LAYER_LUNARG_api_dump");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_device_simulation");
-    instance_layer_names.push_back("VK_LAYER_LUNARG_monitor");
+    // instance_layer_names.push_back("VK_LAYER_LUNARG_monitor");
+    // instance_layer_names.push_back("VK_LAYER_RENDERDOC_Capture");
+    // instance_layer_names.push_back("VK_LAYER_LUNARG_api_dump");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_object_tracker");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_screenshot");
     // instance_layer_names.push_back("VK_LAYER_LUNARG_standard_validation");
@@ -1272,7 +1274,6 @@ namespace wg {
       .setPfnCallback(&_debugCallbackFun);
 
     this->debug_callback = this->vulkan_instance
-      // .createDebugReportCallbackEXT(callbackInfo, nullptr);
       .createDebugReportCallbackEXT(callbackInfo, nullptr, this->dispatcher);
     
 #endif // DEBUG
@@ -1357,9 +1358,6 @@ namespace wg {
     
     std::vector<const char*> device_extension_names;
     device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    // device_extension_names.push_back("VK_EXT_debug_marker");
-    // device_extension_names.push_back("VK_EXT_validation_cache");
-    device_extension_names.push_back(VK_KHR_BIND_MEMORY_2_EXTENSION_NAME);
     
     std::vector<vk::DeviceQueueCreateInfo> c_infos;
     c_infos.reserve(3);
@@ -1618,36 +1616,6 @@ namespace wg {
       framebuffer.colorImage.width = this->window_width;
       framebuffer.colorImage.height = this->window_height;
       vk::MemoryAllocateInfo mai;
-
-      vk::MemoryRequirements mr;
-      mr = this->device.getImageMemoryRequirements(sim);
-
-      mai.allocationSize = mr.size;
-      mai.memoryTypeIndex = _get_memory_type_index(mr.memoryTypeBits,
-          vk::MemoryPropertyFlagBits::eDeviceLocal,
-          this->device_memory_props);
-      framebuffer.colorImage.memory = this->device.allocateMemory(mai);
-
-      vk::BindImageMemorySwapchainInfoKHR bims;
-      bims.setImageIndex(i)
-          .setSwapchain(this->swapchain);
-
-      vk::BindImageMemoryInfo vkb;
-      vkb.setImage(sim)
-          .setMemory(vk::DeviceMemory{ nullptr })
-          .setMemoryOffset(0)
-          .setPNext(&bims)
-          ;
-
-      // VkBindImageMemoryInfo bimi = VkBindImageMemoryInfo(vkb);
-      // this->device.bindImageMemory2KHR(1, &vkb, this->dispatcher);
-      // this->dispatcher.vkBindImageMemory2KHR(VkDevice(this->device), 1, &bimi);
-      // PFN_vkBindImageMemory2KHR vkBindImageMemory2KHR = PFN_vkBindImageMemory2KHR(vkGetDeviceProcAddr(device, "vkBindImageMemory2KHR"));
-      // std::cout << "Binding function is " << vkBindImageMemory2 << std::endl;
-      // vkBindImageMemory2KHR(VkDevice(this->device), 1, &bimi);
-      this->device.bindImageMemory2KHR(1, &vkb, this->dispatcher);
-      
-      // this->device.bindImageMemory(sim, framebuffer.colorImage.memory, 0);
 
       this->cons_image_view(framebuffer.colorImage,
 			    wImageViewColor);

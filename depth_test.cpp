@@ -203,12 +203,12 @@ int main() {
 
   wg::RenderFamily depth_family = wing.createRenderFamily(depth_pipeline, true);
 
-  wgut::Camera camera(M_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
+  wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
   camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
 		   falg::Vec3(0.0f, 0.0f, -2.5f),
 		   falg::Vec3(0.0f, 1.0f, 0.0f));
 
-  wgut::Camera light_camera(M_PI / 3.f, 1.0f, 0.01f, 100.0f);
+  wgut::Camera light_camera(F_PI / 3.f, 1.0f, 0.01f, 100.0f);
   light_camera.setLookAt(falg::Vec3(-1.0f, 3.0f, -1.0f),
 			 falg::Vec3(0.0f, 0.0f, -2.5f),
 			 falg::Vec3(0.0f, 1.0f, 0.0f));

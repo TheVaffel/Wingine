@@ -88,7 +88,7 @@ int main() {
 					4, // Number of elements
 					4 * sizeof(float), // Stride (in bytes)
 					0}, // Offset (bytes)
-				       {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
+				    {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
   
   // Some random size
   const uint32_t shadow_buffer_width = 2000,
@@ -179,7 +179,8 @@ int main() {
 
     float_v lookupval = shadow_tex[light_pos2d][0];
 
-    float_v intensity = select(lookupval + 1e-5 >= light_pos[2] / light_pos[3], 1.f, 0.2f);
+    float_v intensity = select(lookupval + ( 1e-5) >= light_pos[2] / light_pos[3], 
+        1.f, 0.2f);
 
     vec4_v mul = intensity * in_col;
 
@@ -203,7 +204,7 @@ int main() {
 
   wg::RenderFamily depth_family = wing.createRenderFamily(depth_pipeline, true);
 
-  wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
+  wgut::Camera camera(F_PI / 3.f, 9.0 / 16.0, 0.01f, 100.0f);
   camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
 		   falg::Vec3(0.0f, 0.0f, -2.5f),
 		   falg::Vec3(0.0f, 1.0f, 0.0f));
@@ -226,7 +227,6 @@ int main() {
     lightUniform.set(light_camera.getRenderMatrix());
 
     std::cout << "After light uniform update" << std::endl;
-    // exit(0);
 
     depth_family.startRecording(depth_framebuffer);
     depth_family.recordDraw(triangle, {lightSet});

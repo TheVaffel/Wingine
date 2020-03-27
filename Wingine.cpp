@@ -571,12 +571,22 @@ namespace wg {
 			   : framebuffer->colorImage.image,
 			   depth ? framebuffer->depthImage.current_layout
 			   : framebuffer->colorImage.current_layout,
-			   vk::ImageLayout::eDepthStencilAttachmentOptimal,
+               depth ? vk::ImageLayout::eDepthStencilAttachmentOptimal 
+               : vk::ImageLayout::eColorAttachmentOptimal,
 			   this->width, this->height,
 			   this->image, this->current_layout,
 			   vk::ImageLayout::eShaderReadOnlyOptimal,
 			   this->aspect,
 			   framebuffer->has_been_drawn_semaphore);
+
+    this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    
+    if (depth) {
+        framebuffer->depthImage.current_layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    }
+    else {
+        framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
+    }
 			   
   }
 

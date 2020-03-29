@@ -14,6 +14,8 @@ set(WINGINE_SRC_DIR "${WINGINE_ROOT}/src")
 set(WINGINE_EXAMPLES_DIR "${WINGINE_ROOT}/examples")
 set(WINGINE_INCLUDE_DIR "${WINGINE_ROOT}/include")
 
+set(WINGINE_SOURCES buffer.cpp image.cpp renderfamily.cpp Wingine.cpp framebuffer.cpp pipeline.cpp resource.cpp util.cpp WgUtils.cpp)
+list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")
 
 if(WIN32)
   add_definitions(/std:c++latest)
@@ -45,7 +47,7 @@ link_directories(${HCONLIB_ROOT}/lib)
 link_directories(${SPURV_ROOT}/lib)
 include_directories(${WINGINE_INCLUDE_DIR})
 
-add_library(Wingine STATIC ${WINGINE_SRC_DIR}/Wingine.cpp ${WINGINE_SRC_DIR}/WgUtils.cpp)
+add_library(Wingine STATIC ${WINGINE_SOURCES})
 
 add_executable(test ${WINGINE_EXAMPLES_DIR}/test.cpp)
 add_executable(depth_test ${WINGINE_EXAMPLES_DIR}/depth_test.cpp)

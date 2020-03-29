@@ -1,354 +1,26 @@
 #ifndef __WINGINE_HPP
 #define __WINGINE_HPP
 
-#include <Winval.hpp>
-
-
-#ifdef WIN32
-
-typedef HINSTANCE _win_arg_type_0;
-typedef HWND _win_arg_type_1;
-
-#define VK_USE_PLATFORM_WIN32_KHR
-
-#else // WIN32
-
-typedef Window _win_arg_type_0;
-typedef Display* _win_arg_type_1;
-
-#define VK_USE_PLATFORM_XLIB_KHR
-
-#endif // WIN32
-
 #include <iostream>
-#include <vulkan/vulkan.hpp>
 
 #include <vector>
-#include <map>
+#include <map> 
 
 #define DEBUG
 
+#include <Winval.hpp>
+
+#include "declarations.hpp"
+#include "buffer.hpp"
+#include "image.hpp"
+#include "framebuffer.hpp"
+#include "resource.hpp"
+#include "pipeline.hpp"
+#include "renderfamily.hpp"
+#include "util.hpp"
+
 namespace wg {
 
-  enum ResourceType {
-    resUniform = (uint64_t)VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-    resTexture = (uint64_t)VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    resStoreImage = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
-  };
-
-  // These are shifted, because we want to combine them
-  // with resource types as a bitmask
-  /* enum ShaderStage {
-      // shaVertex = ((long long unsigned int)VK_SHADER_STAGE_VERTEX_BIT) << 32LL, 
-      // shaFragment = ((long long unsigned int)VK_SHADER_STAGE_FRAGMENT_BIT) << 32LL
-  }; */
-  // Also, turns out we can't really assume compilers support 64-bit
-  // enum values (looking at you, Windows), so we'll go the cheap way
-  // and declare them as integers instead
-  const int64_t shaVertex = (int64_t)VK_SHADER_STAGE_VERTEX_BIT << 32;
-  const int64_t shaFragment = (int64_t)VK_SHADER_STAGE_FRAGMENT_BIT << 32;
-  
-  enum ImageViewType {
-    wImageViewColor,
-    wImageViewDepth
-  };
-
-  enum RenderPassType {
-    renColorDepth,
-    renDepth
-  };
-
-  class Wingine;
-  class Resource;
-  class RenderFamily;
-  class _Framebuffer;
-  class _Texture;
-
-  template<typename Type>
-  class Uniform;
-  
-  class Buffer {
-    Wingine* wing;
-    
-    vk::Buffer buffer;
-    vk::DeviceMemory memory;
-
-    bool host_updatable;
-    
-    vk::Buffer update_buffer;
-    vk::DeviceMemory update_memory;
-    
-  protected:
-    Buffer(Wingine& wing,
-	   vk::BufferUsageFlags flags,
-	   uint32_t size,
-	   bool host_updatable = true); // True means faster to update, slower to use
-    void set(void* data, uint32_t sizeInBytes, uint32_t offsetInBytes = 0);
-
-    template<typename Type>
-    friend class Uniform;
-    friend class RenderFamily;
-    friend class Wingine;
-  };
-
-  class _VertexBuffer : public Buffer {
-  protected:
-    _VertexBuffer(Wingine& wing,
-		  vk::BufferUsageFlagBits bit,
-		  int num,
-		  bool host_updatable = true);
-
-    friend class Wingine;
-    friend class Resource;
-    template<typename Type>
-    friend class Uniform;
-  };
-  
-  template<typename Type>
-  class VertexBuffer : public _VertexBuffer {
-    VertexBuffer(Wingine& wing,
-		 int num,
-		 bool host_updatable = true);
-
-  public:
-    void set(Type* t, uint32_t num, uint32_t offsetElements = 0);
-
-    friend class Wingine;
-    friend class Resource;
-  };
-
-  class IndexBuffer : public Buffer {
-    int num_indices;
-    IndexBuffer(Wingine& wing,
-		int numIndices,
-		bool host_updatable = false);
-
-  public:
-    void set(uint32_t* indices,
-	     uint32_t num, uint32_t offsetElements = 0);
-
-    friend class RenderFamily;
-    friend class Wingine;
-  };
-
-  class RenderObject {
-    std::vector<_VertexBuffer*> vertexBuffers;
-    IndexBuffer indexBuffer;
-    
-  public:
-    RenderObject(const std::vector<_VertexBuffer*>& buffers,
-		 IndexBuffer indexBuffer);
-    
-    friend class RenderFamily;
-  };
-
-  class ResourceSetLayout {
-    Wingine* wing;
-    vk::DescriptorSetLayout layout;
-
-    
-    ResourceSetLayout(Wingine& wing,
-		      const std::vector<uint64_t>& ll);
-
-  public:
-    ResourceSetLayout();
-    
-    friend class ResourceSet;
-    friend class Wingine;
-    friend class Pipeline;
-  };
-  
-  class Image {
-  protected:
-    vk::Image image;
-    vk::DeviceMemory memory;
-    vk::ImageView view;
-    
-    vk::ImageLayout current_layout;
-
-    uint32_t width, height;
-    
-    const vk::Image& getImage() const;
-    const vk::DeviceMemory& getMemory() const;
-    const vk::ImageView& getView() const;
-    
-    friend class _Framebuffer;
-    friend class _Texture;
-    friend class Wingine;
-    friend class RenderFamily;
-  };
-  
-  class ResourceSet {
-    vk::Device device;
-    vk::DescriptorSet descriptor_set;
-
-    ResourceSet(Wingine& wing, vk::DescriptorSetLayout layout);
-
-  public:
-    void set(const std::vector<Resource*>& resources);
-
-    friend class RenderFamily;
-    friend class Wingine;
-  };
-  
-  class Resource {
-  protected:
-    vk::DescriptorType type;
-    vk::DescriptorImageInfo* image_info;
-    vk::DescriptorBufferInfo* buffer_info;
-
-    Resource(vk::DescriptorType type);
-
-    friend class ResourceSet;
-    
-    friend class Wingine;
-  };
-
-  class _Texture : public Image, public Resource {
-    Wingine* wing;
-    
-    vk::Sampler sampler;
-
-    vk::Image staging_image;
-    vk::DeviceMemory staging_memory;
-    vk::MemoryRequirements staging_memory_memreq;
-
-    vk::ImageLayout current_staging_layout;
-    vk::ImageAspectFlagBits aspect;
-    
-    uint32_t stride_in_bytes;
-
-    _Texture(Wingine& wing,
-	     uint32_t width, uint32_t height,
-	     bool depth);
-  public:
-
-    // Returns stride in bytes
-    uint32_t getStride();
-    
-    void set(unsigned char* pixels, bool fixed_stride = false);
-    void set(_Framebuffer* framebuffer);
-
-    friend class Wingine;
-  };
-
-  template<typename Type>
-  class Uniform : public Resource {
-    Buffer buffer;
-    
-    Uniform(Wingine& wing);
-    
-  public:
-    void set(Type t);
-
-    friend class Wingine;
-  };
-
-  enum ComponentType {
-    tFloat32,
-    tFloat64,
-    tInt32,
-    tInt64
-  };
-  
-  struct VertexAttribDesc {
-    ComponentType component_type;
-    uint32_t binding_num;
-    uint32_t num_elements;
-    uint32_t stride_in_bytes;
-    uint32_t offset_in_bytes;
-  };
-
-  class Shader {
-    vk::PipelineShaderStageCreateInfo shader_info;
-    
-    Shader(vk::Device& device,
-	   uint64_t stage,
-	   std::vector<uint32_t>& spirv);
-
-    friend class Pipeline;
-    friend class Wingine;
-  };
-  
-  
-  class _Framebuffer {
-    Image colorImage;
-    Image depthImage;
-    vk::Framebuffer framebuffer;
-    vk::Semaphore *ready_for_draw_semaphore,
-      *has_been_drawn_semaphore;
-    
-    _Framebuffer(Wingine& wing,
-		 int width, int height,
-		 bool depthOnly, bool withoutSemaphore = false);
-    _Framebuffer();
-    
-  public:
-    
-    void destroy();
-    
-    const Image& getColorImage() const;
-    const Image& getDepthImage() const;
-    const vk::Framebuffer& getFramebuffer() const;
-
-    friend class RenderFamily;
-    friend class Wingine;
-    friend class _Texture;
-    friend class RenderFamily;
-  };
-
-  struct Command {
-    vk::CommandBuffer buffer;
-    vk::Fence fence;
-  };
-
-
-  // Future addition
-  struct PipelineSetup {
-    bool clearScreen = true;
-  };
-  
-  
-  class Pipeline {
-    vk::Pipeline pipeline;
-    vk::PipelineLayout layout;
-    RenderPassType render_pass_type;
-    
-    Pipeline(Wingine& wing,
-	     int width, int height,
-	     const std::vector<VertexAttribDesc>& descriptions,
-	     const std::vector<ResourceSetLayout>& resourceSetLayout,
-	     const std::vector<Shader*>& shaders,
-	     bool depthOnly);
-
-    friend class RenderFamily;
-    friend class Wingine;
-  };
-
-  class RenderFamily {
-    Wingine* wing;
-
-    Command command;
-    Pipeline* pipeline;
-    vk::RenderPass render_pass;
-    _Framebuffer *current_framebuffer;
-    bool clears;
-    
-    RenderFamily(Wingine& wing,
-		 Pipeline& pipeline,
-		 bool clear);
-
-    void submit_command();
-    
-  public:
-    void startRecording(_Framebuffer* framebuffer = nullptr);
-    void recordDraw(RenderObject& obj,
-		    std::vector<ResourceSet> sets);
-    void endRecording();
-    
-    friend class Wingine;
-  };
-  
   class Wingine {
 
     vk::Instance vulkan_instance;
@@ -398,12 +70,12 @@ namespace wg {
     std::map<RenderPassType, vk::RenderPass> compatibleRenderPassMap;
     
     void init_vulkan(int width, int height,
-		     _win_arg_type_0 arg0,
-		     _win_arg_type_1 arg1,
+		     winval_type_0 arg0,
+		     winval_type_1 arg1,
 		     const char* str);
     
     void init_instance(int width, int height, const char* str);
-    void init_surface(_win_arg_type_0 arg0, _win_arg_type_1 arg1);
+    void init_surface(winval_type_0 arg0, winval_type_1 arg1);
     void init_device();
     void init_command_buffers();
     void init_swapchain();
@@ -497,8 +169,8 @@ namespace wg {
     Wingine(Winval& win);
   
     Wingine(int width, int height,
-	    _win_arg_type_0 arg0,
-	    _win_arg_type_1 arg1,
+	    winval_type_0 arg0,
+	    winval_type_1 arg1,
 	    const char* str = "Wingine");
   
 
@@ -515,34 +187,6 @@ namespace wg {
 
 
   // Template things
-  
-  template<typename Type>
-  VertexBuffer<Type>::VertexBuffer(Wingine& wing,
-				   int num,
-				   bool host_updatable) :
-    _VertexBuffer(wing,
-		  vk::BufferUsageFlagBits::eVertexBuffer,
-		  num * sizeof(Type),
-		  host_updatable) { }
-
-  template<typename Type>
-  void VertexBuffer<Type>::set(Type* t, uint32_t num, uint32_t offsetElements) {
-    Buffer::set((void*)t, num * sizeof(Type), offsetElements * sizeof(Type));
-  }
-
-  template<typename Type>
-  Uniform<Type>::Uniform(Wingine& wing) : Resource(vk::DescriptorType::eUniformBuffer),
-					  buffer(wing,
-						 vk::BufferUsageFlagBits::eUniformBuffer,
-						 sizeof(Type),
-						 true)
-  {
-    
-    this->buffer_info = new vk::DescriptorBufferInfo();
-    this->buffer_info->buffer = this->buffer.buffer;
-    this->buffer_info->offset = 0;
-    this->buffer_info->range = sizeof(Type);
-  }
 
 
   template<typename Type>
@@ -553,11 +197,6 @@ namespace wg {
   template<typename Type>
   Uniform<Type> Wingine::createUniform() {
     return Uniform<Type>(*this);
-  }
-
-  template<typename Type>
-  void Uniform<Type>::set(Type t) {
-    this->buffer.set(&t, sizeof(t), 0);
   }
 
   

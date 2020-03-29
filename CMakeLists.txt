@@ -4,7 +4,7 @@ project(Wingine)
 
 
 if (NOT WIN32)
-  add_definitions(-Wall -g -Wno-class-memaccess)
+  add_definitions(-Wall -g -Wno-class-memaccess -mavx)
 endif()
 
 set(SPURV_ROOT "${CMAKE_HOME_DIRECTORY}/../spurv")

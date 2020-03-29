@@ -1234,7 +1234,7 @@ namespace wg {
     std::vector<VkExtensionProperties> props(extension_count);
     vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, props.data() + 0);
     for (unsigned int i = 0; i < extension_count; i++) {
-        std::cout << "Extension: " << props[i].extensionName << std::endl;
+        std::cout << "Available extension: " << props[i].extensionName << std::endl;
     }
 
     for (unsigned int i = 0; i < instance_extension_names.size(); i++) {
@@ -1247,7 +1247,7 @@ namespace wg {
     std::vector<VkLayerProperties> availableLayers(layer_count);
     vkEnumerateInstanceLayerProperties(&layer_count, availableLayers.data());
     for (VkLayerProperties& vv : availableLayers) {
-        std::cout << "Layer: " << vv.layerName << std::endl;
+        std::cout << "Available layer: " << vv.layerName << std::endl;
     }
 
     for (unsigned int i = 0; i < instance_layer_names.size(); i++) {

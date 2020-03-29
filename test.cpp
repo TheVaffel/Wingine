@@ -10,7 +10,7 @@
 int main() {
   const int width = 800, height = 800;
   Winval win(width, height);
-  wg::Wingine wing(width, height, win.getWindow(), win.getDisplay());
+  wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
   const int num_points = 3;
   const int num_triangles = 1;
@@ -44,7 +44,7 @@ int main() {
 
   wg::RenderObject triangle({&position_buffer, &color_buffer}, index_buffer);
 
-  wg::Uniform cameraUniform = wing.createUniform<Matrix4>();
+  wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
 
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
@@ -63,7 +63,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SHADER_VERTEX, vec4_s, vec4_s> shader;
+    SShader<SShaderType::SHADER_VERTEX, vec4_s, vec4_s> shader;
     vec4_v s_pos = shader.input<0>();
     vec4_v s_col = shader.input<1>();
 
@@ -82,7 +82,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SHADER_FRAGMENT, vec4_s> shader;
+    SShader<SShaderType::SHADER_FRAGMENT, vec4_s> shader;
     vec4_v in_col = shader.input<0>();
 
     shader.compile(fragment_spirv, in_col);
@@ -97,11 +97,11 @@ int main() {
 
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
   
-  wgut::Camera camera(M_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
+  wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
   float a = 0;
   while (win.isOpen()) {
-    Matrix4 renderMatrix = camera.getRenderMatrix();
+    falg::Mat4 renderMatrix = camera.getRenderMatrix();
     a += 0.03;
     if(a > 1.0) {
       a = 0;

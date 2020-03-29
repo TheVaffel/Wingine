@@ -8,11 +8,18 @@
 #include <spurv.hpp>
 
 int main() {
-  const int width = 800, height = 800;
+
+  std::cout << "Beginning of main" << std::endl;
+  const int width = 1280, height = 720;
   Winval win(width, height);
+
+  std::cout << "After creating Winval" << std::endl;
+
   win.setTitle("Wingine - Depth Example");
-  wg::Wingine wing(width, height, win.getWindow(), win.getDisplay());
+  wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
+  std::cout << "After creating Wingine" << std::endl;
+
   const int num_points = 7;
   const int num_triangles = 3;
   
@@ -53,9 +60,11 @@ int main() {
     wing.createVertexBuffer<float>(num_points * 4);
   color_buffer.set(colors, num_points * 4);
 
+  std::cout << "Before making index buffer" << std::endl;
   wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
   index_buffer.set(indices, num_triangles * 3);
 
+  std::cout << "After making index buffer " << std::endl;
   wg::RenderObject triangle({&position_buffer, &color_buffer}, index_buffer);
 
   wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
@@ -63,6 +72,8 @@ int main() {
   
   // Initialize resource set layout
   
+  std::cout << "Before making resource sets" << std::endl;
+
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
   wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
@@ -77,16 +88,21 @@ int main() {
 					4, // Number of elements
 					4 * sizeof(float), // Stride (in bytes)
 					0}, // Offset (bytes)
-				       {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
+				    {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
   
   // Some random size
-  const uint32_t shadow_buffer_width = 4000,
-    shadow_buffer_height = 4000;
+  const uint32_t shadow_buffer_width = 2000,
+    shadow_buffer_height = 2000;
+
+  std::cout << "Before creating new framebuffer" << std::endl;
 
   wg::Framebuffer depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
 							     shadow_buffer_height, true, true);
+  std::cout << "After creating new framebuffer" << std::endl;
   wg::Texture shadow_texture = wing.createTexture(shadow_buffer_width,
 						  shadow_buffer_height, true);
+
+  std::cout << "After creating shadow texture" << std::endl;
   
 
   // Initialize texture set layout
@@ -97,11 +113,12 @@ int main() {
   wg::ResourceSet lightTextureSet = wing.createResourceSet(lightTextureSetLayout);
   lightTextureSet.set({shadow_texture, &lightUniform});
   
+  std::cout << "Before first shader" << std::endl;
   std::vector<uint32_t> depth_vertex_shader;
   {
     using namespace spurv;
 
-    SShader<SHADER_VERTEX, vec4_s> shader;
+    SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
     SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
     mat4_v trans = trans_bind.member<0>();
 
@@ -125,7 +142,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SHADER_VERTEX, vec4_s, vec4_s> shader;
+    SShader<SShaderType::SHADER_VERTEX, vec4_s, vec4_s> shader;
     vec4_v s_pos = shader.input<0>();
     vec4_v s_col = shader.input<1>();
 
@@ -146,7 +163,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SHADER_FRAGMENT, vec4_s, vec4_s> shader;
+    SShader<SShaderType::SHADER_FRAGMENT, vec4_s, vec4_s> shader;
     vec4_v in_col = shader.input<0>();
     vec4_v in_wpos = shader.input<1>();
 
@@ -162,7 +179,8 @@ int main() {
 
     float_v lookupval = shadow_tex[light_pos2d][0];
 
-    float_v intensity = select(lookupval + 1e-5 >= light_pos[2] / light_pos[3], 1.f, 0.2f);
+    float_v intensity = select(lookupval + ( 1e-5) >= light_pos[2] / light_pos[3], 
+        1.f, 0.2f);
 
     vec4_v mul = intensity * in_col;
 
@@ -170,6 +188,8 @@ int main() {
 
     shader.compile(fragment_spirv, res);
   }
+
+  std::cout << "After last shader" << std::endl;
   
 
   wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
@@ -183,13 +203,13 @@ int main() {
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
 
   wg::RenderFamily depth_family = wing.createRenderFamily(depth_pipeline, true);
-  
-  wgut::Camera camera(M_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
+
+  wgut::Camera camera(F_PI / 3.f, 9.0 / 16.0, 0.01f, 100.0f);
   camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
 		   falg::Vec3(0.0f, 0.0f, -2.5f),
 		   falg::Vec3(0.0f, 1.0f, 0.0f));
 
-  wgut::Camera light_camera(M_PI / 3.f, 1.0f, 0.01f, 100.0f);
+  wgut::Camera light_camera(F_PI / 3.f, 1.0f, 0.01f, 100.0f);
   light_camera.setLookAt(falg::Vec3(-1.0f, 3.0f, -1.0f),
 			 falg::Vec3(0.0f, 0.0f, -2.5f),
 			 falg::Vec3(0.0f, 1.0f, 0.0f));
@@ -206,6 +226,8 @@ int main() {
 
     lightUniform.set(light_camera.getRenderMatrix());
 
+    std::cout << "After light uniform update" << std::endl;
+
     depth_family.startRecording(depth_framebuffer);
     depth_family.recordDraw(triangle, {lightSet});
     depth_family.endRecording();
@@ -213,7 +235,6 @@ int main() {
     shadow_texture->set(depth_framebuffer);
 
     cameraUniform.set(renderMatrix);
-
     family.startRecording();
     family.recordDraw(triangle, {resourceSet, lightTextureSet});
     family.endRecording();
@@ -227,7 +248,9 @@ int main() {
       break;
     }
 
+
   }
+
 
   wing.destroy(family);
   wing.destroy(depth_family);

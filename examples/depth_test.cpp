@@ -182,6 +182,7 @@ int main() {
     float_v intensity = select(lookupval + ( 1e-5) >= light_pos[2] / light_pos[3], 
         1.f, 0.2f);
 
+    // float_v intensity = lookupval;
     vec4_v mul = intensity * in_col;
 
     vec4_v res = vec4_s::cons(mul[0], mul[1], mul[2], 1.0f);

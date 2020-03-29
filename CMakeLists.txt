@@ -10,6 +10,9 @@ endif()
 set(SPURV_ROOT "${CMAKE_HOME_DIRECTORY}/../spurv")
 set(HCONLIB_ROOT "${CMAKE_HOME_DIRECTORY}/../HConLib")
 set(WINGINE_ROOT "${CMAKE_HOME_DIRECTORY}")
+set(WINGINE_SRC_DIR "${WINGINE_ROOT}/src")
+set(WINGINE_EXAMPLES_DIR "${WINGINE_ROOT}/examples")
+set(WINGINE_INCLUDE_DIR "${WINGINE_ROOT}/include")
 
 
 if(WIN32)
@@ -18,7 +21,7 @@ if(WIN32)
   set(winval_libs Winval)
   set(VULKAN_LIB_NAME vulkan-1)
 else()
-  add_definitions(-std=c++1z -fconcepts)
+  add_definitions(-std=c++1z -fconcepts -mavx)
   set(lib_search_path "${HCONLIB_ROOT}/lib")
   set(x_libs X11)
   set(winval_libs Winval ${x_libs} dl)
@@ -27,6 +30,7 @@ else()
 endif()
 
 set(common_libs ${VULKAN_LIB_NAME} ${winval_libs} FlatAlg spurv)
+set(all_libs ${common_libs} Wingine)
 
 include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/include $ENV{VULKAN_SDK}/include)
 
@@ -39,11 +43,16 @@ endif()
 
 link_directories(${HCONLIB_ROOT}/lib)
 link_directories(${SPURV_ROOT}/lib)
+include_directories(${WINGINE_INCLUDE_DIR})
 
-add_executable(test test.cpp Wingine.cpp WgUtils.cpp)
-add_executable(depth_test depth_test.cpp Wingine.cpp WgUtils.cpp)
-add_executable(texture_test texture_test.cpp Wingine.cpp WgUtils.cpp)
+add_library(Wingine STATIC ${WINGINE_SRC_DIR}/Wingine.cpp ${WINGINE_SRC_DIR}/WgUtils.cpp)
 
-target_link_libraries(test ${common_libs})
-target_link_libraries(depth_test ${common_libs})
-target_link_libraries(texture_test ${common_libs})
+add_executable(test ${WINGINE_EXAMPLES_DIR}/test.cpp)
+add_executable(depth_test ${WINGINE_EXAMPLES_DIR}/depth_test.cpp)
+add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
+
+target_link_libraries(Wingine ${common_libs})
+
+target_link_libraries(test ${all_libs})
+target_link_libraries(depth_test ${all_libs})
+target_link_libraries(texture_test ${all_libs})

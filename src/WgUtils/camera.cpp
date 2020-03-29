@@ -1,9 +1,7 @@
-#define WG_UTILS_MATRIX_LIB_FLATALG
-
-#include <WgUtils.hpp>
+#include "WgUtils/camera.hpp"
 
 namespace wgut {
-
+  
   Camera::Camera(float horizontalFOVRadians, float invAspect, float near, float far){
 
     view = falg::Mat4(falg::FLATALG_MATRIX_IDENTITY);
@@ -73,5 +71,4 @@ namespace wgut {
   falg::Vec3 Camera::getPosition() {
     return (~view.submatrix<3, 3>(0, 0))*-falg::Vec3(view(0, 3), view(1, 3), view(2, 3));
   }
-  
 };

@@ -1,8 +1,6 @@
 #include <Winval.hpp>
 
 #include <Wingine.hpp>
-
-#define WG_UTILS_MATRIX_LIB_FLATALG
 #include <WgUtils.hpp>
 
 #include <spurv.hpp>

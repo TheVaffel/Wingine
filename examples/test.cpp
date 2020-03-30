@@ -40,8 +40,6 @@ int main() {
   wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
   index_buffer.set(indices, num_triangles * 3);
 
-  wg::RenderObject triangle({&position_buffer, &color_buffer}, index_buffer);
-
   wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
 
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
@@ -97,18 +95,13 @@ int main() {
   
   wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
-  float a = 0;
   while (win.isOpen()) {
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
-    a += 0.03;
-    if(a > 1.0) {
-      a = 0;
-    }
     
     cameraUniform.set(renderMatrix);
     
     family.startRecording();
-    family.recordDraw(triangle, {resourceSet});
+    family.recordDraw({&position_buffer, &color_buffer}, index_buffer, {resourceSet});
     family.endRecording();
 
     wing.present();

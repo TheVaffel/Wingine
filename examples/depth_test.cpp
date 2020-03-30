@@ -7,17 +7,12 @@
 
 int main() {
 
-  std::cout << "Beginning of main" << std::endl;
   const int width = 1280, height = 720;
   Winval win(width, height);
-
-  std::cout << "After creating Winval" << std::endl;
 
   win.setTitle("Wingine - Depth Example");
   wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
-  std::cout << "After creating Wingine" << std::endl;
-
   const int num_points = 7;
   const int num_triangles = 3;
   
@@ -58,20 +53,15 @@ int main() {
     wing.createVertexBuffer<float>(num_points * 4);
   color_buffer.set(colors, num_points * 4);
 
-  std::cout << "Before making index buffer" << std::endl;
   wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
   index_buffer.set(indices, num_triangles * 3);
 
-  std::cout << "After making index buffer " << std::endl;
-  wg::RenderObject triangle({&position_buffer, &color_buffer}, index_buffer);
 
   wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
   wg::Uniform lightUniform = wing.createUniform<falg::Mat4>();
   
   // Initialize resource set layout
   
-  std::cout << "Before making resource sets" << std::endl;
-
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
   wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
@@ -92,16 +82,11 @@ int main() {
   const uint32_t shadow_buffer_width = 2000,
     shadow_buffer_height = 2000;
 
-  std::cout << "Before creating new framebuffer" << std::endl;
 
   wg::Framebuffer depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
 							     shadow_buffer_height, true, true);
-  std::cout << "After creating new framebuffer" << std::endl;
   wg::Texture shadow_texture = wing.createTexture(shadow_buffer_width,
 						  shadow_buffer_height, true);
-
-  std::cout << "After creating shadow texture" << std::endl;
-  
 
   // Initialize texture set layout
 
@@ -111,7 +96,6 @@ int main() {
   wg::ResourceSet lightTextureSet = wing.createResourceSet(lightTextureSetLayout);
   lightTextureSet.set({shadow_texture, &lightUniform});
   
-  std::cout << "Before first shader" << std::endl;
   std::vector<uint32_t> depth_vertex_shader;
   {
     using namespace spurv;
@@ -188,9 +172,6 @@ int main() {
     shader.compile(fragment_spirv, res);
   }
 
-  std::cout << "After last shader" << std::endl;
-  
-
   wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
 
   wg::Pipeline pipeline = wing.
@@ -213,29 +194,21 @@ int main() {
 			 falg::Vec3(0.0f, 0.0f, -2.5f),
 			 falg::Vec3(0.0f, 1.0f, 0.0f));
 
-  float a = 0;
   while (win.isOpen()) {
     
-      std::cout << "Tick a = " << a << std::endl;
-    falg::Mat4 renderMatrix = camera.getRenderMatrix();
-    a += 0.03;
-    if(a > 1.0) {
-      a = 0.0;
-    }
-
     lightUniform.set(light_camera.getRenderMatrix());
-
-    std::cout << "After light uniform update" << std::endl;
+    
+    falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
     depth_family.startRecording(depth_framebuffer);
-    depth_family.recordDraw(triangle, {lightSet});
+    depth_family.recordDraw({&position_buffer, &color_buffer}, index_buffer, {lightSet});
     depth_family.endRecording();
 
     shadow_texture->set(depth_framebuffer);
 
     cameraUniform.set(renderMatrix);
     family.startRecording();
-    family.recordDraw(triangle, {resourceSet, lightTextureSet});
+    family.recordDraw({&position_buffer, &color_buffer}, index_buffer, {resourceSet, lightTextureSet});
     family.endRecording();
 
     wing.present();

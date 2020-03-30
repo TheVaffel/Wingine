@@ -39,11 +39,6 @@ namespace wg {
       device.createFence(fci);
   }
   
-  RenderObject::RenderObject(const std::vector<_VertexBuffer*>& buffers,
-			     IndexBuffer nindexBuffer) :
-    vertexBuffers(buffers), indexBuffer(nindexBuffer) { }
-
-  
 
   void RenderFamily::startRecording(_Framebuffer* framebuffer) {
 
@@ -101,8 +96,8 @@ namespace wg {
     this->command.buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline->pipeline);
   }
 
-  void RenderFamily::recordDraw(RenderObject& obj,
-				std::vector<ResourceSet> sets) {
+  void RenderFamily::recordDraw(const std::vector<Buffer*>& vertex_buffers, const IndexBuffer& ind_buf,
+				const std::vector<ResourceSet>& sets){
     std::vector<vk::DescriptorSet> d_sets(sets.size());
     for(unsigned int i = 0; i < sets.size(); i++) {
       d_sets[i] = sets[i].descriptor_set;
@@ -116,21 +111,21 @@ namespace wg {
 					      0, nullptr);
     }
 
-    std::vector<vk::Buffer> vertexBuffers(obj.vertexBuffers.size());
-    std::vector<vk::DeviceSize> offsets(obj.vertexBuffers.size());
+    std::vector<vk::Buffer> vk_buffers(vertex_buffers.size());
+    std::vector<vk::DeviceSize> offsets(vertex_buffers.size());
 
-    for(unsigned int i = 0; i < vertexBuffers.size(); i++) {
-      vertexBuffers[i] = obj.vertexBuffers[i]->buffer;
+    for(unsigned int i = 0; i < vertex_buffers.size(); i++) {
+      vk_buffers[i] = vertex_buffers[i]->buffer;
       offsets[i] = 0;
     }
 
-    this->command.buffer.bindVertexBuffers(0, vertexBuffers.size(),
-					   vertexBuffers.data(),
+    this->command.buffer.bindVertexBuffers(0, vk_buffers.size(),
+					   vk_buffers.data(),
 					   offsets.data());
-    this->command.buffer.bindIndexBuffer(obj.indexBuffer.buffer,
+    this->command.buffer.bindIndexBuffer(ind_buf.buffer,
 					 0, vk::IndexType::eUint32);
 
-    this->command.buffer.drawIndexed(obj.indexBuffer.num_indices, 1,
+    this->command.buffer.drawIndexed(ind_buf.num_indices, 1,
 				     0, 0, 0);
   }
 

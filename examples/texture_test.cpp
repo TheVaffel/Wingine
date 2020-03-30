@@ -53,8 +53,6 @@ int main() {
   wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
   index_buffer.set(indices, num_triangles * 3);
 
-  wg::RenderObject triangle({&position_buffer, &tex_coord_buffer}, index_buffer);
-
 
   std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
   
@@ -109,7 +107,7 @@ int main() {
   while (win.isOpen()) {
     
     family.startRecording();
-    family.recordDraw(triangle, {resourceSet});
+    family.recordDraw({&position_buffer, &tex_coord_buffer}, index_buffer, {resourceSet});
     family.endRecording();
 
     wing.present();

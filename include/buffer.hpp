@@ -70,17 +70,6 @@ namespace wg {
     friend class Wingine;
   };
 
-  class RenderObject {
-    std::vector<_VertexBuffer*> vertexBuffers;
-    IndexBuffer indexBuffer;
-    
-  public:
-    RenderObject(const std::vector<_VertexBuffer*>& buffers,
-		 IndexBuffer indexBuffer);
-    
-    friend class RenderFamily;
-  };
-
   class ResourceSetLayout {
     Wingine* wing;
     vk::DescriptorSetLayout layout;

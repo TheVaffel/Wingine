@@ -13,7 +13,6 @@ namespace wg {
     vk::Fence fence;
   };
 
-
   class RenderFamily {
     Wingine* wing;
 
@@ -31,8 +30,9 @@ namespace wg {
     
   public:
     void startRecording(_Framebuffer* framebuffer = nullptr);
-    void recordDraw(RenderObject& obj,
-		    std::vector<ResourceSet> sets);
+
+    void recordDraw(const std::vector<Buffer*>& buffers, const IndexBuffer& ind_buf,
+		    const std::vector<ResourceSet>& sets);
     void endRecording();
     
     friend class Wingine;

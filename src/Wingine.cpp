@@ -333,8 +333,11 @@ namespace wg {
     // instance_layer_names.push_back("VK_LAYER_LUNARG_vktrace");
     instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
     // instance_layer_names.push_back("VK_LAYER_GOOGLE_threading");
-#endif // DEBUG
 
+    
+    // In case looking at the different available extensions feels like a good idea:
+    
+#if 0
     uint32_t extension_count;
     vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
     std::vector<VkExtensionProperties> props(extension_count);
@@ -345,8 +348,11 @@ namespace wg {
 
     for (unsigned int i = 0; i < instance_extension_names.size(); i++) {
         std::cout << "Tried extension: " << instance_extension_names[i] << std::endl;
-    }
+	}
+#endif
 
+    // Same, with instance layers
+#if 0
     uint32_t layer_count;
     vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
@@ -358,7 +364,11 @@ namespace wg {
 
     for (unsigned int i = 0; i < instance_layer_names.size(); i++) {
         std::cout << "Tried layer: " << instance_layer_names[i] << std::endl;
-    }
+	}
+#endif
+    
+#endif // DEBUG
+    
 
     vk::ApplicationInfo appInfo;
     appInfo.setPApplicationName("Wingine").setApplicationVersion(1)
@@ -511,12 +521,8 @@ namespace wg {
     vk::PhysicalDeviceProperties phprops;
     this->physical_device.getProperties(&phprops);
 
-    std::cout << "Phys props: " << phprops.limits.maxImageArrayLayers << " " <<
-        phprops.limits.maxImageDimension2D << std::endl;
-
     this->device = this->physical_device.createDevice(device_info);
 
-    // this->device
 
     this->dispatcher.init(this->device);
 

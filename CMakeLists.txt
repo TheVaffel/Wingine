@@ -14,7 +14,7 @@ set(WINGINE_SRC_DIR "${WINGINE_ROOT}/src")
 set(WINGINE_EXAMPLES_DIR "${WINGINE_ROOT}/examples")
 set(WINGINE_INCLUDE_DIR "${WINGINE_ROOT}/include")
 
-set(WGUTIL_SOURCES camera.cpp)
+set(WGUTIL_SOURCES camera.cpp model.cpp)
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
 set(WINGINE_SOURCES buffer.cpp image.cpp renderfamily.cpp Wingine.cpp framebuffer.cpp pipeline.cpp resource.cpp util.cpp ${WGUTIL_SOURCES})
 list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")

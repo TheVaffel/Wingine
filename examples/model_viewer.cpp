@@ -10,37 +10,9 @@ int main() {
   Winval win(width, height);
   wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
-  const int num_points = 3;
-  const int num_triangles = 1;
-  
-  float positions[num_points * 4] = {
-    -1.0f, -1.0f, -2.5f, 1.0f,
-    1.0f, -1.0f, -2.5f, 1.0f,
-    0.0f, 1.0f, -2.5f, 1.0f,
-  };
-
-  float colors[num_points * 4] = {
-    0.0f, 1.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, 1.0f, 1.0f,
-  };
-
-  uint32_t indices[num_triangles * 3] = {
-    0, 1, 2,
-  };
-
-  wg::VertexBuffer<float> position_buffer =
-    wing.createVertexBuffer<float>(num_points * 4);
-  position_buffer.set(positions, num_points * 4);
-  
-  wg::VertexBuffer<float> color_buffer =
-    wing.createVertexBuffer<float>(num_points * 4);
-  color_buffer.set(colors, num_points * 4);
-
-  wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
-  index_buffer.set(indices, num_triangles * 3);
-
-  wgut::Model model({&position_buffer, &color_buffer}, index_buffer);
+  wgut::Model model = wgut::Model::fromFile(wing, "../models/teapot.obj",
+					    {wgut::ReadAttribType::attTypePosition,
+					    wgut::ReadAttribType::attTypeNormal}); 
 
   wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
 
@@ -52,26 +24,32 @@ int main() {
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
 					0, // Binding no.
-					4, // Number of elements
-					4 * sizeof(float), // Stride (in bytes)
+					3, // Number of elements
+					3 * sizeof(float), // Stride (in bytes)
 					0}, // Offset (bytes)
-				       {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
+				       {wg::tFloat32, 1, 3, 3 * sizeof(float), 0}};
 
   std::vector<uint32_t> vertex_spirv;
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_VERTEX, vec4_s, vec4_s> shader;
-    vec4_v s_pos = shader.input<0>();
-    vec4_v s_col = shader.input<1>();
+    SShader<SShaderType::SHADER_VERTEX, vec3_s, vec3_s> shader;
+    vec3_v s_pos = shader.input<0>();
+    vec3_v s_col = shader.input<1>();
 
     SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
     mat4_v trans = trans_bind.member<0>();
 
-    vec4_v transformed_pos = trans * s_pos;
+    // vec3_v ss_pos = (1.0f / 50.0f) * s_pos;
+    vec4_v het = vec4_s::cons(s_pos[0], s_pos[1], s_pos[2], 1.0);
+    vec4_v transformed_pos = trans * het;
+    // vec4_v transformed_pos = (1.0f / 50.0f) * het - vec4_s::cons(0.0f, 0.0f, -1.0f, 0.0f);
+
+    vec4_v hcol = vec4_s::cons(s_col[0], s_col[1], s_col[2], 1.0);
+    // vec4_v hcol = vec4_s::cons(1.0f, 0.0f, 0.0f, 1.0f);
     
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
-    shader.compile(vertex_spirv, s_col);
+    shader.compile(vertex_spirv, hcol);
   }
 
   wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
@@ -95,7 +73,10 @@ int main() {
 
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
   
-  wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
+  wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
+  camera.setLookAt(3.0f * falg::Vec3(1.0f, 1.0f, 1.0f),
+		   falg::Vec3(0.0f, 0.0f, 0.0f),
+		   falg::Vec3(0.0f, 1.0f, 0.0f));
 
   while (win.isOpen()) {
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
@@ -105,7 +86,7 @@ int main() {
     family.startRecording();
     family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
     family.endRecording();
-
+    
     wing.present();
 
     win.sleepMilliseconds(40);
@@ -124,10 +105,7 @@ int main() {
   wing.destroy(resourceSet);
   wing.destroy(pipeline);
 
-  wing.destroy(position_buffer);
-  wing.destroy(color_buffer);
-  wing.destroy(index_buffer);
-
+  model.destroy(wing);
   wing.destroy(cameraUniform);
 
 }

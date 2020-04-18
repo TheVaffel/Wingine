@@ -11,6 +11,7 @@
 #include <Winval.hpp>
 
 #include "declarations.hpp"
+
 #include "buffer.hpp"
 #include "image.hpp"
 #include "framebuffer.hpp"
@@ -18,6 +19,7 @@
 #include "pipeline.hpp"
 #include "renderfamily.hpp"
 #include "util.hpp"
+
 
 namespace wg {
 

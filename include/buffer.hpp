@@ -3,6 +3,8 @@
 
 #include "declarations.hpp"
 
+#include "WgUtils/declarations.hpp"
+
 namespace wg {
   
   
@@ -54,6 +56,7 @@ namespace wg {
 
     friend class Wingine;
     friend class Resource;
+    friend class wgut::Model;
   };
 
   class IndexBuffer : public Buffer {
@@ -65,9 +68,12 @@ namespace wg {
   public:
     void set(uint32_t* indices,
 	     uint32_t num, uint32_t offsetElements = 0);
+    int getNumIndices() const;
 
     friend class RenderFamily;
     friend class Wingine;
+
+    friend class wgut::Model;
   };
 
   class ResourceSetLayout {

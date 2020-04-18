@@ -133,6 +133,10 @@ namespace wg {
 		offsetElements * sizeof(uint32_t));
   }
 
+  int IndexBuffer::getNumIndices() const {
+    return this->num_indices;
+  }
+
   
   _VertexBuffer::_VertexBuffer(Wingine& wing,
 			       vk::BufferUsageFlagBits bit,

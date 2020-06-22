@@ -82,7 +82,6 @@ int main() {
   const uint32_t shadow_buffer_width = 2000,
     shadow_buffer_height = 2000;
 
-
   wg::Framebuffer depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
 							     shadow_buffer_height, true, true);
   wg::Texture shadow_texture = wing.createTexture(shadow_buffer_width,
@@ -171,6 +170,7 @@ int main() {
 
     shader.compile(fragment_spirv, res);
   }
+
 
   wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
 

@@ -333,42 +333,33 @@ namespace wg {
     // instance_layer_names.push_back("VK_LAYER_LUNARG_vktrace");
     instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
     // instance_layer_names.push_back("VK_LAYER_GOOGLE_threading");
+#endif // DEBUG
 
-    
-    // In case looking at the different available extensions feels like a good idea:
-    
-#if 0
     uint32_t extension_count;
     vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
     std::vector<VkExtensionProperties> props(extension_count);
     vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, props.data() + 0);
-    for (unsigned int i = 0; i < extension_count; i++) {
+    /* for (unsigned int i = 0; i < extension_count; i++) {
         std::cout << "Available extension: " << props[i].extensionName << std::endl;
     }
 
     for (unsigned int i = 0; i < instance_extension_names.size(); i++) {
         std::cout << "Tried extension: " << instance_extension_names[i] << std::endl;
-	}
-#endif
+	} */
 
-    // Same, with instance layers
-#if 0
     uint32_t layer_count;
     vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
     std::vector<VkLayerProperties> availableLayers(layer_count);
     vkEnumerateInstanceLayerProperties(&layer_count, availableLayers.data());
-    for (VkLayerProperties& vv : availableLayers) {
+
+    /* for (VkLayerProperties& vv : availableLayers) {
         std::cout << "Available layer: " << vv.layerName << std::endl;
     }
 
     for (unsigned int i = 0; i < instance_layer_names.size(); i++) {
         std::cout << "Tried layer: " << instance_layer_names[i] << std::endl;
-	}
-#endif
-    
-#endif // DEBUG
-    
+	} */
 
     vk::ApplicationInfo appInfo;
     appInfo.setPApplicationName("Wingine").setApplicationVersion(1)
@@ -545,13 +536,13 @@ namespace wg {
 
   void Wingine::init_command_buffers() {
     vk::CommandPoolCreateInfo cpi;
-    cpi.setQueueFamilyIndex(this->present_queue_index).
+    cpi.setQueueFamilyIndex(this->graphics_queue_index).
       setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
-    this->present_command_pool = this->device.createCommandPool(cpi);
-    
-    cpi.setQueueFamilyIndex(this->graphics_queue_index);
     this->graphics_command_pool = this->device.createCommandPool(cpi);
+    
+    cpi.setQueueFamilyIndex(this->present_queue_index);
+    this->present_command_pool = this->device.createCommandPool(cpi);
 
     vk::CommandBufferAllocateInfo cbi;
     cbi.setCommandPool(this->present_command_pool)
@@ -1018,6 +1009,9 @@ namespace wg {
     this->device.waitForFences(1, &family.command.fence, true, UINT64_MAX);
     this->device.destroy(family.command.fence);
 
+    this->device.freeCommandBuffers(this->graphics_command_pool,
+				   1, &family.command.buffer);
+
     if(family.render_pass != this->compatibleRenderPassMap[family.pipeline->render_pass_type]) {
       this->device.destroy(family.render_pass);
     }
@@ -1086,14 +1080,24 @@ namespace wg {
     for(_Framebuffer& fb : this->framebuffers) {
       this->destroySwapchainFramebuffer(&fb);
     }
+
+    this->device.freeCommandBuffers(this->graphics_command_pool,
+				    1, &this->general_purpose_command.buffer);
+    this->device.freeCommandBuffers(this->present_command_pool,
+				    1, &this->present_command.buffer);
+    
+    
+    this->device.destroyCommandPool(this->graphics_command_pool);
     
     this->device.destroyCommandPool(this->present_command_pool);
     this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX);
     this->device.destroyFence(this->present_command.fence);
 
-    this->device.destroyCommandPool(this->graphics_command_pool);
 
     if(this->compute_queue_index >= 0) {
+      this->device.freeCommandBuffers(this->compute_command_pool,
+				      1, &this->compute_command.buffer);
+      
       this->device.destroyCommandPool(this->compute_command_pool);
       this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX);
       this->device.destroyFence(this->compute_command.fence);

@@ -4,7 +4,7 @@ project(Wingine)
 
 
 if (NOT WIN32)
-  add_definitions(-Wall -g -mavx)
+  add_definitions(-Wall -g -Wno-class-memaccess -Wno-init-list-lifetime -mavx)
 endif()
 
 set(SPURV_ROOT "${CMAKE_HOME_DIRECTORY}/../spurv")
@@ -25,7 +25,7 @@ if(WIN32)
   set(winval_libs Winval)
   set(VULKAN_LIB_NAME vulkan-1)
 else()
-  add_definitions(-std=c++1z -fconcepts)
+  add_definitions(-std=c++1z -fconcepts -mavx)
   set(lib_search_path "${HCONLIB_ROOT}/lib")
   set(x_libs X11)
   set(winval_libs Winval ${x_libs} dl)
@@ -51,6 +51,7 @@ include_directories(${WINGINE_INCLUDE_DIR})
 
 add_library(Wingine STATIC ${WINGINE_SOURCES})
 
+add_executable(trivial ${WINGINE_EXAMPLES_DIR}/trivial.cpp)
 add_executable(test ${WINGINE_EXAMPLES_DIR}/test.cpp)
 add_executable(depth_test ${WINGINE_EXAMPLES_DIR}/depth_test.cpp)
 add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
@@ -58,6 +59,7 @@ add_executable(model_viewer ${WINGINE_EXAMPLES_DIR}/model_viewer.cpp)
 
 target_link_libraries(Wingine ${common_libs})
 
+target_link_libraries(trivial ${all_libs})
 target_link_libraries(test ${all_libs})
 target_link_libraries(depth_test ${all_libs})
 target_link_libraries(texture_test ${all_libs})

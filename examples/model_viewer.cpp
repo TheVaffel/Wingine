@@ -74,11 +74,16 @@ int main() {
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
   
   wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
-  camera.setLookAt(3.0f * falg::Vec3(1.0f, 1.0f, 1.0f),
-		   falg::Vec3(0.0f, 0.0f, 0.0f),
-		   falg::Vec3(0.0f, 1.0f, 0.0f));
+  float phi = 0.0;
 
   while (win.isOpen()) {
+
+    phi += 0.01;
+    
+    camera.setLookAt(3.0f * falg::Vec3(sin(phi), 1.0f, cos(phi)),
+		     falg::Vec3(0.0f, 0.0f, 0.0f),
+		     falg::Vec3(0.0f, 1.0f, 0.0f));
+    
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     
     cameraUniform.set(renderMatrix);

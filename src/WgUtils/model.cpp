@@ -102,10 +102,21 @@ namespace wgut {
 
     // Here, we normalize positions, for debugging
     if(index_pos != -1) {
+      float max_diff = maxa - mina;
+      float min_coord = mina;
+      if(maxb - minb > max_diff) {
+	max_diff = maxb - minb;
+	min_coord = minb;
+      }
+      if(maxc - minc > max_diff) {
+	max_diff = maxc - minc;
+	min_coord = minc;
+      }
+      
       for(int i = 0; i < data_buffers[index_pos].size() / 3; i++) {
-	data_buffers[index_pos][3 * i + 0] = (data_buffers[index_pos][3 * i + 0] - mina) / (maxa - mina);
-	data_buffers[index_pos][3 * i + 1] = (data_buffers[index_pos][3 * i + 1] - minb) / (maxb - minb);
-	data_buffers[index_pos][3 * i + 2] = (data_buffers[index_pos][3 * i + 2] - minc) / (maxc - minc);
+	data_buffers[index_pos][3 * i + 0] = (data_buffers[index_pos][3 * i + 0] - min_coord) / max_diff * 2.0 - 1.0;
+	data_buffers[index_pos][3 * i + 1] = (data_buffers[index_pos][3 * i + 1] - min_coord) / max_diff * 2.0 - 1.0;
+	data_buffers[index_pos][3 * i + 2] = (data_buffers[index_pos][3 * i + 2] - min_coord) / max_diff * 2.0 - 1.0;
 	}
     }
     

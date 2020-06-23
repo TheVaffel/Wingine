@@ -32,7 +32,7 @@ namespace wg {
     void startRecording(_Framebuffer* framebuffer = nullptr);
 
     void recordDraw(const std::vector<Buffer*>& buffers, const IndexBuffer& ind_buf,
-		    const std::vector<ResourceSet>& sets);
+		    const std::vector<ResourceSet>& sets, int instanceCount = 1);
     void endRecording();
     
     friend class Wingine;

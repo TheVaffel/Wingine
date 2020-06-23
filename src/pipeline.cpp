@@ -40,7 +40,7 @@ namespace wg {
     
     int vertex_binding_count = 0;
     
-    for(VertexAttribDesc desc : descriptions) {
+    for(const VertexAttribDesc& desc : descriptions) {
       vertex_binding_count = std::max(desc.binding_num + 1,
 				      (uint32_t)vertex_binding_count);
     }
@@ -62,6 +62,35 @@ namespace wg {
 
     vk::GraphicsPipelineCreateInfo createInfo;
 
+#ifdef DEBUG
+
+    // Check consistency of input parameters
+    int per_instance[vertex_binding_count];
+    int stride[vertex_binding_count];
+    for(int i = 0; i < vertex_binding_count; i++) {
+      per_instance[i] = -1;
+      stride[i] = -1;
+    }
+    for(unsigned int i = 0; i < descriptions.size(); i++) {
+      if(per_instance[i] == -1) {
+	per_instance[i] = descriptions[i].per_instance ? 1 : 0;
+	stride[i] = descriptions[i].stride_in_bytes;
+      } else {
+	if(per_instance[i] != (descriptions[i].per_instance ? 1 : 0)) {
+	  std::cerr << "[Wingine] Vertex atrribute descriptions' per-instance fields not consistent on same binding"
+		    << std::endl;
+	  std::exit(-1);
+	}
+	if(stride[i] != (descriptions[i].stride_in_bytes)) {
+	  std::cerr << "[Wingine] Vertex attribute descriptions' stride fields not consistent on same binding"
+		    << std::endl;
+	  std::exit(-1);
+	}
+      }
+    }
+
+#endif // DEBUG
+
     for(int i = 0; i < vertex_binding_count; i++) {
       vi_bindings[i].setBinding(i)
 	.setInputRate(vk::VertexInputRate::eVertex);
@@ -69,6 +98,9 @@ namespace wg {
 
     for(unsigned int i = 0; i < descriptions.size(); i++) {
       vi_bindings[descriptions[i].binding_num]
+	.setInputRate(descriptions[i].per_instance ?
+		      vk::VertexInputRate::eInstance :
+		      vk::VertexInputRate::eVertex)
 	.setStride(descriptions[i].stride_in_bytes); // Set stride of binding structure
 
       vi_attribs[i].setBinding(descriptions[i].binding_num)

@@ -97,7 +97,7 @@ namespace wg {
   }
 
   void RenderFamily::recordDraw(const std::vector<Buffer*>& vertex_buffers, const IndexBuffer& ind_buf,
-				const std::vector<ResourceSet>& sets){
+				const std::vector<ResourceSet>& sets, int instanceCount){
     std::vector<vk::DescriptorSet> d_sets(sets.size());
     for(unsigned int i = 0; i < sets.size(); i++) {
       d_sets[i] = sets[i].descriptor_set;
@@ -125,7 +125,7 @@ namespace wg {
     this->command.buffer.bindIndexBuffer(ind_buf.buffer,
 					 0, vk::IndexType::eUint32);
 
-    this->command.buffer.drawIndexed(ind_buf.num_indices, 1,
+    this->command.buffer.drawIndexed(ind_buf.num_indices, instanceCount,
 				     0, 0, 0);
   }
 

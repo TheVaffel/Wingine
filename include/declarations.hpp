@@ -44,6 +44,7 @@ namespace wg {
     uint32_t num_elements;
     uint32_t stride_in_bytes;
     uint32_t offset_in_bytes;
+    bool per_instance = false;
   };
 
   // Uniform template

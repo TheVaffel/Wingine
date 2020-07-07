@@ -48,9 +48,14 @@ int main() {
 
     SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
     vec4_v s_pos = shader.input<0>();
+    uint_v vi = shader.getBuiltin<BUILTIN_VERTEX_INDEX, uint_s>();
+    float_v fvi = cast<float_s>(vi);
+
+    vec4_v col = vec4_s::cons(fvi / 2.0f,
+			      fvi - 2.0f, 0.3f, 1.0f);
 
     shader.setBuiltin<BUILTIN_POSITION>(s_pos);
-    shader.compile(vertex_spirv);
+    shader.compile(vertex_spirv, col);
   }
 
   wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
@@ -59,11 +64,12 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_FRAGMENT> shader;
+    SShader<SShaderType::SHADER_FRAGMENT, vec4_s> shader;
     
     vec4_v frag_coord = shader.getBuiltin<BUILTIN_FRAG_COORD, vec4_s>();
-    vec4_v out_col = vec4_s::cons(frag_coord[0] / float(width),
-				  frag_coord[1] / float(height), 0.50f, 1.0f);
+    vec4_v out_col = shader.input<0>();
+    // vec4_v out_col = vec4_s::cons(frag_coord[0] / float(width),
+    // frag_coord[1] / float(height), 0.50f, 1.0f);
     
     shader.compile(fragment_spirv, out_col);
   }

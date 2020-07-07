@@ -57,6 +57,7 @@ add_executable(depth_test ${WINGINE_EXAMPLES_DIR}/depth_test.cpp)
 add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
 add_executable(model_viewer ${WINGINE_EXAMPLES_DIR}/model_viewer.cpp)
 add_executable(instance_test ${WINGINE_EXAMPLES_DIR}/instance_test.cpp)
+add_executable(frag ${WINGINE_EXAMPLES_DIR}/frag.cpp)
 
 target_link_libraries(Wingine ${common_libs})
 
@@ -66,3 +67,4 @@ target_link_libraries(depth_test ${all_libs})
 target_link_libraries(texture_test ${all_libs})
 target_link_libraries(model_viewer ${all_libs})
 target_link_libraries(instance_test ${all_libs})
+target_link_libraries(frag ${all_libs})

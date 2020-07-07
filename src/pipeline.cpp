@@ -81,7 +81,7 @@ namespace wg {
 		    << std::endl;
 	  std::exit(-1);
 	}
-	if(stride[i] != (descriptions[i].stride_in_bytes)) {
+	if(stride[i] != (int)(descriptions[i].stride_in_bytes)) {
 	  std::cerr << "[Wingine] Vertex attribute descriptions' stride fields not consistent on same binding"
 		    << std::endl;
 	  std::exit(-1);

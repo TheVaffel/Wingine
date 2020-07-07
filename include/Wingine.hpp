@@ -128,6 +128,9 @@ namespace wg {
     
   public:
 
+    int getWindowWidth();
+    int getWindowHeight();
+
     template<typename Type>
     VertexBuffer<Type> createVertexBuffer(uint32_t num, bool host_updatable = true);
 

@@ -24,6 +24,14 @@ _debugCallbackFun(VkDebugReportFlagsEXT flags,
 
 namespace wg {
 
+  int Wingine::getWindowWidth() {
+    return this->window_width;
+  }
+
+  int Wingine::getWindowHeight() {
+    return this->window_height;
+  }
+  
   void Wingine::cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
 			       vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
 			       vk::ImageLayout finalLayout) {

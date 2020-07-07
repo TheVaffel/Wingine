@@ -8,9 +8,12 @@
 #include <random>
 
 int main() {
-  const int width = 800, height = 800;
+  int width = 800, height = 800;
   Winval win(width, height);
   wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
+
+  width = wing.getWindowWidth();
+  height = wing.getWindowHeight();
   
   wgut::Model model = wgut::Model::fromFile(wing, "../models/teapot.obj",
 					    {wgut::ReadAttribType::attTypePosition,
@@ -108,7 +111,7 @@ int main() {
 
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
   
-  wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
+  wgut::Camera camera(F_PI / 3.f, (float)height / (float)width, 0.01f, 1000.0f);
   float phi = 0.0;
 
   while (win.isOpen()) {

@@ -113,7 +113,7 @@ namespace wgut {
 	min_coord = minc;
       }
       
-      for(int i = 0; i < data_buffers[index_pos].size() / 3; i++) {
+      for(unsigned int i = 0; i < data_buffers[index_pos].size() / 3; i++) {
 	data_buffers[index_pos][3 * i + 0] = (data_buffers[index_pos][3 * i + 0] - min_coord) / max_diff * 2.0 - 1.0;
 	data_buffers[index_pos][3 * i + 1] = (data_buffers[index_pos][3 * i + 1] - min_coord) / max_diff * 2.0 - 1.0;
 	data_buffers[index_pos][3 * i + 2] = (data_buffers[index_pos][3 * i + 2] - min_coord) / max_diff * 2.0 - 1.0;

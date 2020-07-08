@@ -74,6 +74,11 @@ int main() {
     shader.compile(vertex_spirv, s_col);
   }
 
+  /* std::cout << "Vertex SPIRV:" << std::endl;
+  for(uint i = 0; i < vertex_spirv.size(); i++) {
+    std::cout << vertex_spirv[i] << std::endl;
+    } */
+
   wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   std::vector<uint32_t> fragment_spirv;
@@ -85,6 +90,11 @@ int main() {
 
     shader.compile(fragment_spirv, in_col);
   }
+
+  /* std::cout << "Fragment SPIRV:" << std::endl;
+  for(uint i = 0; i < fragment_spirv.size(); i++) {
+    std::cout << fragment_spirv[i] << std::endl;
+    } */
 
   wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   

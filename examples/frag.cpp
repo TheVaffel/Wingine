@@ -34,6 +34,11 @@ int main() {
 
   wgut::Model model({&position_buffer}, index_buffer);
 
+  wg::Uniform time_uniform = wing.createUniform<float>();
+  std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
+  wg::ResourceSet time_set = wing.createResourceSet(resourceSetLayout);
+  time_set.set({&time_uniform});
+
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
 					0, // Binding no.
@@ -49,12 +54,14 @@ int main() {
     SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
     vec4_v s_pos = shader.input<0>();
     uint_v vi = shader.getBuiltin<BUILTIN_VERTEX_INDEX>();
+    SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
+    float_v oscil = un1.member<0>();
     // float_v fvi = cast<float_s>(vi);
 
     float_v pv0 = cast<float_s>(vi % 2);
     float_v pv1 = cast<float_s>(vi / 2);
 
-    vec4_v col = vec4_s::cons(pv0, pv1, 0.3f, 1.0f);
+    vec4_v col = vec4_s::cons(pv0, pv1, 0.3f, 1.0f) * oscil;
 
     shader.setBuiltin<BUILTIN_POSITION>(s_pos);
     shader.compile(vertex_spirv, col);
@@ -80,16 +87,24 @@ int main() {
   
   wg::Pipeline pipeline = wing.
     createPipeline(vertAttrDesc,
-		   {},
+		   {&resourceSetLayout},
 		   {&vertex_shader, &fragment_shader});
 
   wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
   
-
+  float f = 0.0;
+  float inc = 0.05f;
   while (win.isOpen()) {
+    if(f > 1) {
+      inc = -0.05f;
+    } else if(f < 0) {
+      inc = 0.05f;
+    }
+    f += inc;
+    time_uniform.set(f);
     
     family.startRecording();
-    family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {});
+    family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
     family.endRecording();
 
     wing.present();
@@ -112,4 +127,6 @@ int main() {
   wing.destroy(position_buffer);
   wing.destroy(index_buffer);
 
+  wing.destroy(time_set);
+  wing.destroy(time_uniform);
 }

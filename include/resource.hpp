@@ -84,7 +84,7 @@ namespace wg {
   template<typename Type>
   Uniform<Type>::Uniform(Wingine& wing) : Resource(vk::DescriptorType::eUniformBuffer),
 					  buffer(wing,
-						 vk::BufferUsageFlagBits::eUniformBuffer,
+						 (vk::BufferUsageFlags)(vk::BufferUsageFlagBits::eUniformBuffer),
 						 sizeof(Type),
 						 true)
   {

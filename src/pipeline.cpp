@@ -237,7 +237,7 @@ namespace wg {
     this->render_pass_type = rpt;
     
     this->pipeline = device.createGraphicsPipelines(wing.pipeline_cache,
-						    {createInfo})[0];    
+						    {createInfo}).value[0];
   }
 
   

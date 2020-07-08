@@ -4,7 +4,7 @@ project(Wingine)
 
 
 if (NOT WIN32)
-  add_definitions(-Wall -g -Wno-class-memaccess -Wno-init-list-lifetime -mavx)
+  add_definitions(-Wall -g -Wno-class-memaccess -Wno-init-list-lifetime -mavx -fPIC)
 endif()
 
 set(SPURV_ROOT "${CMAKE_HOME_DIRECTORY}/../spurv")
@@ -36,12 +36,10 @@ endif()
 set(common_libs ${VULKAN_LIB_NAME} ${winval_libs} FlatAlg spurv)
 set(all_libs ${common_libs} Wingine)
 
-include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/include $ENV{VULKAN_SDK}/include)
+include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/include)
 
 
 if(WIN32)
-    link_directories($ENV{VULKAN_SDK}/lib)
-else()
     link_directories($ENV{VULKAN_SDK}/lib)
 endif()
 

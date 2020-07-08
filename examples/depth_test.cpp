@@ -161,7 +161,7 @@ int main() {
     float_v lookupval = shadow_tex[light_pos2d][0];
 
     float_v intensity = select(lookupval + ( 1e-5) >= light_pos[2] / light_pos[3], 
-			       float_s::cons(1.f), 0.2f);
+			       1.f, 0.2f);
 
     // float_v intensity = lookupval;
     vec4_v mul = intensity * in_col;

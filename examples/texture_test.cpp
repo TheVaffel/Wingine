@@ -103,13 +103,15 @@ int main() {
 		   {vertex_shader, fragment_shader});
 
   wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
-
-  while (win.isOpen()) {
     
-    family->startRecording();
-    family->recordDraw({position_buffer, tex_coord_buffer}, index_buffer, {resourceSet});
-    family->endRecording();
+  family->startRecording();
+  family->recordDraw({position_buffer, tex_coord_buffer}, index_buffer, {resourceSet});
+  family->endRecording();
+  
+  while (win.isOpen()) {
 
+    family->submit();
+    
     wing.present();
 
     win.sleepMilliseconds(40);

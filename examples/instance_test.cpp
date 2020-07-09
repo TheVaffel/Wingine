@@ -113,7 +113,13 @@ int main() {
   
   wgut::Camera camera(F_PI / 3.f, (float)height / (float)width, 0.01f, 1000.0f);
   float phi = 0.0;
+      
+  family->startRecording();
+  family->recordDraw({model.getVertexBuffers()[0], offset_buffer, color_buffer},
+		     model.getIndexBuffer(), {resourceSet}, num_instances);
+  family->endRecording();
 
+  
   while (win.isOpen()) {
 
     phi += 0.01;
@@ -125,11 +131,8 @@ int main() {
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     
     cameraUniform->set(renderMatrix);
-    
-    family->startRecording();
-    family->recordDraw({model.getVertexBuffers()[0], offset_buffer, color_buffer},
-		       model.getIndexBuffer(), {resourceSet}, num_instances);
-    family->endRecording();
+
+    family->submit();
     
     wing.present();
 

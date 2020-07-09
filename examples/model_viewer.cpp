@@ -75,7 +75,11 @@ int main() {
   
   wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
   float phi = 0.0;
-
+  
+  family->startRecording();
+  family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+  family->endRecording();
+  
   while (win.isOpen()) {
 
     phi += 0.01;
@@ -88,9 +92,7 @@ int main() {
     
     cameraUniform->set(renderMatrix);
     
-    family->startRecording();
-    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    family->endRecording();
+    family->submit();
     
     wing.present();
 

@@ -91,6 +91,10 @@ int main() {
 		   {vertex_shader, fragment_shader});
 
   wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
+
+  family->startRecording();
+  family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
+  family->endRecording();
   
   float f = 0.0;
   float inc = 0.05f;
@@ -102,11 +106,9 @@ int main() {
     }
     f += inc;
     time_uniform->set(f);
-    
-    family->startRecording();
-    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
-    family->endRecording();
 
+    family->submit();
+    
     wing.present();
 
     win.sleepMilliseconds(40);

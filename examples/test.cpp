@@ -106,16 +106,18 @@ int main() {
   wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
   
   wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
-
+  
+  family->startRecording();
+  family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+  family->endRecording();
+  
   while (win.isOpen()) {
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     
     cameraUniform->set(renderMatrix);
-    
-    family->startRecording();
-    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    family->endRecording();
 
+    family->submit();
+    
     wing.present();
 
     win.sleepMilliseconds(40);

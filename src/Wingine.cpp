@@ -731,32 +731,32 @@ namespace wg {
     // for(vk::Image sim : this->swapchain_images) {
         vk::Image sim = this->swapchain_images[i];
 
-      Framebuffer framebuffer;
+	Framebuffer* framebuffer = new Framebuffer();;
       
-      framebuffer.colorImage.image = sim;
-      framebuffer.colorImage.width = this->window_width;
-      framebuffer.colorImage.height = this->window_height;
+      framebuffer->colorImage.image = sim;
+      framebuffer->colorImage.width = this->window_width;
+      framebuffer->colorImage.height = this->window_height;
       vk::MemoryAllocateInfo mai;
 
-      this->cons_image_view(framebuffer.colorImage,
+      this->cons_image_view(framebuffer->colorImage,
 			    wImageViewColor);
       
 
-      this->cons_image_image(framebuffer.depthImage,
+      this->cons_image_image(framebuffer->depthImage,
 			     this->window_width,
 			     this->window_height,
 			     vk::Format::eD32Sfloat,
 			     vk::ImageUsageFlagBits::eDepthStencilAttachment |
 			     vk::ImageUsageFlagBits::eTransferSrc,
 			     vk::ImageTiling::eOptimal);
-      this->cons_image_memory(framebuffer.depthImage,
+      this->cons_image_memory(framebuffer->depthImage,
 			      vk::MemoryPropertyFlagBits::eDeviceLocal);
-      this->cons_image_view(framebuffer.depthImage,
+      this->cons_image_view(framebuffer->depthImage,
 			    wImageViewDepth);
 
       vk::ImageView attachments[] = {
-	framebuffer.colorImage.view,
-	framebuffer.depthImage.view
+	framebuffer->colorImage.view,
+	framebuffer->depthImage.view
       };
       
       vk::FramebufferCreateInfo finf;
@@ -767,10 +767,10 @@ namespace wg {
 	.setHeight(this->window_height)
 	.setLayers(1);
       
-      framebuffer.framebuffer = this->device.createFramebuffer(finf);
+      framebuffer->framebuffer = this->device.createFramebuffer(finf);
 
-      framebuffer.ready_for_draw_semaphore = &this->image_acquired_semaphore;
-      framebuffer.has_been_drawn_semaphore = &this->image_drawn_semaphore;
+      framebuffer->ready_for_draw_semaphore = &this->image_acquired_semaphore;
+      framebuffer->has_been_drawn_semaphore = &this->image_drawn_semaphore;
       
       this->framebuffers.push_back(framebuffer);
     }
@@ -947,8 +947,20 @@ namespace wg {
     return this->descriptor_pool;
   }
 
+  std::vector<Framebuffer*>&  Wingine::getFramebuffers() {
+    return framebuffers;
+  }
+
+  int Wingine::getNumFramebuffers() {
+    return framebuffers.size();
+  }
+
   Framebuffer* Wingine::getCurrentFramebuffer() {
-    return &this->framebuffers[this->current_swapchain_image];
+    return this->framebuffers[this->current_swapchain_image];
+  }
+
+  int Wingine::getCurrentFramebufferIndex() {
+    return this->current_swapchain_image;
   }
   
   IndexBuffer* Wingine::createIndexBuffer(uint32_t numIndices) {
@@ -996,9 +1008,9 @@ namespace wg {
     return texture;
   }
 
-  RenderFamily* Wingine::createRenderFamily(Pipeline* pipeline, bool clear) {
+  RenderFamily* Wingine::createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers) {
     return new RenderFamily(*this,
-			    pipeline, clear);
+			    pipeline, clear, num_framebuffers);
   }
   
   void Wingine::destroySwapchainImage(Image& image) {
@@ -1014,15 +1026,18 @@ namespace wg {
   }
 
   void Wingine::destroy(RenderFamily* family) {
-    this->device.waitForFences(1, &family->command.fence, true, UINT64_MAX);
-    this->device.destroy(family->command.fence);
+    for(int i = 0; i < family->num_buffers; i++) {
+      this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX);
+      this->device.destroy(family->commands[i].fence);
 
-    this->device.freeCommandBuffers(this->graphics_command_pool,
-				    1, &family->command.buffer);
+      this->device.freeCommandBuffers(this->graphics_command_pool,
+				      1, &family->commands[i].buffer);
 
-    if(family->render_pass != this->compatibleRenderPassMap[family->pipeline->render_pass_type]) {
-      this->device.destroy(family->render_pass);
+      if(family->render_passes[i] != this->compatibleRenderPassMap[family->pipeline->render_pass_type]) {
+	this->device.destroy(family->render_passes[i]);
+      }
     }
+
     
     delete family;
   }
@@ -1075,8 +1090,8 @@ namespace wg {
     this->device.destroy(*framebuffer->has_been_drawn_semaphore);
 
     if(framebuffer->ready_for_draw_semaphore != nullptr) {
-          this->device.destroy(*framebuffer->ready_for_draw_semaphore);
-	  delete framebuffer->ready_for_draw_semaphore;    
+      this->device.destroy(*framebuffer->ready_for_draw_semaphore);
+      delete framebuffer->ready_for_draw_semaphore;    
     }
     
     delete framebuffer->has_been_drawn_semaphore;
@@ -1089,8 +1104,9 @@ namespace wg {
     this->device.destroy(this->descriptor_pool);
     this->device.destroy(this->pipeline_cache);
 
-    for(Framebuffer& fb : this->framebuffers) {
-      this->destroySwapchainFramebuffer(&fb);
+    for(Framebuffer* fb : this->framebuffers) {
+      this->destroySwapchainFramebuffer(fb);
+      delete fb;
     }
 
     this->device.freeCommandBuffers(this->graphics_command_pool,

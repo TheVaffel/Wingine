@@ -179,10 +179,21 @@ int main() {
 		   {resourceSetLayout, lightTextureSetLayout},
 		   {vertex_shader, fragment_shader});
 
-  
+
   wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
 
-  wg::RenderFamily* depth_family = wing.createRenderFamily(depth_pipeline, true);
+  // Create family with only one framebuffer
+  wg::RenderFamily* depth_family = wing.createRenderFamily(depth_pipeline, true, 1);
+  
+  // Supply framebuffer (only one, as specified above)
+  depth_family->startRecording({depth_framebuffer});
+  depth_family->recordDraw({position_buffer, color_buffer}, index_buffer, {lightSet});
+  depth_family->endRecording();
+
+  family->startRecording();
+  family->recordDraw({position_buffer, color_buffer}, index_buffer, {resourceSet, lightTextureSet});
+  family->endRecording();
+  
 
   wgut::Camera camera(F_PI / 3.f, 9.0 / 16.0, 0.01f, 100.0f);
   camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
@@ -193,24 +204,23 @@ int main() {
   light_camera.setLookAt(falg::Vec3(-1.0f, 3.0f, -1.0f),
 			 falg::Vec3(0.0f, 0.0f, -2.5f),
 			 falg::Vec3(0.0f, 1.0f, 0.0f));
-
+  
   while (win.isOpen()) {
     
     lightUniform->set(light_camera.getRenderMatrix());
     
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-    depth_family->startRecording(depth_framebuffer);
-    depth_family->recordDraw({position_buffer, color_buffer}, index_buffer, {lightSet});
-    depth_family->endRecording();
-
+    // depth_family is created with only one framebuffer, and that is the only one we will render to
+    // Hence the 0
+    depth_family->submit(0);
+    
     shadow_texture->set(depth_framebuffer);
 
     cameraUniform->set(renderMatrix);
-    family->startRecording();
-    family->recordDraw({position_buffer, color_buffer}, index_buffer, {resourceSet, lightTextureSet});
-    family->endRecording();
 
+    family->submit();
+    
     wing.present();
 
     win.sleepMilliseconds(30);

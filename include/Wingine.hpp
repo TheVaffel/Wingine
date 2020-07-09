@@ -43,7 +43,7 @@ namespace wg {
     vk::Semaphore image_drawn_semaphore;
 
     uint32_t current_swapchain_image;
-    std::vector<Framebuffer> framebuffers;
+    std::vector<Framebuffer*> framebuffers;
     
     vk::DescriptorPool descriptor_pool;
 
@@ -120,7 +120,8 @@ namespace wg {
     vk::DescriptorPool getDescriptorPool();
     vk::CommandPool getPresentCommandPool();
     vk::CommandPool getGraphicsCommandPool();
-    Framebuffer* getCurrentFramebuffer();
+    
+    std::vector<Framebuffer*>& getFramebuffers();
 
     void register_compatible_render_pass(RenderPassType type);
     vk::RenderPass create_render_pass(RenderPassType type,
@@ -130,6 +131,10 @@ namespace wg {
 
   public:
 
+    Framebuffer* getCurrentFramebuffer();
+    int getCurrentFramebufferIndex();
+    int getNumFramebuffers();
+    
     int getWindowWidth();
     int getWindowHeight();
 
@@ -141,7 +146,7 @@ namespace wg {
     template<typename Type>
     Uniform<Type>* createUniform();
 
-    RenderFamily* createRenderFamily(Pipeline* pipeline, bool clear);
+    RenderFamily* createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers = 0);
       
     ResourceSet* createResourceSet(std::vector<uint64_t>& resourceLayout);
 

@@ -19,20 +19,20 @@ namespace wg {
     Command command;
     Pipeline* pipeline;
     vk::RenderPass render_pass;
-    _Framebuffer *current_framebuffer;
+    Framebuffer *current_framebuffer;
     bool clears;
     
     RenderFamily(Wingine& wing,
-		 Pipeline& pipeline,
+		 Pipeline* pipeline,
 		 bool clear);
 
     void submit_command();
     
   public:
-    void startRecording(_Framebuffer* framebuffer = nullptr);
+    void startRecording(Framebuffer* framebuffer = nullptr);
 
-    void recordDraw(const std::vector<Buffer*>& buffers, const IndexBuffer& ind_buf,
-		    const std::vector<ResourceSet>& sets, int instanceCount = 1);
+    void recordDraw(const std::vector<Buffer*>& buffers, const IndexBuffer* ind_buf,
+		    const std::vector<ResourceSet*>& sets, int instanceCount = 1);
     void endRecording();
     
     friend class Wingine;

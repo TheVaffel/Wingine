@@ -43,7 +43,7 @@ namespace wg {
     vk::Semaphore image_drawn_semaphore;
 
     uint32_t current_swapchain_image;
-    std::vector<_Framebuffer> framebuffers;
+    std::vector<Framebuffer> framebuffers;
     
     vk::DescriptorPool descriptor_pool;
 
@@ -111,7 +111,7 @@ namespace wg {
 			vk::ImageLayout finalLayout);
     
     // Don't delete color images, those are handled by swapchain
-    void destroySwapchainFramebuffer(_Framebuffer* framebuffer);
+    void destroySwapchainFramebuffer(Framebuffer* framebuffer);
     void destroySwapchainImage(Image& image);
 
     vk::Queue getGraphicsQueue();
@@ -120,56 +120,56 @@ namespace wg {
     vk::DescriptorPool getDescriptorPool();
     vk::CommandPool getPresentCommandPool();
     vk::CommandPool getGraphicsCommandPool();
-    _Framebuffer* getCurrentFramebuffer();
+    Framebuffer* getCurrentFramebuffer();
 
     void register_compatible_render_pass(RenderPassType type);
     vk::RenderPass create_render_pass(RenderPassType type,
 					       bool clear);
-    
+
+    void destroy(Image& image);
+
   public:
 
     int getWindowWidth();
     int getWindowHeight();
 
     template<typename Type>
-    VertexBuffer<Type> createVertexBuffer(uint32_t num, bool host_updatable = true);
+    VertexBuffer<Type>* createVertexBuffer(uint32_t num, bool host_updatable = true);
 
-    IndexBuffer createIndexBuffer(uint32_t num_indices);
+    IndexBuffer* createIndexBuffer(uint32_t num_indices);
 
     template<typename Type>
-    Uniform<Type> createUniform();
+    Uniform<Type>* createUniform();
 
-    RenderFamily createRenderFamily(Pipeline& pipeline, bool clear);
+    RenderFamily* createRenderFamily(Pipeline* pipeline, bool clear);
       
-    ResourceSet createResourceSet(std::vector<uint64_t>& resourceLayout);
+    ResourceSet* createResourceSet(std::vector<uint64_t>& resourceLayout);
 
-    Shader createShader(uint64_t stage_bit, std::vector<uint32_t>& spirv);
+    Shader* createShader(uint64_t stage_bit, std::vector<uint32_t>& spirv);
 
-    Pipeline createPipeline(const std::vector<VertexAttribDesc>& descriptions,
-			    const std::vector<std::vector<uint64_t>* >& resourceSetLayout,
-			    const std::vector<Shader*>& shaders,
-			    bool depthOnly = false,
-			    int width = -1, int height = -1);
+    Pipeline* createPipeline(const std::vector<VertexAttribDesc>& descriptions,
+			     const std::vector<std::vector<uint64_t> >& resourceSetLayout,
+			     const std::vector<Shader*>& shaders,
+			     bool depthOnly = false,
+			     int width = -1, int height = -1);
     
-    _Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
+    Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
 				    bool depthOnly = false, bool withoutSemaphore = false);
 
-    _Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
+    Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
     
     void present();
 
-    void destroy(Pipeline& pipeline);
-    void destroy(RenderFamily& family);
-    void destroy(ResourceSet& set);
-    void destroy(Buffer& buffer);
-    void destroy(Shader& shader);
-    void destroy(_Texture* texture);
+    void destroy(Pipeline* pipeline);
+    void destroy(RenderFamily* family);
+    void destroy(Buffer* buffer);
+    void destroy(Shader* shader);
+    void destroy(Texture* texture);
     
     template<typename Type>
-    void destroy(Uniform<Type>& uniform);
+    void destroy(Uniform<Type>* uniform);
     
-    void destroy(Image& image);
-    void destroy(_Framebuffer* framebuffer);
+    void destroy(Framebuffer* framebuffer);
     
     Wingine(Winval& win);
   
@@ -183,11 +183,11 @@ namespace wg {
 
     friend class Buffer;
     friend class Pipeline;
-    friend class _Framebuffer;
+    friend class Framebuffer;
     friend class RenderFamily;
     friend class ResourceSetLayout;
     friend class ResourceSet;
-    friend class _Texture;
+    friend class Texture;
   };
 
 
@@ -195,23 +195,22 @@ namespace wg {
 
 
   template<typename Type>
-  VertexBuffer<Type> Wingine::createVertexBuffer(uint32_t num, bool host_updatable) {
-    return VertexBuffer<Type>(*this, num, host_updatable);
+  VertexBuffer<Type>* Wingine::createVertexBuffer(uint32_t num, bool host_updatable) {
+    return new VertexBuffer<Type>(*this, num, host_updatable);
   }
 
   template<typename Type>
-  Uniform<Type> Wingine::createUniform() {
-    return Uniform<Type>(*this);
+  Uniform<Type>* Wingine::createUniform() {
+    return new Uniform<Type>(*this);
   }
 
   
   template<typename Type>
-  void Wingine::destroy(Uniform<Type>& uniform) {
-    this->destroy(uniform.buffer);
+  void Wingine::destroy(Uniform<Type>* uniform) {
+    this->destroy(uniform->buffer);
+    delete uniform;
   }
-
-  typedef _Framebuffer* Framebuffer;  
-  typedef _Texture* Texture;
+  
   
 };
 

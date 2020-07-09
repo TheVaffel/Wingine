@@ -3,12 +3,12 @@
 #include "Wingine.hpp"
 
 namespace wg {
-  _Framebuffer::_Framebuffer() { }
+  Framebuffer::Framebuffer() { }
   
-  _Framebuffer::_Framebuffer(Wingine& wing,
-			     int width, int height,
-			     bool depthOnly,
-			     bool withoutReadyToDrawSemaphore) {
+  Framebuffer::Framebuffer(Wingine& wing,
+			   int width, int height,
+			   bool depthOnly,
+			   bool withoutReadyToDrawSemaphore) {
 
     std::vector<vk::ImageView> attachments;
     
@@ -80,7 +80,7 @@ namespace wg {
   }
 
   
-  const vk::Framebuffer& _Framebuffer::getFramebuffer() const {
+  const vk::Framebuffer& Framebuffer::getFramebuffer() const {
     return this->framebuffer;
   }
 };

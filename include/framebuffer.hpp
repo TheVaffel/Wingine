@@ -7,17 +7,17 @@
 
 namespace wg {
 
-  class _Framebuffer {
+  class Framebuffer {
     Image colorImage;
     Image depthImage;
     vk::Framebuffer framebuffer;
     vk::Semaphore *ready_for_draw_semaphore,
       *has_been_drawn_semaphore;
     
-    _Framebuffer(Wingine& wing,
+    Framebuffer(Wingine& wing,
 		 int width, int height,
 		 bool depthOnly, bool withoutSemaphore = false);
-    _Framebuffer();
+    Framebuffer();
     
   public:
     
@@ -29,7 +29,7 @@ namespace wg {
 
     friend class RenderFamily;
     friend class Wingine;
-    friend class _Texture;
+    friend class Texture;
     friend class RenderFamily;
   };
 };

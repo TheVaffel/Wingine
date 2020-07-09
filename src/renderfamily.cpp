@@ -4,16 +4,16 @@
 
 namespace wg {
   RenderFamily::RenderFamily(Wingine& wing,
-			     Pipeline& pipeline,
+			     Pipeline* pipeline,
 			     bool clear) :
-    wing(&wing), pipeline(&pipeline) {
+    wing(&wing), pipeline(pipeline) {
 
     this->clears = clear;
 
     if(!clear) {
-      this->render_pass = wing.compatibleRenderPassMap[pipeline.render_pass_type];
+      this->render_pass = wing.compatibleRenderPassMap[pipeline->render_pass_type];
     } else {
-      this->render_pass = wing.create_render_pass(pipeline.render_pass_type,
+      this->render_pass = wing.create_render_pass(pipeline->render_pass_type,
 						  clear);
     }
 
@@ -40,7 +40,7 @@ namespace wg {
   }
   
 
-  void RenderFamily::startRecording(_Framebuffer* framebuffer) {
+  void RenderFamily::startRecording(Framebuffer* framebuffer) {
 
     if (framebuffer == nullptr) {
       framebuffer = wing->getCurrentFramebuffer();
@@ -96,11 +96,11 @@ namespace wg {
     this->command.buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline->pipeline);
   }
 
-  void RenderFamily::recordDraw(const std::vector<Buffer*>& vertex_buffers, const IndexBuffer& ind_buf,
-				const std::vector<ResourceSet>& sets, int instanceCount){
+  void RenderFamily::recordDraw(const std::vector<Buffer*>& vertex_buffers, const IndexBuffer* ind_buf,
+				const std::vector<ResourceSet*>& sets, int instanceCount){
     std::vector<vk::DescriptorSet> d_sets(sets.size());
     for(unsigned int i = 0; i < sets.size(); i++) {
-      d_sets[i] = sets[i].descriptor_set;
+      d_sets[i] = sets[i]->descriptor_set;
     }
 
     if (sets.size()) {
@@ -122,10 +122,10 @@ namespace wg {
     this->command.buffer.bindVertexBuffers(0, vk_buffers.size(),
 					   vk_buffers.data(),
 					   offsets.data());
-    this->command.buffer.bindIndexBuffer(ind_buf.buffer,
+    this->command.buffer.bindIndexBuffer(ind_buf->buffer,
 					 0, vk::IndexType::eUint32);
 
-    this->command.buffer.drawIndexed(ind_buf.num_indices, instanceCount,
+    this->command.buffer.drawIndexed(ind_buf->num_indices, instanceCount,
 				     0, 0, 0);
   }
 

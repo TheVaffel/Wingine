@@ -29,25 +29,25 @@ int main() {
     0, 1, 2,
   };
 
-  wg::VertexBuffer<float> position_buffer =
+  wg::VertexBuffer<float>* position_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
-  position_buffer.set(positions, num_points * 4);
+  position_buffer->set(positions, num_points * 4);
   
-  wg::VertexBuffer<float> color_buffer =
+  wg::VertexBuffer<float>* color_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
-  color_buffer.set(colors, num_points * 4);
+  color_buffer->set(colors, num_points * 4);
 
-  wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
-  index_buffer.set(indices, num_triangles * 3);
+  wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
+  index_buffer->set(indices, num_triangles * 3);
 
-  wgut::Model model({&position_buffer, &color_buffer}, index_buffer);
+  wgut::Model model({position_buffer, color_buffer}, index_buffer);
 
-  wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
+  wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
-  wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
-  resourceSet.set({&cameraUniform});
+  wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
+  resourceSet->set({cameraUniform});
 
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -79,7 +79,7 @@ int main() {
     std::cout << vertex_spirv[i] << std::endl;
     } */
 
-  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+  wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   std::vector<uint32_t> fragment_spirv;
   {
@@ -96,25 +96,25 @@ int main() {
     std::cout << fragment_spirv[i] << std::endl;
     } */
 
-  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+  wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   
-  wg::Pipeline pipeline = wing.
+  wg::Pipeline* pipeline = wing.
     createPipeline(vertAttrDesc,
-		   {&resourceSetLayout},
-		   {&vertex_shader, &fragment_shader});
+		   {resourceSetLayout},
+		   {vertex_shader, fragment_shader});
 
-  wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
+  wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
   
   wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
   while (win.isOpen()) {
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     
-    cameraUniform.set(renderMatrix);
+    cameraUniform->set(renderMatrix);
     
-    family.startRecording();
-    family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    family.endRecording();
+    family->startRecording();
+    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    family->endRecording();
 
     wing.present();
 
@@ -131,7 +131,6 @@ int main() {
   wing.destroy(vertex_shader);
   wing.destroy(fragment_shader);
   
-  wing.destroy(resourceSet);
   wing.destroy(pipeline);
 
   wing.destroy(position_buffer);

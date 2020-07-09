@@ -19,14 +19,14 @@ namespace wgut {
 
   public:
     Model(const std::vector<wg::Buffer*>& _vertex_buffer,
-	  wg::IndexBuffer& _index_buffer);
+	  wg::IndexBuffer* _index_buffer);
 
     static Model fromFile(wg::Wingine& wing,
 			  const std::string& file_name,
 			  const std::vector<ReadAttribType>& attribs);
     
     const std::vector<wg::Buffer*>& getVertexBuffers();
-    const wg::IndexBuffer& getIndexBuffer();
+    const wg::IndexBuffer* getIndexBuffer();
 
     void destroy(wg::Wingine& wing);
   };

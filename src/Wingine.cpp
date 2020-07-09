@@ -731,7 +731,7 @@ namespace wg {
     // for(vk::Image sim : this->swapchain_images) {
         vk::Image sim = this->swapchain_images[i];
 
-      _Framebuffer framebuffer;
+      Framebuffer framebuffer;
       
       framebuffer.colorImage.image = sim;
       framebuffer.colorImage.width = this->window_width;
@@ -947,58 +947,58 @@ namespace wg {
     return this->descriptor_pool;
   }
 
-  _Framebuffer* Wingine::getCurrentFramebuffer() {
+  Framebuffer* Wingine::getCurrentFramebuffer() {
     return &this->framebuffers[this->current_swapchain_image];
   }
   
-  IndexBuffer Wingine::createIndexBuffer(uint32_t numIndices) {
-    return IndexBuffer(*this, numIndices);
+  IndexBuffer* Wingine::createIndexBuffer(uint32_t numIndices) {
+    return new IndexBuffer(*this, numIndices);
   }
 
-  Shader Wingine::createShader(uint64_t shader_bit,
+  Shader* Wingine::createShader(uint64_t shader_bit,
 				 std::vector<uint32_t>& spirv) {
-    return Shader(this->device,
-		  shader_bit,
-		  spirv);
+    return new Shader(this->device,
+		      shader_bit,
+		      spirv);
   }
 
   
-  Pipeline Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
-				   const std::vector<std::vector<uint64_t>* >& resourceSetLayout,
+  Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
+				   const std::vector<std::vector<uint64_t> >& resourceSetLayout,
 				   const std::vector<Shader*>& shaders,
 				   bool depthOnly, int width, int height) {
     std::vector<ResourceSetLayout> rsl;
     for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
-      rsl.push_back(this->resourceSetLayoutMap[*(resourceSetLayout[i])]);
+      rsl.push_back(this->resourceSetLayoutMap[resourceSetLayout[i]]);
     }
 
-    return Pipeline(*this,
-		    width < 0 ? this->window_width : width,
-		    height < 0 ? this->window_height : height,
-		    descriptions,
-		    rsl,
-		    shaders,
-		    depthOnly);
+    return new Pipeline(*this,
+			width < 0 ? this->window_width : width,
+			height < 0 ? this->window_height : height,
+			descriptions,
+			rsl,
+			shaders,
+			depthOnly);
   }
 
-  _Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
+  Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
 					   bool depthOnly, bool withoutSemaphore) {
-    _Framebuffer* framebuffer = new _Framebuffer(*this,
-						 width, height,
-						 depthOnly, withoutSemaphore);
+    Framebuffer* framebuffer = new Framebuffer(*this,
+					       width, height,
+					       depthOnly, withoutSemaphore);
     return framebuffer;
     
   }
 
-  _Texture* Wingine::createTexture(uint32_t width, uint32_t height, bool depth) {
-    _Texture* texture = new _Texture(*this,
-				     width, height, depth);
+  Texture* Wingine::createTexture(uint32_t width, uint32_t height, bool depth) {
+    Texture* texture = new Texture(*this,
+				    width, height, depth);
     return texture;
   }
 
-  RenderFamily Wingine::createRenderFamily(Pipeline& pipeline, bool clear) {
-    return RenderFamily(*this,
-			pipeline, clear);
+  RenderFamily* Wingine::createRenderFamily(Pipeline* pipeline, bool clear) {
+    return new RenderFamily(*this,
+			    pipeline, clear);
   }
   
   void Wingine::destroySwapchainImage(Image& image) {
@@ -1006,30 +1006,33 @@ namespace wg {
     this->device.destroy(image.view);
   }
   
-  void Wingine::destroySwapchainFramebuffer(_Framebuffer* framebuffer) {
+  void Wingine::destroySwapchainFramebuffer(Framebuffer* framebuffer) {
     this->destroySwapchainImage(framebuffer->colorImage);
     this->destroy(framebuffer->depthImage);
     
     this->device.destroy(framebuffer->framebuffer);
   }
 
-  void Wingine::destroy(RenderFamily& family) {
-    this->device.waitForFences(1, &family.command.fence, true, UINT64_MAX);
-    this->device.destroy(family.command.fence);
+  void Wingine::destroy(RenderFamily* family) {
+    this->device.waitForFences(1, &family->command.fence, true, UINT64_MAX);
+    this->device.destroy(family->command.fence);
 
     this->device.freeCommandBuffers(this->graphics_command_pool,
-				   1, &family.command.buffer);
+				    1, &family->command.buffer);
 
-    if(family.render_pass != this->compatibleRenderPassMap[family.pipeline->render_pass_type]) {
-      this->device.destroy(family.render_pass);
+    if(family->render_pass != this->compatibleRenderPassMap[family->pipeline->render_pass_type]) {
+      this->device.destroy(family->render_pass);
     }
+    
+    delete family;
   }
 
-  void Wingine::destroy(Shader& shader) {
-    this->device.destroy(shader.shader_info.module);
+  void Wingine::destroy(Shader* shader) {
+    this->device.destroy(shader->shader_info.module);
+    delete shader;
   }
 
-  void Wingine::destroy(_Texture* texture) {
+  void Wingine::destroy(Texture* texture) {
     delete texture->image_info;
 
     this->device.destroy(texture->sampler);
@@ -1040,21 +1043,22 @@ namespace wg {
     delete texture;
   }
   
-  void Wingine::destroy(ResourceSet& resourceSet) { }
-
-  void Wingine::destroy(Pipeline& pipeline) {
-    this->device.destroy(pipeline.layout);
-    this->device.destroy(pipeline.pipeline);
+  void Wingine::destroy(Pipeline* pipeline) {
+    this->device.destroy(pipeline->layout);
+    this->device.destroy(pipeline->pipeline);
+    delete pipeline;
   }
 
-  void Wingine::destroy(Buffer& buffer) {
-    this->device.destroy(buffer.buffer);
-    this->device.free(buffer.memory);
+  void Wingine::destroy(Buffer* buffer) {
+    this->device.destroy(buffer->buffer);
+    this->device.free(buffer->memory);
 
-    if( !buffer.host_updatable ) {
-      this->device.destroy(buffer.update_buffer);
-      this->device.free(buffer.update_memory);
+    if( !buffer->host_updatable ) {
+      this->device.destroy(buffer->update_buffer);
+      this->device.free(buffer->update_memory);
     }
+
+    delete buffer;
   }
 
   void Wingine::destroy(Image& image) {
@@ -1063,7 +1067,7 @@ namespace wg {
     this->device.destroy(image.view);
   }
   
-  void Wingine::destroy(_Framebuffer* framebuffer) {
+  void Wingine::destroy(Framebuffer* framebuffer) {
     this->destroy(framebuffer->colorImage);
     this->destroy(framebuffer->depthImage);
 
@@ -1085,7 +1089,7 @@ namespace wg {
     this->device.destroy(this->descriptor_pool);
     this->device.destroy(this->pipeline_cache);
 
-    for(_Framebuffer& fb : this->framebuffers) {
+    for(Framebuffer& fb : this->framebuffers) {
       this->destroySwapchainFramebuffer(&fb);
     }
 

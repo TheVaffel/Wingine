@@ -25,19 +25,19 @@ int main() {
     1, 3, 2
   };
 
-  wg::VertexBuffer<float> position_buffer =
+  wg::VertexBuffer<float>* position_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
-  position_buffer.set(positions, num_points * 4);
+  position_buffer->set(positions, num_points * 4);
 
-  wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
-  index_buffer.set(indices, num_triangles * 3);
+  wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
+  index_buffer->set(indices, num_triangles * 3);
 
-  wgut::Model model({&position_buffer}, index_buffer);
+  wgut::Model model({position_buffer}, index_buffer);
 
-  wg::Uniform time_uniform = wing.createUniform<float>();
+  wg::Uniform<float>* time_uniform = wing.createUniform<float>();
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-  wg::ResourceSet time_set = wing.createResourceSet(resourceSetLayout);
-  time_set.set({&time_uniform});
+  wg::ResourceSet* time_set = wing.createResourceSet(resourceSetLayout);
+  time_set->set({time_uniform});
 
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -67,7 +67,7 @@ int main() {
     shader.compile(vertex_spirv, col);
   }
 
-  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+  wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   std::vector<uint32_t> fragment_spirv;
   {
@@ -83,14 +83,14 @@ int main() {
     shader.compile(fragment_spirv, out_col);
   }
 
-  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+  wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   
-  wg::Pipeline pipeline = wing.
+  wg::Pipeline* pipeline = wing.
     createPipeline(vertAttrDesc,
-		   {&resourceSetLayout},
-		   {&vertex_shader, &fragment_shader});
+		   {resourceSetLayout},
+		   {vertex_shader, fragment_shader});
 
-  wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
+  wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
   
   float f = 0.0;
   float inc = 0.05f;
@@ -101,11 +101,11 @@ int main() {
       inc = 0.05f;
     }
     f += inc;
-    time_uniform.set(f);
+    time_uniform->set(f);
     
-    family.startRecording();
-    family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
-    family.endRecording();
+    family->startRecording();
+    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
+    family->endRecording();
 
     wing.present();
 
@@ -127,6 +127,5 @@ int main() {
   wing.destroy(position_buffer);
   wing.destroy(index_buffer);
 
-  wing.destroy(time_set);
   wing.destroy(time_uniform);
 }

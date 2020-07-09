@@ -9,9 +9,9 @@
 namespace wgut {
   
   Model::Model(const std::vector<wg::Buffer*>& _vertex_buffer,
-	       wg::IndexBuffer& _index_buffer) :
+	       wg::IndexBuffer* _index_buffer) :
     vertex_buffers(_vertex_buffer),
-    index_buffer(&_index_buffer)
+    index_buffer(_index_buffer)
   { }
 
   Model Model::fromFile(wg::Wingine& wing,
@@ -131,21 +131,21 @@ namespace wgut {
     wg::IndexBuffer* index_buffer = new wg::IndexBuffer(wing, index_data.size());
     index_buffer->set(index_data.data(), index_data.size(), 0);
 
-    return Model(buffers, *index_buffer);
+    return Model(buffers, index_buffer);
   }
 
   const std::vector<wg::Buffer*>& Model::getVertexBuffers() {
     return this->vertex_buffers;
   }
   
-  const wg::IndexBuffer& Model::getIndexBuffer() {
-    return *this->index_buffer;
+  const wg::IndexBuffer* Model::getIndexBuffer() {
+    return this->index_buffer;
   }
 
   void Model::destroy(wg::Wingine& wing) {
     for(unsigned int i = 0; i < this->vertex_buffers.size(); i++) {
-      wing.destroy(*(wg::VertexBuffer<float>*)this->vertex_buffers[i]);
+      wing.destroy(this->vertex_buffers[i]);
     }
-    wing.destroy(*this->index_buffer);
+    wing.destroy(this->index_buffer);
   }
 };

@@ -16,11 +16,11 @@ namespace wg {
     return this->view;
   }
 
-  const Image& _Framebuffer::getColorImage() const {
+  const Image& Framebuffer::getColorImage() const {
     return this->colorImage;
   }
 
-  const Image& _Framebuffer::getDepthImage() const {
+  const Image& Framebuffer::getDepthImage() const {
     return this->depthImage;
   }
 };

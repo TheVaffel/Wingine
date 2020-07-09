@@ -39,25 +39,25 @@ int main() {
     }
   }
 
-  wg::Texture texture = wing.createTexture(texture_width, texture_height);
+  wg::Texture* texture = wing.createTexture(texture_width, texture_height);
   texture->set(texture_buffer);
 
-  wg::VertexBuffer<float> position_buffer =
+  wg::VertexBuffer<float>* position_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
-  position_buffer.set(positions, num_points * 4);
+  position_buffer->set(positions, num_points * 4);
   
-  wg::VertexBuffer<float> tex_coord_buffer =
+  wg::VertexBuffer<float>* tex_coord_buffer =
     wing.createVertexBuffer<float>(num_points * 2);
-  tex_coord_buffer.set(tex_coords, num_points * 2);
+  tex_coord_buffer->set(tex_coords, num_points * 2);
 
-  wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
-  index_buffer.set(indices, num_triangles * 3);
+  wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
+  index_buffer->set(indices, num_triangles * 3);
 
 
   std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
   
-  wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
-  resourceSet.set({texture});
+  wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
+  resourceSet->set({texture});
   
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -79,7 +79,7 @@ int main() {
     shader.compile(vertex_spirv, s_coord);
   }
 
-  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+  wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   std::vector<uint32_t> fragment_spirv;
   {
@@ -95,20 +95,20 @@ int main() {
     shader.compile(fragment_spirv, color);
   }
 
-  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+  wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   
-  wg::Pipeline pipeline = wing.
+  wg::Pipeline* pipeline = wing.
     createPipeline(vertAttrDesc,
-		   {&resourceSetLayout},
-		   {&vertex_shader, &fragment_shader});
+		   {resourceSetLayout},
+		   {vertex_shader, fragment_shader});
 
-  wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
+  wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
 
   while (win.isOpen()) {
     
-    family.startRecording();
-    family.recordDraw({&position_buffer, &tex_coord_buffer}, index_buffer, {resourceSet});
-    family.endRecording();
+    family->startRecording();
+    family->recordDraw({position_buffer, tex_coord_buffer}, index_buffer, {resourceSet});
+    family->endRecording();
 
     wing.present();
 
@@ -125,7 +125,6 @@ int main() {
   wing.destroy(vertex_shader);
   wing.destroy(fragment_shader);
   
-  wing.destroy(resourceSet);
   wing.destroy(pipeline);
 
   wing.destroy(position_buffer);

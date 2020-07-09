@@ -14,12 +14,12 @@ int main() {
 					    {wgut::ReadAttribType::attTypePosition,
 					    wgut::ReadAttribType::attTypeNormal}); 
 
-  wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
+  wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
-  wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
-  resourceSet.set({&cameraUniform});
+  wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
+  resourceSet->set({cameraUniform});
 
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -52,7 +52,7 @@ int main() {
     shader.compile(vertex_spirv, hcol);
   }
 
-  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+  wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   std::vector<uint32_t> fragment_spirv;
   {
@@ -64,14 +64,14 @@ int main() {
     shader.compile(fragment_spirv, in_col);
   }
 
-  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+  wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   
-  wg::Pipeline pipeline = wing.
+  wg::Pipeline* pipeline = wing.
     createPipeline(vertAttrDesc,
-		   {&resourceSetLayout},
-		   {&vertex_shader, &fragment_shader});
+		   {resourceSetLayout},
+		   {vertex_shader, fragment_shader});
 
-  wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
+  wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
   
   wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
   float phi = 0.0;
@@ -86,11 +86,11 @@ int main() {
     
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     
-    cameraUniform.set(renderMatrix);
+    cameraUniform->set(renderMatrix);
     
-    family.startRecording();
-    family.recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    family.endRecording();
+    family->startRecording();
+    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    family->endRecording();
     
     wing.present();
 
@@ -107,7 +107,6 @@ int main() {
   wing.destroy(vertex_shader);
   wing.destroy(fragment_shader);
   
-  wing.destroy(resourceSet);
   wing.destroy(pipeline);
 
   model.destroy(wing);

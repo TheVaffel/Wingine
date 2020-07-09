@@ -31,7 +31,7 @@ namespace wg {
 
   ResourceSetLayout::ResourceSetLayout() { }
 
-  ResourceSet Wingine::createResourceSet(std::vector<uint64_t>& flags) {
+  ResourceSet* Wingine::createResourceSet(std::vector<uint64_t>& flags) {
     
     if(this->resourceSetLayoutMap.find(flags) ==
        this->resourceSetLayoutMap.end()) {
@@ -39,7 +39,7 @@ namespace wg {
       this->resourceSetLayoutMap[flags] = ResourceSetLayout(*this, flags);
     }
     
-    return ResourceSet(*this, this->resourceSetLayoutMap[flags].layout);
+    return new ResourceSet(*this, this->resourceSetLayoutMap[flags].layout);
   }
 
   ResourceSet::ResourceSet(Wingine& wing, vk::DescriptorSetLayout layout) {
@@ -79,9 +79,9 @@ namespace wg {
    * Texture - represents resource images with a sampler
    */
 
-  _Texture::_Texture(Wingine& wing,
-		     uint32_t width, uint32_t height,
-		     bool depth) :
+  Texture::Texture(Wingine& wing,
+		   uint32_t width, uint32_t height,
+		   bool depth) :
     Resource(vk::DescriptorType::eCombinedImageSampler) {
     
     this->wing = &wing;
@@ -104,34 +104,34 @@ namespace wg {
     this->height = height;
 
     if (!depth) {
-        Image pseudo;
-        wing.cons_image_image(pseudo,
-            width, height,
-            depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
-            vk::ImageUsageFlagBits::eTransferSrc,
-            vk::ImageTiling::eLinear,
-            vk::ImageLayout::ePreinitialized);
-        wing.cons_image_memory(pseudo,
-            vk::MemoryPropertyFlagBits::eHostCoherent |
-            vk::MemoryPropertyFlagBits::eHostVisible);
+      Image pseudo;
+      wing.cons_image_image(pseudo,
+			    width, height,
+			    depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
+			    vk::ImageUsageFlagBits::eTransferSrc,
+			    vk::ImageTiling::eLinear,
+			    vk::ImageLayout::ePreinitialized);
+      wing.cons_image_memory(pseudo,
+			     vk::MemoryPropertyFlagBits::eHostCoherent |
+			     vk::MemoryPropertyFlagBits::eHostVisible);
 
-        this->staging_image = pseudo.image;
-        this->staging_memory = pseudo.memory;
+      this->staging_image = pseudo.image;
+      this->staging_memory = pseudo.memory;
 
-        this->staging_memory_memreq = device.getImageMemoryRequirements(this->staging_image);
+      this->staging_memory_memreq = device.getImageMemoryRequirements(this->staging_image);
 
-        this->current_staging_layout = vk::ImageLayout::eUndefined;
+      this->current_staging_layout = vk::ImageLayout::eUndefined;
 
 
 
-        vk::ImageSubresource subres;
-        subres.setMipLevel(0)
-            .setArrayLayer(0)
-            .setAspectMask(this->aspect);
+      vk::ImageSubresource subres;
+      subres.setMipLevel(0)
+	.setArrayLayer(0)
+	.setAspectMask(this->aspect);
 
-        vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
+      vk::SubresourceLayout lay = device.getImageSubresourceLayout(this->staging_image, subres);
 
-        this->stride_in_bytes = lay.rowPitch;
+      this->stride_in_bytes = lay.rowPitch;
     }
       
     vk::SamplerCreateInfo sci;
@@ -160,11 +160,11 @@ namespace wg {
   }
 
   // Returns stride in bytes
-  uint32_t _Texture::getStride() {
+  uint32_t Texture::getStride() {
     return this->stride_in_bytes;
   }
    
-  void _Texture::set(unsigned char* pixels, bool fixed_stride) {
+  void Texture::set(unsigned char* pixels, bool fixed_stride) {
     void* mapped_memory;
     uint32_t mem_size = this->staging_memory_memreq.size;
 
@@ -186,16 +186,16 @@ namespace wg {
     device.unmapMemory(this->staging_memory);
 
     this->wing->copy_image(this->width, this->height, this->staging_image,
-			  this->current_staging_layout, vk::ImageLayout::eGeneral,
-			  this->width, this->height, this->image,
-			  this->current_layout, vk::ImageLayout::eShaderReadOnlyOptimal,
-			  this->aspect);
+			   this->current_staging_layout, vk::ImageLayout::eGeneral,
+			   this->width, this->height, this->image,
+			   this->current_layout, vk::ImageLayout::eShaderReadOnlyOptimal,
+			   this->aspect);
 
     this->current_staging_layout = vk::ImageLayout::eGeneral;
     this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
   }
 
-  void _Texture::set(_Framebuffer* framebuffer) {
+  void Texture::set(Framebuffer* framebuffer) {
     bool depth = this->aspect == vk::ImageAspectFlagBits::eDepth;
     
     this->wing->copy_image(depth ? framebuffer->depthImage.width
@@ -206,8 +206,8 @@ namespace wg {
 			   : framebuffer->colorImage.image,
 			   depth ? framebuffer->depthImage.current_layout
 			   : framebuffer->colorImage.current_layout,
-               depth ? vk::ImageLayout::eDepthStencilAttachmentOptimal 
-               : vk::ImageLayout::eColorAttachmentOptimal,
+			   depth ? vk::ImageLayout::eDepthStencilAttachmentOptimal 
+			   : vk::ImageLayout::eColorAttachmentOptimal,
 			   this->width, this->height,
 			   this->image, this->current_layout,
 			   vk::ImageLayout::eShaderReadOnlyOptimal,
@@ -217,10 +217,10 @@ namespace wg {
     this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
     
     if (depth) {
-        framebuffer->depthImage.current_layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+      framebuffer->depthImage.current_layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
     }
     else {
-        framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
+      framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
     }
 			   
   }

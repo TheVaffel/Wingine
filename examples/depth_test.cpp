@@ -45,30 +45,30 @@ int main() {
     5, 4, 6
   };
 
-  wg::VertexBuffer<float> position_buffer =
+  wg::VertexBuffer<float>* position_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
-  position_buffer.set(positions, num_points * 4);
+  position_buffer->set(positions, num_points * 4);
   
-  wg::VertexBuffer<float> color_buffer =
+  wg::VertexBuffer<float>* color_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
-  color_buffer.set(colors, num_points * 4);
+  color_buffer->set(colors, num_points * 4);
 
-  wg::IndexBuffer index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
-  index_buffer.set(indices, num_triangles * 3);
+  wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
+  index_buffer->set(indices, num_triangles * 3);
 
 
-  wg::Uniform cameraUniform = wing.createUniform<falg::Mat4>();
-  wg::Uniform lightUniform = wing.createUniform<falg::Mat4>();
+  wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
+  wg::Uniform<falg::Mat4>* lightUniform = wing.createUniform<falg::Mat4>();
   
   // Initialize resource set layout
   
   std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
   
-  wg::ResourceSet resourceSet = wing.createResourceSet(resourceSetLayout);
-  resourceSet.set({&cameraUniform});
+  wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
+  resourceSet->set({cameraUniform});
 
-  wg::ResourceSet lightSet = wing.createResourceSet(resourceSetLayout);
-  lightSet.set({&lightUniform});
+  wg::ResourceSet* lightSet = wing.createResourceSet(resourceSetLayout);
+  lightSet->set({lightUniform});
   
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
     std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -76,24 +76,24 @@ int main() {
 					4, // Number of elements
 					4 * sizeof(float), // Stride (in bytes)
 					0}, // Offset (bytes)
-				    {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
+				       {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
   
   // Some random size
   const uint32_t shadow_buffer_width = 2000,
     shadow_buffer_height = 2000;
 
-  wg::Framebuffer depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
-							     shadow_buffer_height, true, true);
-  wg::Texture shadow_texture = wing.createTexture(shadow_buffer_width,
-						  shadow_buffer_height, true);
+  wg::Framebuffer* depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
+							      shadow_buffer_height, true, true);
+  wg::Texture* shadow_texture = wing.createTexture(shadow_buffer_width,
+						   shadow_buffer_height, true);
 
   // Initialize texture set layout
 
   std::vector<uint64_t> lightTextureSetLayout = {wg::resTexture | wg::shaFragment,
 						 wg::resUniform | wg::shaFragment};
   
-  wg::ResourceSet lightTextureSet = wing.createResourceSet(lightTextureSetLayout);
-  lightTextureSet.set({shadow_texture, &lightUniform});
+  wg::ResourceSet* lightTextureSet = wing.createResourceSet(lightTextureSetLayout);
+  lightTextureSet->set({shadow_texture, lightUniform});
   
   std::vector<uint32_t> depth_vertex_shader;
   {
@@ -111,12 +111,12 @@ int main() {
     shader.compile(depth_vertex_shader);
   }
 
-  wg::Shader depth_shader = wing.createShader(wg::shaVertex, depth_vertex_shader);
+  wg::Shader* depth_shader = wing.createShader(wg::shaVertex, depth_vertex_shader);
 
-  wg::Pipeline depth_pipeline = wing.createPipeline({vertAttrDesc[0]},
-						    {&resourceSetLayout},
-						    {&depth_shader}, true,
-						    shadow_buffer_width, shadow_buffer_height);
+  wg::Pipeline* depth_pipeline = wing.createPipeline({vertAttrDesc[0]},
+						     {resourceSetLayout},
+						     {depth_shader}, true,
+						     shadow_buffer_width, shadow_buffer_height);
   
   
   std::vector<uint32_t> vertex_spirv;
@@ -137,7 +137,7 @@ int main() {
     shader.compile(vertex_spirv, s_col, world_pos);
   }
 
-  wg::Shader vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+  wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   
   std::vector<uint32_t> fragment_spirv;
@@ -172,17 +172,17 @@ int main() {
   }
 
 
-  wg::Shader fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+  wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
 
-  wg::Pipeline pipeline = wing.
+  wg::Pipeline* pipeline = wing.
     createPipeline(vertAttrDesc,
-		   {&resourceSetLayout, &lightTextureSetLayout},
-		   {&vertex_shader, &fragment_shader});
+		   {resourceSetLayout, lightTextureSetLayout},
+		   {vertex_shader, fragment_shader});
 
   
-  wg::RenderFamily family = wing.createRenderFamily(pipeline, true);
+  wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
 
-  wg::RenderFamily depth_family = wing.createRenderFamily(depth_pipeline, true);
+  wg::RenderFamily* depth_family = wing.createRenderFamily(depth_pipeline, true);
 
   wgut::Camera camera(F_PI / 3.f, 9.0 / 16.0, 0.01f, 100.0f);
   camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
@@ -196,20 +196,20 @@ int main() {
 
   while (win.isOpen()) {
     
-    lightUniform.set(light_camera.getRenderMatrix());
+    lightUniform->set(light_camera.getRenderMatrix());
     
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-    depth_family.startRecording(depth_framebuffer);
-    depth_family.recordDraw({&position_buffer, &color_buffer}, index_buffer, {lightSet});
-    depth_family.endRecording();
+    depth_family->startRecording(depth_framebuffer);
+    depth_family->recordDraw({position_buffer, color_buffer}, index_buffer, {lightSet});
+    depth_family->endRecording();
 
     shadow_texture->set(depth_framebuffer);
 
-    cameraUniform.set(renderMatrix);
-    family.startRecording();
-    family.recordDraw({&position_buffer, &color_buffer}, index_buffer, {resourceSet, lightTextureSet});
-    family.endRecording();
+    cameraUniform->set(renderMatrix);
+    family->startRecording();
+    family->recordDraw({position_buffer, color_buffer}, index_buffer, {resourceSet, lightTextureSet});
+    family->endRecording();
 
     wing.present();
 
@@ -236,9 +236,6 @@ int main() {
   wing.destroy(vertex_shader);
   wing.destroy(fragment_shader);
 
-  wing.destroy(lightTextureSet);
-  wing.destroy(lightSet);
-  wing.destroy(resourceSet);
   wing.destroy(pipeline);
   
   wing.destroy(position_buffer);

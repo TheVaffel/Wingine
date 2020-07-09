@@ -83,8 +83,8 @@ namespace wg {
   class Wingine;
   class Resource;
   class RenderFamily;
-  class _Framebuffer;
-  class _Texture;
+  class Framebuffer;
+  class Texture;
   class Image;
   class Buffer;
   template<typename tt>

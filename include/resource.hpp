@@ -33,7 +33,7 @@ namespace wg {
   };
 
 
-  class _Texture : public Image, public Resource {
+  class Texture : public Image, public Resource {
     Wingine* wing;
     
     vk::Sampler sampler;
@@ -47,7 +47,7 @@ namespace wg {
     
     uint32_t stride_in_bytes;
 
-    _Texture(Wingine& wing,
+    Texture(Wingine& wing,
 	     uint32_t width, uint32_t height,
 	     bool depth);
   public:
@@ -56,7 +56,7 @@ namespace wg {
     uint32_t getStride();
     
     void set(unsigned char* pixels, bool fixed_stride = false);
-    void set(_Framebuffer* framebuffer);
+    void set(Framebuffer* framebuffer);
 
     friend class Wingine;
   };
@@ -66,7 +66,7 @@ namespace wg {
   
   template<typename Type>
   class Uniform : public Resource {
-    Buffer buffer;
+    Buffer* buffer;
     
     Uniform(Wingine& wing);
     
@@ -78,19 +78,19 @@ namespace wg {
 
   template<typename Type>
   void Uniform<Type>::set(Type t) {
-    this->buffer.set(&t, sizeof(t), 0);
+    this->buffer->set(&t, sizeof(t), 0);
   }
 
   template<typename Type>
   Uniform<Type>::Uniform(Wingine& wing) : Resource(vk::DescriptorType::eUniformBuffer),
-					  buffer(wing,
-						 (vk::BufferUsageFlags)(vk::BufferUsageFlagBits::eUniformBuffer),
-						 sizeof(Type),
-						 true)
+					  buffer(new Buffer(wing,
+							    (vk::BufferUsageFlags)(vk::BufferUsageFlagBits::eUniformBuffer),
+							    sizeof(Type),
+							    true))
   {
     
     this->buffer_info = new vk::DescriptorBufferInfo();
-    this->buffer_info->buffer = this->buffer.buffer;
+    this->buffer_info->buffer = this->buffer->buffer;
     this->buffer_info->offset = 0;
     this->buffer_info->range = sizeof(Type);
   }

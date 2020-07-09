@@ -61,6 +61,20 @@ namespace wg {
     friend class Wingine;
   };
 
+  
+  class StorageBuffer : public Resource {
+
+    int num_bytes;
+    Buffer* buffer;
+    StorageBuffer(Wingine& wing,
+		  int size_bytes,
+		  bool host_updatable);
+  public:
+    void set(void* data,
+	     uint32_t num_bytes, uint32_t offset_bytes = 0);
+
+    friend class Wingine;
+  };
 
   // Template declarations
   

@@ -222,6 +222,24 @@ namespace wg {
     else {
       framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
     }
-			   
   }
+  
+  StorageBuffer::StorageBuffer(Wingine& wing,
+			       int size_bytes,
+			       bool host_updatable) :
+    Resource(vk::DescriptorType::eStorageBuffer) {
+    this->buffer = new Buffer(wing,
+			      vk::BufferUsageFlagBits::eStorageBuffer,
+			      size_bytes,
+			      host_updatable);
+  }
+
+  void StorageBuffer::set(void* data,
+			  uint32_t num_bytes,
+			  uint32_t offset_bytes) {
+    this->buffer->set(data,
+		      num_bytes,
+		      offset_bytes);
+  }
+
 };

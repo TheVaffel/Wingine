@@ -1008,6 +1008,11 @@ namespace wg {
     return texture;
   }
 
+  StorageBuffer* Wingine::createStorageBuffer(uint32_t num_bytes, bool host_updatable) {
+    return new StorageBuffer(*this,
+			     num_bytes, host_updatable);
+  }
+
   RenderFamily* Wingine::createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers) {
     return new RenderFamily(*this,
 			    pipeline, clear, num_framebuffers);
@@ -1097,6 +1102,11 @@ namespace wg {
     delete framebuffer->has_been_drawn_semaphore;
     
     delete framebuffer;
+  }
+
+  void Wingine::destroy(StorageBuffer* storagebuffer) {
+    this->destroy(storagebuffer->buffer);
+    delete storagebuffer;
   }
   
   Wingine::~Wingine() {

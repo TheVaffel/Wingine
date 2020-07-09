@@ -146,6 +146,8 @@ namespace wg {
     template<typename Type>
     Uniform<Type>* createUniform();
 
+    StorageBuffer* createStorageBuffer(uint32_t num_bytes, bool host_updatable = true);
+
     RenderFamily* createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers = 0);
       
     ResourceSet* createResourceSet(std::vector<uint64_t>& resourceLayout);
@@ -170,6 +172,7 @@ namespace wg {
     void destroy(Buffer* buffer);
     void destroy(Shader* shader);
     void destroy(Texture* texture);
+    void destroy(StorageBuffer* storageBuffer);
     
     template<typename Type>
     void destroy(Uniform<Type>* uniform);

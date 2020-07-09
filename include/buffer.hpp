@@ -28,6 +28,7 @@ namespace wg {
 
     template<typename Type>
     friend class Uniform;
+    friend class StorageBuffer;
     friend class RenderFamily;
     friend class Wingine;
   };

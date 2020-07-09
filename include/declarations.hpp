@@ -87,9 +87,12 @@ namespace wg {
   class Texture;
   class Image;
   class Buffer;
+  
   template<typename tt>
   class VertexBuffer;
+  
   class IndexBuffer;
+  class StorageBuffer;
 };
 
 #endif // WG_DECLARATIONS_HPP

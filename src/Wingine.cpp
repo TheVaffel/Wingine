@@ -779,7 +779,7 @@ namespace wg {
   void Wingine::init_descriptor_pool() {
     const int max_num_descriptors = 16; // Use as placeholder - refactor this part if necessary
     
-    std::vector<vk::DescriptorPoolSize> sizes(3);
+    std::vector<vk::DescriptorPoolSize> sizes(4);
     sizes[0].setType(vk::DescriptorType::eUniformBuffer)
       .setDescriptorCount(max_num_descriptors);
 
@@ -787,6 +787,9 @@ namespace wg {
       .setDescriptorCount(max_num_descriptors);
 
     sizes[2].setType(vk::DescriptorType::eStorageImage)
+      .setDescriptorCount(max_num_descriptors);
+
+    sizes[3].setType(vk::DescriptorType::eStorageBuffer)
       .setDescriptorCount(max_num_descriptors);
 
     vk::DescriptorPoolCreateInfo dpi;
@@ -1106,6 +1109,7 @@ namespace wg {
 
   void Wingine::destroy(StorageBuffer* storagebuffer) {
     this->destroy(storagebuffer->buffer);
+    delete storagebuffer->buffer_info;
     delete storagebuffer;
   }
   

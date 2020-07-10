@@ -53,6 +53,7 @@ namespace wg {
   
   enum ResourceType {
     resUniform = (uint64_t)VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+    resStorageBuffer = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     resTexture = (uint64_t)VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
     resStoreImage = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
   };

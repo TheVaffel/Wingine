@@ -88,7 +88,7 @@ int main() {
     SShader<SShaderType::SHADER_FRAGMENT, vec2_s> shader;
     vec2_v coord = shader.input<0>();
 
-    texture2D_v texture = shader.uniformBinding<texture2D_s>(0, 0);
+    texture2D_v texture = shader.uniformConstant<texture2D_s>(0, 0);
 
     vec4_v color = texture[coord];
     

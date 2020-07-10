@@ -232,6 +232,11 @@ namespace wg {
 			      vk::BufferUsageFlagBits::eStorageBuffer,
 			      size_bytes,
 			      host_updatable);
+
+    this->buffer_info = new vk::DescriptorBufferInfo();
+    this->buffer_info->buffer = this->buffer->buffer;
+    this->buffer_info->offset = 0;
+    this->buffer_info->range = size_bytes;
   }
 
   void StorageBuffer::set(void* data,

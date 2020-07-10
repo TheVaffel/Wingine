@@ -216,6 +216,7 @@ namespace wg {
   template<typename Type>
   void Wingine::destroy(Uniform<Type>* uniform) {
     this->destroy(uniform->buffer);
+    delete uniform->buffer_info;
     delete uniform;
   }
   

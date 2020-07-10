@@ -148,7 +148,7 @@ int main() {
     vec4_v in_col = shader.input<0>();
     vec4_v in_wpos = shader.input<1>();
 
-    texture2D_v shadow_tex = shader.uniformBinding<texture2D_s>(1, 0);
+    texture2D_v shadow_tex = shader.uniformConstant<texture2D_s>(1, 0);
     SUniformBinding<mat4_s> shadow_trans_bind = shader.uniformBinding<mat4_s>(1, 1);
     mat4_v shadow_trans = shadow_trans_bind.member<0>();
 

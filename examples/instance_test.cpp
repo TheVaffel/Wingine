@@ -89,10 +89,10 @@ int main() {
     SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
     mat4_v trans = trans_bind.member<0>();
 
-    vec4_v v0 = vec4_s::cons(1.0f, 0.0f, 0.0f, 0.0f);
+    /* vec4_v v0 = vec4_s::cons(1.0f, 0.0f, 0.0f, 0.0f);
     vec4_v v1 = vec4_s::cons(0.0f, 0.5f, 0.0f, 0.0f);
     vec4_v v2 = vec4_s::cons(0.0f, 0.0f, 0.5f, 0.0f);
-    vec4_v v3 = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f);
+    vec4_v v3 = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f); */
 
     /* mat4_v scale = mat4_s::cons(1.0f, 0.0f, 0.0f, 0.0f,
 				0.0f, 0.5f, 0.0f, 0.0f,
@@ -100,7 +100,7 @@ int main() {
 				0.0f, 0.0f, 0.0f, 1.0f); */
 
     // Just to demonstrate matrix construction for columns
-    mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
+    // mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
     
     SStorageBuffer<mat4_sarr_s> inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 1);
     mat4_sarr_v mat_array = inst_trans_bind.member<0>();
@@ -108,11 +108,10 @@ int main() {
     uint_v instance_id = shader.getBuiltin<BUILTIN_INSTANCE_INDEX>();
     
     mat4_v this_mat = mat_array[instance_id];
-    // vec3_v ss_pos = (1.0f / 50.0f) * s_pos;
     
     vec4_v het = vec4_s::cons(s_pos, 1.0f);
     vec4_v het_off = vec4_s::cons(s_off, 0.0f);
-    vec4_v transformed_pos = trans * (het_off + this_mat * scale * het);
+    vec4_v transformed_pos = trans * (het_off + this_mat * het);
 
     
 

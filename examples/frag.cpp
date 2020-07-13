@@ -56,16 +56,37 @@ int main() {
     uint_v vi = shader.getBuiltin<BUILTIN_VERTEX_INDEX>();
     SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
     float_v oscil = un1.member<0>();
-    // float_v fvi = cast<float_s>(vi);
 
     float_v pv0 = cast<float_s>(vi % 2);
     float_v pv1 = cast<float_s>(vi / 2);
 
-    vec4_v col = vec4_s::cons(pv0, pv1, 0.3f, 1.0f) * oscil;
+    float_lv local_variable = shader.local<float_s>();
+
+    local_variable.store(float_s::cons(0.3f));
+
+    float_v con = local_variable.load();
+    
+    local_variable.store(pv0);
+    
+    int_v i = shader.forLoop(4);
+    {
+      float_v a = local_variable.load();
+      float_v b = a * 1.2f;
+      local_variable.store(b);
+      
+    }
+    shader.endLoop();
+
+    
+    float_v pv0p = local_variable.load();
+    
+    
+    vec4_v col = vec4_s::cons(vec3_s::cons(pv0p, pv1, 0.3f) * oscil, 1.0f);
 
     shader.setBuiltin<BUILTIN_POSITION>(s_pos);
     shader.compile(vertex_spirv, col);
   }
+
 
   wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
@@ -77,11 +98,9 @@ int main() {
     
     // vec4_v frag_coord = shader.getBuiltin<BUILTIN_FRAG_COORD>();
     vec4_v out_col = shader.input<0>();
-    // vec4_v out_col = vec4_s::cons(frag_coord[0] / float(width),
-    // frag_coord[1] / float(height), 0.50f, 1.0f);
-    
+
     shader.compile(fragment_spirv, out_col);
-  }
+  } 
 
   wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   

@@ -47,6 +47,11 @@ int main() {
 					0}, // Offset (bytes)
   };
 
+  
+  float scale = 0.001f;
+  float offx = -0.77568377f;
+  float offy = 0.13646737f;
+
   std::vector<uint32_t> vertex_spirv;
   {
     using namespace spurv;
@@ -55,52 +60,74 @@ int main() {
     vec4_v s_pos = shader.input<0>();
     uint_v vi = shader.getBuiltin<BUILTIN_VERTEX_INDEX>();
     SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
-    float_v oscil = un1.member<0>();
 
-    float_v pv0 = cast<float_s>(vi % 2);
-    float_v pv1 = cast<float_s>(vi / 2);
+    // Compute corners, (-1, -1) to (1, 1)
+    float_v pv0 = cast<float_s>(vi % 2) * 2.f - 1.f;
+    float_v pv1 = cast<float_s>(vi / 2) * 2.f - 1.f;
 
-    float_lv local_variable = shader.local<float_s>();
-
-    local_variable.store(float_s::cons(0.3f));
-
-    float_v con = local_variable.load();
-    
-    local_variable.store(pv0);
-    
-    int_v i = shader.forLoop(4);
-    {
-      float_v a = local_variable.load();
-      float_v b = a * 1.2f;
-      local_variable.store(b);
-      
-    }
-    shader.endLoop();
-
-    
-    float_v pv0p = local_variable.load();
-    
-    
-    vec4_v col = vec4_s::cons(vec3_s::cons(pv0p, pv1, 0.3f) * oscil, 1.0f);
+    vec2_v coord = vec2_s::cons(pv0, pv1) * scale + vec2_s::cons(offx, offy);
 
     shader.setBuiltin<BUILTIN_POSITION>(s_pos);
-    shader.compile(vertex_spirv, col);
-  }
+    shader.compile(vertex_spirv, coord);
 
+  }
 
   wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
+  int mandelbrot_iterations = 1000;
+  float max_rad = 4.f;
+  
   std::vector<uint32_t> fragment_spirv;
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_FRAGMENT, vec4_s> shader;
-    
-    // vec4_v frag_coord = shader.getBuiltin<BUILTIN_FRAG_COORD>();
-    vec4_v out_col = shader.input<0>();
+    SShader<SShaderType::SHADER_FRAGMENT, vec2_s> shader;
+   
+    vec2_v coord = shader.input<0>();
 
+    vec2_lv z = shader.local<vec2_s>();
+    z.store(coord);
+
+    int_lv num_its = shader.local<int_s>();
+    num_its.store(int_s::cons(mandelbrot_iterations));
+
+    int_v i = shader.forLoop(mandelbrot_iterations);
+    {
+      vec2_v zl = z.load();
+      float_v a = zl[0];
+      float_v b = zl[1];
+
+      float_v r = a * a + b * b;
+      
+      shader.ifThen(r > float_s::cons(max_rad));
+      {
+	num_its.store(i);
+	shader.breakLoop();
+      }
+      shader.endIf();
+      
+      vec2_v new_z = vec2_s::cons(a * a - b * b, 2.f * a * b) + coord;
+      z.store(new_z);
+    }
+    shader.endLoop();
+
+    float_v itnum = cast<float_s>(num_its.load());
+
+    float_v rf = sin(itnum * 0.143f);
+    float_v gf = cos(itnum * 0.273f);
+    float_v bf = sin(itnum * 0.352f);
+    float_v r = (rf + 1.0f) / 2.0f;
+    float_v g = (gf + 1.0f) / 2.0f;
+    float_v b = (bf + 1.0f) / 2.0f;
+    
+
+    vec4_v rgb = vec4_s::cons(r, g, b, 1.0f);
+    vec4_v black = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    vec4_v out_col = select(itnum < float_s::cons(mandelbrot_iterations), rgb, black);
+    
     shader.compile(fragment_spirv, out_col);
-  } 
+  }
 
   wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
   

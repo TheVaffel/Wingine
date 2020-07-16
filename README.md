@@ -1,17 +1,13 @@
 # Wingine
 
-A Vulkan wrapper aiming to make graphics development somewhat enjoyable.
+A Vulkan wrapper aiming to make graphics development in Vulkan somewhat enjoyable.
 
 Previously, Wingine has been a part of [HConLib](https://github.com/TheVaffel/HConLib), but has been moved into its own project to ease sustained development.
 
-Current functionality is limited. In fact, it's even more limited than the one in HConLib. This is because I have rewritten it using Khronos' [C++ API for Vulkan](https://github.com/KhronosGroup/Vulkan-Hpp).
+A few examples of uses is in the `examples` folder. Here is a screenshot from the `instance_test` example, demonstrating instansted rendering:
 
-Current objectives include making it great again and then making it even greater.
+![The teapot fever dream](teapot_fever_dream.png)
 
-## Differences From HConLib Version
+It renders 20000 instances of the Utah teapot .obj model and uses simple Phong shading (diffuse light only). The color and offset of each teapot is given through per-instance attributes and its rotation is randomly generated on the host and accessed through a storage buffer. This example, including the shaders written in [spurv](https://github.com/TheVaffel/spurv), is about 200 lines of code.
 
-This version of Wingine is
-- Written with Khronos' Vulkan C++ API
-- Without direct support for GLSL (but you can use it if you want, provided you have some way to convert it into SPIR-V)
-- Kinda biased towards game developers, although it's hard to tell at this point
-- Under construction
+Wingine is not considered finished (probably never will, which is common in the software world), but is considered somewhat usable it this point.

@@ -56,11 +56,14 @@ int main() {
   
   wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
+  wg::Uniform<falg::Mat4>* viewUniform = wing.createUniform<falg::Mat4>();
+
   std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex,
+					      wg::resUniform | wg::shaVertex,
 					      wg::resStorageBuffer | wg::shaVertex };
   
   wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
-  resourceSet->set({cameraUniform, storage_buffer});
+  resourceSet->set({cameraUniform, viewUniform, storage_buffer});
 
   // Positions, color, offset
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
@@ -87,7 +90,9 @@ int main() {
     vec3_v s_col = shader.input<3>();
 
     SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    SUniformBinding<mat4_s> view_bind = shader.uniformBinding<mat4_s>(0, 1);
     mat4_v trans = trans_bind.member<0>();
+    mat4_v view = view_bind.member<0>();
 
     /* vec4_v v0 = vec4_s::cons(1.0f, 0.0f, 0.0f, 0.0f);
     vec4_v v1 = vec4_s::cons(0.0f, 0.5f, 0.0f, 0.0f);
@@ -102,7 +107,7 @@ int main() {
     // Just to demonstrate matrix construction for columns
     // mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
     
-    SStorageBuffer<mat4_sarr_s> inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 1);
+    SStorageBuffer<mat4_sarr_s> inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 2);
     mat4_sarr_v mat_array = inst_trans_bind.member<0>();
 
     uint_v instance_id = shader.getBuiltin<BUILTIN_INSTANCE_INDEX>();
@@ -113,13 +118,13 @@ int main() {
     vec4_v het_off = vec4_s::cons(s_off, 0.0f);
     vec4_v transformed_pos = trans * (het_off + this_mat * het);
 
-    
+    vec4_v norm_view = view * this_mat * vec4_s::cons(s_norm, 0.0f);
+    vec3_v trunc_norm = vec3_s::cons(norm_view[0], norm_view[1], norm_view[2]);
 
-    vec4_v hcol = vec4_s::cons(s_col, 1.0);
     // vec4_v hcol = vec4_s::cons(1.0f, 0.0f, 0.0f, 1.0f);
     
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
-    shader.compile(vertex_spirv, hcol);
+    shader.compile(vertex_spirv, s_col, trunc_norm);
   }
 
   // for(uint32_t i : vertex_spirv) {
@@ -132,10 +137,15 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_FRAGMENT, vec4_s> shader;
-    vec4_v in_col = shader.input<0>();
+    SShader<SShaderType::SHADER_FRAGMENT, vec3_s, vec3_s> shader;
+    vec3_v in_col = shader.input<0>();
+    vec3_v s_norm = shader.input<1>();
 
-    shader.compile(fragment_spirv, in_col);
+    float_v dt = max(-dot(s_norm, vec3_s::cons(0.6f, - 0.8f, 0.0f)), 0.1f);
+
+    vec4_v out_col = vec4_s::cons(dt * in_col, 1.0f);
+
+    shader.compile(fragment_spirv, out_col);
   }
 
   wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
@@ -165,8 +175,10 @@ int main() {
 		     falg::Vec3(0.0f, 1.0f, 0.0f));
     
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
+    falg::Mat4 rViewMatrix = ~camera.getViewMatrix();
     
     cameraUniform->set(renderMatrix);
+    viewUniform->set(rViewMatrix);
 
     family->submit();
     
@@ -193,5 +205,6 @@ int main() {
 
   model.destroy(wing);
   wing.destroy(cameraUniform);
+  wing.destroy(viewUniform);
 
 }

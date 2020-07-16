@@ -89,7 +89,7 @@ int main() {
     z.store(coord);
 
     int_lv num_its = shader.local<int_s>();
-    num_its.store(int_s::cons(mandelbrot_iterations));
+    num_its.store(mandelbrot_iterations);
 
     int_v i = shader.forLoop(mandelbrot_iterations);
     {
@@ -99,7 +99,7 @@ int main() {
 
       float_v r = a * a + b * b;
       
-      shader.ifThen(r > float_s::cons(max_rad));
+      shader.ifThen(r > max_rad);
       {
 	num_its.store(i);
 	shader.breakLoop();
@@ -113,18 +113,14 @@ int main() {
 
     float_v itnum = cast<float_s>(num_its.load());
 
-    float_v rf = sin(itnum * 0.143f);
-    float_v gf = cos(itnum * 0.273f);
-    float_v bf = sin(itnum * 0.352f);
-    float_v r = (rf + 1.0f) / 2.0f;
-    float_v g = (gf + 1.0f) / 2.0f;
-    float_v b = (bf + 1.0f) / 2.0f;
-    
+    float_v r = (sin(itnum * 0.143f) + 1.0f) / 2.0f;
+    float_v g = (cos(itnum * 0.273f) + 1.0f) / 2.0f;
+    float_v b = (sin(itnum * 0.352f) + 1.0f) / 2.0f;
 
-    vec4_v rgb = vec4_s::cons(r, g, b, 1.0f);
     vec4_v black = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f);
     
-    vec4_v out_col = select(itnum < float_s::cons(mandelbrot_iterations), rgb, black);
+    vec4_v out_col = select(itnum < mandelbrot_iterations,
+			    vec4_s::cons(r, g, b, 1.0f), black);
     
     shader.compile(fragment_spirv, out_col);
   }

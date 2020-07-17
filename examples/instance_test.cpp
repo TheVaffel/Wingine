@@ -116,15 +116,18 @@ int main() {
     
     vec4_v het = vec4_s::cons(s_pos, 1.0f);
     vec4_v het_off = vec4_s::cons(s_off, 0.0f);
-    vec4_v transformed_pos = trans * (het_off + this_mat * het);
-
+    vec4_v world_pos = het_off + this_mat * het;
+    
+    vec4_v transformed_pos = trans * world_pos;
     vec4_v norm_view = view * this_mat * vec4_s::cons(s_norm, 0.0f);
+    vec4_v pos_view = view * world_pos;
+			      
     vec3_v trunc_norm = vec3_s::cons(norm_view[0], norm_view[1], norm_view[2]);
 
     // vec4_v hcol = vec4_s::cons(1.0f, 0.0f, 0.0f, 1.0f);
     
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
-    shader.compile(vertex_spirv, s_col, trunc_norm);
+    shader.compile(vertex_spirv, s_col, trunc_norm, pos_view);
   }
 
   // for(uint32_t i : vertex_spirv) {
@@ -137,13 +140,23 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_FRAGMENT, vec3_s, vec3_s> shader;
+    SShader<SShaderType::SHADER_FRAGMENT, vec3_s, vec3_s, vec4_s> shader;
     vec3_v in_col = shader.input<0>();
-    vec3_v s_norm = shader.input<1>();
+    vec3_v s_norm = normalize(shader.input<1>());
+    vec4_v s_pos = shader.input<2>();
 
-    float_v dt = max(-dot(s_norm, vec3_s::cons(0.6f, - 0.8f, 0.0f)), 0.1f);
 
-    vec4_v out_col = vec4_s::cons(dt * in_col, 1.0f);
+    vec3_v sun_dir = normalize(vec3_s::cons(1.0f, -1.0f, 0.5f));
+
+    vec3_v pos_cam_dir = -normalize(vec3_s::cons(s_pos[0], s_pos[1], s_pos[2]));
+
+    float_v ldir_diff = max(dot(reflect(sun_dir, s_norm), pos_cam_dir), 0.0f);
+
+    float_v dt = max(-dot(s_norm, sun_dir), 0.0f);
+
+    float_v intensity = 0.1f + dt + pow(ldir_diff, 20.0f);
+
+    vec4_v out_col = vec4_s::cons(intensity * in_col, 1.0f);
 
     shader.compile(fragment_spirv, out_col);
   }

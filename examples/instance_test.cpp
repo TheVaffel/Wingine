@@ -53,17 +53,19 @@ int main() {
 
   wg::StorageBuffer* storage_buffer = wing.createStorageBuffer(num_instances * sizeof(falg::Mat4));
   storage_buffer->set(inst_mats, num_instances * sizeof(falg::Mat4));
-  
-  wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
-  wg::Uniform<falg::Mat4>* viewUniform = wing.createUniform<falg::Mat4>();
+
+  struct CamColl {
+    falg::Mat4 cam, view;
+  };
+  
+  wg::Uniform<CamColl>* cameraUniform = wing.createUniform<CamColl>();
 
   std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex,
-					      wg::resUniform | wg::shaVertex,
 					      wg::resStorageBuffer | wg::shaVertex };
   
   wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
-  resourceSet->set({cameraUniform, viewUniform, storage_buffer});
+  resourceSet->set({cameraUniform, storage_buffer});
 
   // Positions, color, offset
   std::vector<wg::VertexAttribDesc> vertAttrDesc =
@@ -89,10 +91,9 @@ int main() {
     vec3_v s_off = shader.input<2>();
     vec3_v s_col = shader.input<3>();
 
-    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
-    SUniformBinding<mat4_s> view_bind = shader.uniformBinding<mat4_s>(0, 1);
+    SUniformBinding<mat4_s, mat4_s> trans_bind = shader.uniformBinding<mat4_s, mat4_s>(0, 0);
     mat4_v trans = trans_bind.member<0>();
-    mat4_v view = view_bind.member<0>();
+    mat4_v view = trans_bind.member<1>();
 
     /* vec4_v v0 = vec4_s::cons(1.0f, 0.0f, 0.0f, 0.0f);
     vec4_v v1 = vec4_s::cons(0.0f, 0.5f, 0.0f, 0.0f);
@@ -107,7 +108,7 @@ int main() {
     // Just to demonstrate matrix construction for columns
     // mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
     
-    SStorageBuffer<mat4_sarr_s> inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 2);
+    SStorageBuffer<mat4_sarr_s> inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 1);
     mat4_sarr_v mat_array = inst_trans_bind.member<0>();
 
     uint_v instance_id = shader.getBuiltin<BUILTIN_INSTANCE_INDEX>();
@@ -178,6 +179,7 @@ int main() {
 		     model.getIndexBuffer(), {resourceSet}, num_instances);
   family->endRecording();
 
+  CamColl camcoll;
   
   while (win.isOpen()) {
 
@@ -186,12 +188,13 @@ int main() {
     camera.setLookAt(3.0f * falg::Vec3(sin(phi), 1.0f, cos(phi)),
 		     falg::Vec3(0.0f, 0.0f, 0.0f),
 		     falg::Vec3(0.0f, 1.0f, 0.0f));
-    
+
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     falg::Mat4 rViewMatrix = ~camera.getViewMatrix();
+
+    camcoll = {renderMatrix, rViewMatrix};
     
-    cameraUniform->set(renderMatrix);
-    viewUniform->set(rViewMatrix);
+    cameraUniform->set(camcoll);
 
     family->submit();
     
@@ -218,6 +221,5 @@ int main() {
 
   model.destroy(wing);
   wing.destroy(cameraUniform);
-  wing.destroy(viewUniform);
 
 }

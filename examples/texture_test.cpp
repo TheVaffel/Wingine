@@ -71,7 +71,7 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_VERTEX, vec4_s, vec2_s> shader;
+    VertexShader<vec4_s, vec2_s> shader;
     vec4_v s_pos = shader.input<0>();
     vec2_v s_coord = shader.input<1>();
     
@@ -85,10 +85,10 @@ int main() {
   {
     using namespace spurv;
 
-    SShader<SShaderType::SHADER_FRAGMENT, vec2_s> shader;
+    FragmentShader<vec2_s> shader;
     vec2_v coord = shader.input<0>();
 
-    texture2D_v texture = shader.uniformConstant<texture2D_s>(0, 0);
+    texture2D_v texture = shader.uniformConstant<texture2D_s>(0, 0).load();
 
     vec4_v color = texture[coord];
     

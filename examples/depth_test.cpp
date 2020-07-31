@@ -100,8 +100,8 @@ int main() {
     using namespace spurv;
 
     SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
-    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
-    mat4_v trans = trans_bind.member<0>();
+    SPointerVar<SStruct<mat4_s>, STORAGE_UNIFORM>& trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    mat4_v trans = trans_bind.member<0>().load();
 
     vec4_v pos = shader.input<0>();
     
@@ -109,6 +109,7 @@ int main() {
 
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
     shader.compile(depth_vertex_shader);
+
   }
 
   wg::Shader* depth_shader = wing.createShader(wg::shaVertex, depth_vertex_shader);
@@ -127,14 +128,17 @@ int main() {
     vec4_v s_pos = shader.input<0>();
     vec4_v s_col = shader.input<1>();
 
-    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
-    mat4_v trans = trans_bind.member<0>();
+    // SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    auto trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    mat4_v trans = trans_bind.member<0>().load();
 
     vec4_v transformed_pos = trans * s_pos;
     vec4_v world_pos = s_pos; // Should be model transformed, but doesn't have one in this example
     
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
     shader.compile(vertex_spirv, s_col, world_pos);
+
+    SUtils::binaryPrettyPrint(vertex_spirv);
   }
 
   wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
@@ -148,9 +152,9 @@ int main() {
     vec4_v in_col = shader.input<0>();
     vec4_v in_wpos = shader.input<1>();
 
-    texture2D_v shadow_tex = shader.uniformConstant<texture2D_s>(1, 0);
-    SUniformBinding<mat4_s> shadow_trans_bind = shader.uniformBinding<mat4_s>(1, 1);
-    mat4_v shadow_trans = shadow_trans_bind.member<0>();
+    texture2D_v shadow_tex = shader.uniformConstant<texture2D_s>(1, 0).load();
+    auto shadow_trans_bind = shader.uniformBinding<mat4_s>(1, 1);
+    mat4_v shadow_trans = shadow_trans_bind.member<0>().load();
 
     vec4_v light_pos = shadow_trans * in_wpos;
 

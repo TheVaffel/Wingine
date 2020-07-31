@@ -59,7 +59,7 @@ int main() {
     SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
     vec4_v s_pos = shader.input<0>();
     uint_v vi = shader.getBuiltin<BUILTIN_VERTEX_INDEX>();
-    SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
+    // SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
 
     // Compute corners, (-1, -1) to (1, 1)
     float_v pv0 = cast<float_s>(vi % 2) * 2.f - 1.f;
@@ -123,10 +123,15 @@ int main() {
 			    vec4_s::cons(r, g, b, 1.0f), black);
     
     shader.compile(fragment_spirv, out_col);
+
+    SUtils::binaryPrettyPrint(fragment_spirv);
   }
 
+  /* for(int i = 0; i < fragment_spirv.size(); i++) {
+    printf("%d\n", fragment_spirv[i]);
+    } */
+
   wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-  
   wg::Pipeline* pipeline = wing.
     createPipeline(vertAttrDesc,
 		   {resourceSetLayout},

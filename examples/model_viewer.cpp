@@ -12,7 +12,7 @@ int main() {
   
   wgut::Model model = wgut::Model::fromFile(wing, "../models/teapot.obj",
 					    {wgut::ReadAttribType::attTypePosition,
-					    wgut::ReadAttribType::attTypeNormal}); 
+					     wgut::ReadAttribType::attTypeNormal}); 
 
   wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
@@ -37,8 +37,8 @@ int main() {
     vec3_v s_pos = shader.input<0>();
     vec3_v s_col = shader.input<1>();
 
-    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
-    mat4_v trans = trans_bind.member<0>();
+    auto trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    mat4_v trans = trans_bind.member<0>().load();
 
     // vec3_v ss_pos = (1.0f / 50.0f) * s_pos;
     vec4_v het = vec4_s::cons(s_pos[0], s_pos[1], s_pos[2], 1.0);

@@ -91,9 +91,9 @@ int main() {
     vec3_v s_off = shader.input<2>();
     vec3_v s_col = shader.input<3>();
 
-    SUniformBinding<mat4_s, mat4_s> trans_bind = shader.uniformBinding<mat4_s, mat4_s>(0, 0);
-    mat4_v trans = trans_bind.member<0>();
-    mat4_v view = trans_bind.member<1>();
+    auto trans_bind = shader.uniformBinding<mat4_s, mat4_s>(0, 0);
+    mat4_v trans = trans_bind.member<0>().load();
+    mat4_v view = trans_bind.member<1>().load();
 
     /* vec4_v v0 = vec4_s::cons(1.0f, 0.0f, 0.0f, 0.0f);
     vec4_v v1 = vec4_s::cons(0.0f, 0.5f, 0.0f, 0.0f);
@@ -108,12 +108,12 @@ int main() {
     // Just to demonstrate matrix construction for columns
     // mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
     
-    SStorageBuffer<mat4_sarr_s> inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 1);
-    mat4_sarr_v mat_array = inst_trans_bind.member<0>();
+    auto inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 1);
+    auto mat_array = inst_trans_bind.member<0>();
 
     uint_v instance_id = shader.getBuiltin<BUILTIN_INSTANCE_INDEX>();
     
-    mat4_v this_mat = mat_array[instance_id];
+    mat4_v this_mat = mat_array[cast<int_s>(instance_id)].load();
     
     vec4_v het = vec4_s::cons(s_pos, 1.0f);
     vec4_v het_off = vec4_s::cons(s_off, 0.0f);
@@ -129,12 +129,10 @@ int main() {
     
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
     shader.compile(vertex_spirv, s_col, trunc_norm, pos_view);
+
+    // prettyprint(vertex_spirv);
   }
-
-  // for(uint32_t i : vertex_spirv) {
-  // std::cout << i << std::endl;
-  // }
-
+  
   wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
   std::vector<uint32_t> fragment_spirv;
@@ -160,6 +158,8 @@ int main() {
     vec4_v out_col = vec4_s::cons(intensity * in_col, 1.0f);
 
     shader.compile(fragment_spirv, out_col);
+
+    // prettyprint(fragment_spirv);
   }
 
   wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);

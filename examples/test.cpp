@@ -65,13 +65,15 @@ int main() {
     vec4_v s_pos = shader.input<0>();
     vec4_v s_col = shader.input<1>();
 
-    SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
-    mat4_v trans = trans_bind.member<0>();
+    // SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    mat4_v trans = shader.uniformBinding<mat4_s>(0, 0).member<0>().load();
 
     vec4_v transformed_pos = trans * s_pos;
     
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
     shader.compile(vertex_spirv, s_col);
+
+    // prettyprint(vertex_spirv);
   }
 
   /* std::cout << "Vertex SPIRV:" << std::endl;

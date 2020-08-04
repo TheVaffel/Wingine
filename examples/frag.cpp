@@ -124,7 +124,7 @@ int main() {
     
     shader.compile(fragment_spirv, out_col);
 
-    SUtils::binaryPrettyPrint(fragment_spirv);
+    // SUtils::binaryPrettyPrint(fragment_spirv);
   }
 
   /* for(int i = 0; i < fragment_spirv.size(); i++) {

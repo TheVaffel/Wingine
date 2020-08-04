@@ -100,7 +100,7 @@ int main() {
     using namespace spurv;
 
     SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
-    SPointerVar<SStruct<mat4_s>, STORAGE_UNIFORM>& trans_bind = shader.uniformBinding<mat4_s>(0, 0);
+    SPointerVar<SStruct<SDecoration::BLOCK, mat4_s>, STORAGE_UNIFORM>& trans_bind = shader.uniformBinding<mat4_s>(0, 0);
     mat4_v trans = trans_bind.member<0>().load();
 
     vec4_v pos = shader.input<0>();
@@ -138,7 +138,7 @@ int main() {
     shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
     shader.compile(vertex_spirv, s_col, world_pos);
 
-    SUtils::binaryPrettyPrint(vertex_spirv);
+    // SUtils::binaryPrettyPrint(vertex_spirv);
   }
 
   wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);

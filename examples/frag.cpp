@@ -85,10 +85,10 @@ int main() {
    
     vec2_v coord = shader.input<0>();
 
-    vec2_lv z = shader.local<vec2_s>();
+    local_v<vec2_s> z = shader.local<vec2_s>();
     z.store(coord);
 
-    int_lv num_its = shader.local<int_s>();
+    local_v<int_s> num_its = shader.local<int_s>();
     num_its.store(mandelbrot_iterations);
 
     int_v i = shader.forLoop(mandelbrot_iterations);

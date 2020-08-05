@@ -113,7 +113,7 @@ int main() {
 
     uint_v instance_id = shader.getBuiltin<BUILTIN_INSTANCE_INDEX>();
     
-    mat4_v this_mat = mat_array[cast<int_s>(instance_id)].load();
+    mat4_v this_mat = mat_array[instance_id].load();
     
     vec4_v het = vec4_s::cons(s_pos, 1.0f);
     vec4_v het_off = vec4_s::cons(s_off, 0.0f);

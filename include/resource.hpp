@@ -55,8 +55,11 @@ namespace wg {
     // Returns stride in bytes
     uint32_t getStride();
     
-    void set(unsigned char* pixels, bool fixed_stride = false);
-    void set(Framebuffer* framebuffer);
+    void set(unsigned char* pixels,
+	     const std::initializer_list<SemaphoreChain*>& wait_semaphores,
+	     bool fixed_stride = false);
+    void set(Framebuffer* framebuffer,
+	     const std::initializer_list<SemaphoreChain*>& wait_semaphores);
 
     friend class Wingine;
   };

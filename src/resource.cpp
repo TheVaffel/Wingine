@@ -164,7 +164,9 @@ namespace wg {
     return this->stride_in_bytes;
   }
    
-  void Texture::set(unsigned char* pixels, bool fixed_stride) {
+  void Texture::set(unsigned char* pixels,
+		    const std::initializer_list<SemaphoreChain*>& semaphores,
+		    bool fixed_stride) {
     void* mapped_memory;
     uint32_t mem_size = this->staging_memory_memreq.size;
 
@@ -189,37 +191,32 @@ namespace wg {
 			   this->current_staging_layout, vk::ImageLayout::eGeneral,
 			   this->width, this->height, this->image,
 			   this->current_layout, vk::ImageLayout::eShaderReadOnlyOptimal,
-			   this->aspect);
+			   this->aspect,
+			   semaphores);
 
     this->current_staging_layout = vk::ImageLayout::eGeneral;
     this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
   }
 
-  void Texture::set(Framebuffer* framebuffer) {
+  void Texture::set(Framebuffer* framebuffer, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {
     bool depth = this->aspect == vk::ImageAspectFlagBits::eDepth;
     
-    this->wing->copy_image(depth ? framebuffer->depthImage.width
-			   : framebuffer->colorImage.width,
-			   depth ? framebuffer->depthImage.height
-			   : framebuffer->colorImage.height,
-			   depth ? framebuffer->depthImage.image
-			   : framebuffer->colorImage.image,
-			   depth ? framebuffer->depthImage.current_layout
-			   : framebuffer->colorImage.current_layout,
-			   depth ? vk::ImageLayout::eDepthStencilAttachmentOptimal 
-			   : vk::ImageLayout::eColorAttachmentOptimal,
+    this->wing->copy_image(depth ? framebuffer->depthImage.width : framebuffer->colorImage.width,
+			   depth ? framebuffer->depthImage.height : framebuffer->colorImage.height,
+			   depth ? framebuffer->depthImage.image : framebuffer->colorImage.image,
+			   depth ? framebuffer->depthImage.current_layout : framebuffer->colorImage.current_layout,
+			   depth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal,
 			   this->width, this->height,
 			   this->image, this->current_layout,
 			   vk::ImageLayout::eShaderReadOnlyOptimal,
 			   this->aspect,
-			   framebuffer->has_been_drawn_semaphore);
+			   wait_semaphores);
 
     this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
     
     if (depth) {
       framebuffer->depthImage.current_layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-    }
-    else {
+    } else {
       framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
     }
   }

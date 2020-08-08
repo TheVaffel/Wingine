@@ -11,18 +11,16 @@ namespace wg {
     Image colorImage;
     Image depthImage;
     vk::Framebuffer framebuffer;
-    vk::Semaphore *ready_for_draw_semaphore,
-      *has_been_drawn_semaphore;
     
     Framebuffer(Wingine& wing,
 		 int width, int height,
-		 bool depthOnly, bool withoutSemaphore = false);
+		 bool depthOnly);
     Framebuffer();
     
   public:
     
     void destroy();
-    
+
     const Image& getColorImage() const;
     const Image& getDepthImage() const;
     const vk::Framebuffer& getFramebuffer() const;

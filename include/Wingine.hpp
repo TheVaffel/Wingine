@@ -18,11 +18,12 @@
 #include "resource.hpp"
 #include "pipeline.hpp"
 #include "renderfamily.hpp"
+#include "semaphore.hpp"
 #include "util.hpp"
 
 
 namespace wg {
-
+  
   class Wingine {
 
     vk::Instance vulkan_instance;
@@ -39,8 +40,10 @@ namespace wg {
     vk::SwapchainKHR swapchain;
 
     std::vector<vk::Image> swapchain_images;
-    vk::Semaphore image_acquired_semaphore;
-    vk::Semaphore image_drawn_semaphore;
+    
+    vk::Fence image_acquired_fence;
+    vk::Semaphore image_acquire_semaphore;
+    vk::Semaphore finished_drawing_semaphore;
 
     uint32_t current_swapchain_image;
     std::vector<Framebuffer*> framebuffers;
@@ -85,7 +88,7 @@ namespace wg {
     void init_framebuffers();
     void init_descriptor_pool();
     void init_pipeline_cache();
-    void stage_next_image();
+    void stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphore_chains);
     
     void cons_image_image(Image& image,
 			  uint32_t width, uint32_t height,
@@ -100,11 +103,11 @@ namespace wg {
 			 ImageViewType type);
 
     void copy_image(uint32_t w1, uint32_t h1, vk::Image src,
-		   vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
-		   uint32_t w2, uint32_t h2, vk::Image dst,
-		   vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
+		    vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
+		    uint32_t w2, uint32_t h2, vk::Image dst,
+		    vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
 		    vk::ImageAspectFlagBits flag,
-		    vk::Semaphore *wait_semaphore = nullptr);
+		    const std::initializer_list<SemaphoreChain*>& wait_semaphores);
 
     void cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
 			vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
@@ -131,6 +134,8 @@ namespace wg {
 
   public:
 
+    void waitForLastPresent();
+    
     Framebuffer* getCurrentFramebuffer();
     int getCurrentFramebufferIndex();
     int getNumFramebuffers();
@@ -161,11 +166,13 @@ namespace wg {
 			     int width = -1, int height = -1);
     
     Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
-				    bool depthOnly = false, bool withoutSemaphore = false);
+				    bool depthOnly = false);
 
     Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
+
+    SemaphoreChain* createSemaphoreChain();
     
-    void present();
+    void present(const std::initializer_list<SemaphoreChain*>& semaphores);
 
     void destroy(Pipeline* pipeline);
     void destroy(RenderFamily* family);
@@ -173,6 +180,7 @@ namespace wg {
     void destroy(Shader* shader);
     void destroy(Texture* texture);
     void destroy(StorageBuffer* storageBuffer);
+    void destroy(SemaphoreChain* semaphore_chain);
     
     template<typename Type>
     void destroy(Uniform<Type>* uniform);
@@ -196,11 +204,11 @@ namespace wg {
     friend class ResourceSetLayout;
     friend class ResourceSet;
     friend class Texture;
+    friend class SemaphoreChain;
   };
 
 
   // Template things
-
 
   template<typename Type>
   VertexBuffer<Type>* Wingine::createVertexBuffer(uint32_t num, bool host_updatable) {

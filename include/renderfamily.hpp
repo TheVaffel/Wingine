@@ -28,7 +28,7 @@ namespace wg {
 		 bool clear,
 		 int num_buffers = 0);
 
-    void submit_command(int index);
+    void submit_command(const std::initializer_list<SemaphoreChain*>& wait_semaphores, int index);
     
   public:
     void startRecording(std::vector<Framebuffer*> framebuffer = {});
@@ -37,7 +37,7 @@ namespace wg {
 		    const std::vector<ResourceSet*>& sets, int instanceCount = 1);
     void endRecording();
 
-    void submit(int index = -1);
+    void submit(const std::initializer_list<SemaphoreChain*>& wait_semaphores = {}, int index = -1);
     
     friend class Wingine;
   };

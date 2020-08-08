@@ -88,6 +88,7 @@ namespace wg {
   class Texture;
   class Image;
   class Buffer;
+  class SemaphoreChain;
   
   template<typename tt>
   class VertexBuffer;

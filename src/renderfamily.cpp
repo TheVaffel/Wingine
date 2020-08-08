@@ -103,8 +103,7 @@ namespace wg {
     
       vk::Device device = this->wing->getDevice();
 
-      device.waitForFences(1, &this->commands[i].fence, true, (uint64_t)(1000000));
-	
+      device.waitForFences(1, &this->commands[i].fence, true, UINT64_MAX);
 
       this->commands[i].buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
     
@@ -160,39 +159,63 @@ namespace wg {
     }
   }
 
-  void RenderFamily::submit(int index) {
+  void RenderFamily::submit(const std::initializer_list<SemaphoreChain*>& wait_semaphores, int index) {
     if (index == -1) {
       index = this->wing->getCurrentFramebufferIndex();
     }
 
     _wassert(index <= this->num_buffers, "[RenderFamily::submit(int index)] Index too high. This could be because the RenderFamily instance is created with fewer buffers than there are frame buffers, and no index was explicitly set.");
     
-    this->submit_command(index);
+    this->submit_command(wait_semaphores, index);
   }
 
-  void RenderFamily::submit_command(int index) {
+  void RenderFamily::submit_command(const std::initializer_list<SemaphoreChain*>& semaphores, int index) {
+
     vk::Device device = this->wing->getDevice();
     vk::Queue queue = this->wing->getGraphicsQueue();
 
-    vk::PipelineStageFlags last_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+    vk::PipelineStageFlags stage_flags[semaphores.size()];
 
-    vk::SubmitInfo si;
-    si.setPWaitDstStageMask(&last_stage)
-      .setCommandBufferCount(1)
-      .setPCommandBuffers(&this->commands[index].buffer)
-      .setSignalSemaphoreCount(1)
-      .setPSignalSemaphores(this->framebuffers[index]->has_been_drawn_semaphore);
-
-    if (this->framebuffers[index]->ready_for_draw_semaphore != nullptr) {
-      si.setWaitSemaphoreCount(1)
-	.setPWaitSemaphores(this->framebuffers[index]->ready_for_draw_semaphore);
-    } else {
-      si.setWaitSemaphoreCount(0);
+    for(unsigned int i = 0; i < semaphores.size(); i++) {
+      stage_flags[i] = vk::PipelineStageFlagBits::eTopOfPipe;
     }
+
+    vk::Semaphore wait_sems[semaphores.size()];
+    vk::Semaphore signal_sems[semaphores.size()];
+    vk::PipelineStageFlags flags[semaphores.size()];
+    uint64_t wait_vals[semaphores.size()];
+    uint64_t signal_vals[semaphores.size()];
+
+
+    int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems, std::begin(semaphores), semaphores.size());
+    int num_signal_sems = SemaphoreChain::getSignalSemaphores(signal_sems, std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreWaitValues(wait_vals, std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreSignalValues(signal_vals, std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getWaitStages(flags, std::begin(semaphores), semaphores.size());
+    
+    vk::TimelineSemaphoreSubmitInfo tssi;
+    tssi.setSignalSemaphoreValueCount(num_signal_sems)
+      .setPSignalSemaphoreValues(signal_vals)
+      .setWaitSemaphoreValueCount(num_wait_sems)
+      .setPWaitSemaphoreValues(wait_vals);
+    
+    vk::SubmitInfo si;
+    si.setCommandBufferCount(1)
+      .setPCommandBuffers(&this->commands[index].buffer)
+      .setPWaitDstStageMask(stage_flags)
+      .setSignalSemaphoreCount(num_signal_sems)
+      .setPSignalSemaphores(signal_sems)
+      .setWaitSemaphoreCount(num_wait_sems)
+      .setPWaitSemaphores(wait_sems)
+      .setPNext(&tssi);
+      
+    SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
+
+    // Ensure finished last submission
+    device.waitForFences(1, &this->commands[index].fence, true, (uint64_t)1e9);
     
     device.resetFences(1, &this->commands[index].fence);
+
     queue.submit(1, &si, this->commands[index].fence);
-    
-    device.waitForFences(1, &this->commands[index].fence, true, (uint64_t)1e9);
   }
 };

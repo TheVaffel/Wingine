@@ -7,8 +7,7 @@ namespace wg {
   
   Framebuffer::Framebuffer(Wingine& wing,
 			   int width, int height,
-			   bool depthOnly,
-			   bool withoutReadyToDrawSemaphore) {
+			   bool depthOnly) {
 
     std::vector<vk::ImageView> attachments;
     
@@ -63,19 +62,7 @@ namespace wg {
     vk::Device device = wing.getDevice();
 
     vk::SemaphoreCreateInfo sci;
-    
-    if (!withoutReadyToDrawSemaphore) {
-      this->ready_for_draw_semaphore = new vk::Semaphore();
-      
-      *this->ready_for_draw_semaphore = wing.device.createSemaphore(sci);
-    } else {
-      this->ready_for_draw_semaphore = nullptr;
-    }
-
-    this->has_been_drawn_semaphore = new vk::Semaphore();
-
-    *this->has_been_drawn_semaphore = wing.device.createSemaphore(sci);
-    
+        
     this->framebuffer = device.createFramebuffer(finf);
   }
 

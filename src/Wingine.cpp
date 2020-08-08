@@ -112,7 +112,7 @@ namespace wg {
 			   uint32_t w2, uint32_t h2, vk::Image dst,
 			   vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
 			   vk::ImageAspectFlagBits aspect,
-			   vk::Semaphore *wait_semaphore) {
+			   const std::initializer_list<SemaphoreChain*>& semaphores) {
     vk::CommandBufferBeginInfo bg;
     this->device.waitForFences(1, &general_purpose_command.fence,
 			       true, (uint64_t)1e9);
@@ -190,24 +190,44 @@ namespace wg {
 
     general_purpose_command.buffer.end();
 
-    vk::PipelineStageFlags last_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput;	
+    
+    vk::Semaphore wait_sems[semaphores.size()];
+    vk::Semaphore signal_sems[semaphores.size()];
+    uint64_t wait_vals[semaphores.size()];
+    uint64_t signal_vals[semaphores.size()];
+    vk::PipelineStageFlags flags[semaphores.size()];
+
+    int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems, std::begin(semaphores), semaphores.size());
+    int num_sig_sems = SemaphoreChain::getSignalSemaphores(signal_sems, std::begin(semaphores), semaphores.size());
+    
+    SemaphoreChain::getSemaphoreWaitValues(wait_vals, std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreSignalValues(signal_vals, std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getWaitStages(flags, std::begin(semaphores), semaphores.size());
+
+    vk::TimelineSemaphoreSubmitInfo tssi;
+    tssi.setWaitSemaphoreValueCount(num_wait_sems)
+      .setPWaitSemaphoreValues(wait_vals)
+      .setSignalSemaphoreValueCount(num_sig_sems)
+      .setPSignalSemaphoreValues(signal_vals);
     
     vk::SubmitInfo si;
     si.setCommandBufferCount(1)
       .setPCommandBuffers(&general_purpose_command.buffer)
-      .setPWaitDstStageMask(&last_stage);
-    
-    if (wait_semaphore != nullptr) {
-      si.setWaitSemaphoreCount(1)
-	.setPWaitSemaphores(wait_semaphore);
-    } else {
-      si.setWaitSemaphoreCount(0);
-    }
+      .setPWaitDstStageMask(flags)
+      .setWaitSemaphoreCount(num_wait_sems)
+      .setPWaitSemaphores(wait_sems)
+      .setSignalSemaphoreCount(num_sig_sems)
+      .setPSignalSemaphores(signal_sems)
+      .setPNext(&tssi);
+
+    SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     
     this->graphics_queue.submit(1, &si, general_purpose_command.fence);
 
-    // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
-    this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9);
+    if (semaphores.size() == 0) {
+      // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
+      this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9);
+    }
     
   }
   
@@ -292,21 +312,33 @@ namespace wg {
   
   
 
-  void Wingine::present() {
+  void Wingine::present(const std::initializer_list<SemaphoreChain*>& semaphores) {
 
+#ifdef DEBUG
+    if(!semaphores.size()) {
+      std::cout << "[Wingine::present] Warning: No semaphore submitted to present(), presentation may not happen correctly"
+		<< std::endl;
+    }
+#endif // DEBUG
+    
     vk::PresentInfoKHR presentInfo;
+    
+    SemaphoreChain::chainsToSemaphore(this, std::begin(semaphores), semaphores.size(), this->finished_drawing_semaphore);
 
+    // Present, but wait for finished_drawing_semaphore, which waits on the rest of the semaphores
+    
     presentInfo.setSwapchainCount(1)
       .setPSwapchains(&this->swapchain)
       .setPImageIndices(&this->current_swapchain_image)
       .setWaitSemaphoreCount(1)
-      .setPWaitSemaphores(&this->image_drawn_semaphore)
+      .setPWaitSemaphores(&this->finished_drawing_semaphore)
       .setPResults(nullptr);
-
     
     this->present_queue.presentKHR(presentInfo);
 
-    this->stage_next_image();
+    this->stage_next_image(semaphores);
+
+    SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
   }
   
   void Wingine::init_instance(int width, int height, const char* str) {
@@ -431,10 +463,14 @@ namespace wg {
     bool found = false;
 
     for(vk::PhysicalDevice dev : found_devices) {
-        vk::PhysicalDeviceProperties props = dev.getProperties();
-        std::cout << "Device name: " << props.deviceName << std::endl;
+      vk::StructureChain<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties> props =
+	dev.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties>(this->dispatcher);
 
+      vk::PhysicalDeviceProperties2 props2 = props.get<vk::PhysicalDeviceProperties2>();
+      // vk::PhysicalDeviceVulkan12Properties props12 = props.get<vk::PhysicalDeviceVulkan12Properties>();
 
+      std::cout << "Device name: " << props2.properties.deviceName << std::endl;
+      // std::cout << "maxTimelineSemaphoreValueDifference: " << props12.maxTimelineSemaphoreValueDifference << std::endl;
         this->graphics_queue_index = -1;
         this->present_queue_index = -1;
         this->compute_queue_index = -1;
@@ -508,6 +544,9 @@ namespace wg {
     vk::PhysicalDeviceFeatures feats = {};
     feats.setShaderClipDistance(VK_TRUE);
 
+    vk::PhysicalDeviceVulkan12Features feats12;
+    feats12.setTimelineSemaphore(VK_TRUE);
+    
     vk::DeviceCreateInfo device_info;
     device_info.setQueueCreateInfoCount(c_infos.size())
       .setPQueueCreateInfos(c_infos.data())
@@ -515,7 +554,8 @@ namespace wg {
       .setPpEnabledExtensionNames(device_extension_names.data())
       .setEnabledLayerCount(0)
       .setPpEnabledLayerNames(nullptr)
-      .setPEnabledFeatures(&feats);
+      .setPEnabledFeatures(&feats)
+      .setPNext(&feats12); // The documentation says this is okay
 
     vk::PhysicalDeviceProperties phprops;
     this->physical_device.getProperties(&phprops);
@@ -592,6 +632,14 @@ namespace wg {
 	this->device.createFence(fci);
     }
 
+    this->image_acquired_fence =
+      this->device.createFence(fci);
+
+    vk::SemaphoreCreateInfo sci;
+    this->image_acquire_semaphore =
+      this->device.createSemaphore(sci);
+    this->finished_drawing_semaphore =
+      this->device.createSemaphore(sci);
     
   }
 
@@ -712,13 +760,6 @@ namespace wg {
     this->swapchain = this->device.createSwapchainKHR(sci);
 
     this->swapchain_images = this->device.getSwapchainImagesKHR(swapchain);
-
-    vk::FenceCreateInfo fci;
-    fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
-
-    vk::SemaphoreCreateInfo sci2;
-    this->image_acquired_semaphore = this->device.createSemaphore(sci2);
-    this->image_drawn_semaphore = this->device.createSemaphore(sci2);
     
   }
 
@@ -728,7 +769,6 @@ namespace wg {
 
   void Wingine::init_framebuffers() {
     for(unsigned int i = 0; i < this->swapchain_images.size(); i++) {
-    // for(vk::Image sim : this->swapchain_images) {
         vk::Image sim = this->swapchain_images[i];
 
 	Framebuffer* framebuffer = new Framebuffer();;
@@ -768,9 +808,6 @@ namespace wg {
 	.setLayers(1);
       
       framebuffer->framebuffer = this->device.createFramebuffer(finf);
-
-      framebuffer->ready_for_draw_semaphore = &this->image_acquired_semaphore;
-      framebuffer->has_been_drawn_semaphore = &this->image_drawn_semaphore;
       
       this->framebuffers.push_back(framebuffer);
     }
@@ -809,12 +846,24 @@ namespace wg {
     this->pipeline_cache = this->device.createPipelineCache(pcci);
   }
 
-  void Wingine::stage_next_image() {
+  void Wingine::waitForLastPresent() {
+      this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX);
+  }
+
+  void Wingine::stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphores) {
+    int num_semaphores = semaphores.size();
+
+    this->waitForLastPresent();
+    this->device.resetFences(1, &this->image_acquired_fence);
     
     this->device.acquireNextImageKHR(this->swapchain, UINT64_MAX,
-				     this->image_acquired_semaphore, nullptr,
+				     num_semaphores ? this->image_acquire_semaphore : vk::Semaphore((VkSemaphore)(VK_NULL_HANDLE)),
+				     image_acquired_fence,
 				     &(this->current_swapchain_image));
 
+    if(num_semaphores) {
+      SemaphoreChain::semaphoreToChains(this, this->image_acquire_semaphore, std::begin(semaphores), num_semaphores);
+    }
   }
   
   void Wingine::init_vulkan(int width, int height,
@@ -837,7 +886,8 @@ namespace wg {
 
     this->init_pipeline_cache();
 
-    this->stage_next_image();
+    this->stage_next_image({});
+    this->waitForLastPresent(); // Ensure image is already acquired    
   }
 
   void Wingine::cons_image_image(Image& image, uint32_t width, uint32_t height,
@@ -997,10 +1047,10 @@ namespace wg {
   }
 
   Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
-					   bool depthOnly, bool withoutSemaphore) {
+					   bool depthOnly) {
     Framebuffer* framebuffer = new Framebuffer(*this,
 					       width, height,
-					       depthOnly, withoutSemaphore);
+					       depthOnly);
     return framebuffer;
     
   }
@@ -1009,6 +1059,11 @@ namespace wg {
     Texture* texture = new Texture(*this,
 				    width, height, depth);
     return texture;
+  }
+
+  SemaphoreChain* Wingine::createSemaphoreChain() {
+    SemaphoreChain* semaphore_chain = new SemaphoreChain(*this);
+    return semaphore_chain;
   }
 
   StorageBuffer* Wingine::createStorageBuffer(uint32_t num_bytes, bool host_updatable) {
@@ -1045,7 +1100,6 @@ namespace wg {
 	this->device.destroy(family->render_passes[i]);
       }
     }
-
     
     delete family;
   }
@@ -1064,6 +1118,12 @@ namespace wg {
     this->device.destroy(texture->staging_image);
     this->device.free(texture->staging_memory);
     delete texture;
+  }
+
+  void Wingine::destroy(SemaphoreChain* semaphore_chain) {
+    this->device.destroy(semaphore_chain->semaphore);
+
+    delete semaphore_chain;
   }
   
   void Wingine::destroy(Pipeline* pipeline) {
@@ -1095,14 +1155,6 @@ namespace wg {
     this->destroy(framebuffer->depthImage);
 
     this->device.destroy(framebuffer->framebuffer);
-    this->device.destroy(*framebuffer->has_been_drawn_semaphore);
-
-    if(framebuffer->ready_for_draw_semaphore != nullptr) {
-      this->device.destroy(*framebuffer->ready_for_draw_semaphore);
-      delete framebuffer->ready_for_draw_semaphore;    
-    }
-    
-    delete framebuffer->has_been_drawn_semaphore;
     
     delete framebuffer;
   }
@@ -1145,12 +1197,11 @@ namespace wg {
       this->device.destroyFence(this->compute_command.fence);
     }
 
+    this->device.destroyFence(this->image_acquired_fence);
+
     this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX);
     this->device.destroy(this->general_purpose_command.fence);
 
-    this->device.destroy(this->image_acquired_semaphore);
-    this->device.destroy(this->image_drawn_semaphore);
-    
     this->device.destroy(this->swapchain);
     
     this->vulkan_instance.destroy(this->surface);

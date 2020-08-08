@@ -5,6 +5,8 @@
 
 #include <spurv.hpp>
 
+#include <chrono>
+
 int main() {
 
   const int width = 1280, height = 720;
@@ -83,7 +85,7 @@ int main() {
     shadow_buffer_height = 2000;
 
   wg::Framebuffer* depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
-							      shadow_buffer_height, true, true);
+							      shadow_buffer_height, true);
   wg::Texture* shadow_texture = wing.createTexture(shadow_buffer_width,
 						   shadow_buffer_height, true);
 
@@ -208,35 +210,59 @@ int main() {
   light_camera.setLookAt(falg::Vec3(-1.0f, 3.0f, -1.0f),
 			 falg::Vec3(0.0f, 0.0f, -2.5f),
 			 falg::Vec3(0.0f, 1.0f, 0.0f));
-  
+
+
+  wg::SemaphoreChain* main_chain = wing.createSemaphoreChain();
+  wg::SemaphoreChain* shadow_chain = wing.createSemaphoreChain();
+
+  int fps = 0;
+
+  std::chrono::high_resolution_clock clock;
+  auto start = clock.now();
   while (win.isOpen()) {
     
     lightUniform->set(light_camera.getRenderMatrix());
     
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
-
+    
     // depth_family is created with only one framebuffer, and that is the only one we will render to
     // Hence the 0
-    depth_family->submit(0);
     
-    shadow_texture->set(depth_framebuffer);
+    depth_family->submit({shadow_chain}, 0);
+    
+    shadow_texture->set(depth_framebuffer, {shadow_chain});
 
     cameraUniform->set(renderMatrix);
 
-    family->submit();
+    family->submit({main_chain, shadow_chain});
     
-    wing.present();
+    wing.present({main_chain});
 
-    win.sleepMilliseconds(30);
+    // win.sleepMilliseconds(30);
+    
+    auto now = clock.now();
+
+    double duration = std::chrono::duration<double>(now - start).count();
+    fps++;
+    if(duration >= 1.0f) {
+      std::cout << "FPS = " << fps << std::endl;
+      fps = 0;
+      start = now;
+    }
+
+    // Main reason for the wait here is to ensure that setting the uniforms
+    // for the next frame does not interfere with unfinished drawing
+    wing.waitForLastPresent(); 
     
     win.flushEvents();
     if(win.isKeyPressed(WK_ESC)) {
       break;
     }
 
-
   }
 
+  wing.destroy(main_chain);
+  wing.destroy(shadow_chain);
 
   wing.destroy(family);
   wing.destroy(depth_family);

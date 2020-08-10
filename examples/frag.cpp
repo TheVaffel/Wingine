@@ -145,6 +145,9 @@ int main() {
   
   float f = 0.0;
   float inc = 0.05f;
+
+  wg::SemaphoreChain* main_chain = wing.createSemaphoreChain();
+  
   while (win.isOpen()) {
     if(f > 1) {
       inc = -0.05f;
@@ -154,17 +157,21 @@ int main() {
     f += inc;
     time_uniform->set(f);
 
-    family->submit();
+    family->submit({main_chain});
     
-    wing.present();
+    wing.present({main_chain});
 
-    win.sleepMilliseconds(40);
+    win.sleepMilliseconds(16);
+
+    wing.waitForLastPresent();
 
     win.flushEvents();
     if(win.isKeyPressed(WK_ESC)) {
       break;
     }
   }
+
+  wing.destroy(main_chain);
 
   wing.destroy(family);
 

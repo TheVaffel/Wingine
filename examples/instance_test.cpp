@@ -5,6 +5,7 @@
 
 #include <spurv.hpp>
 
+#include <chrono>
 #include <random>
 
 int main() {
@@ -180,6 +181,13 @@ int main() {
   family->endRecording();
 
   CamColl camcoll;
+
+  wg::SemaphoreChain* chain = wing.createSemaphoreChain();
+
+  int fps = 0;
+
+  std::chrono::high_resolution_clock clock;
+  auto start = clock.now();
   
   while (win.isOpen()) {
 
@@ -196,17 +204,32 @@ int main() {
     
     cameraUniform->set(camcoll);
 
-    family->submit();
+    family->submit({chain});
     
-    wing.present();
+    wing.present({chain});
 
-    win.sleepMilliseconds(16);
+    
+    auto now = clock.now();
+
+    double duration = std::chrono::duration<double>(now - start).count();
+    fps++;
+    if(duration >= 1.0f) {
+      std::cout << "FPS = " << fps << std::endl;
+      fps = 0;
+      start = now;
+    }
+    
+    // win.sleepMilliseconds(30);
+    
+    wing.waitForLastPresent();
 
     win.flushEvents();
     if(win.isKeyPressed(WK_ESC)) {
       break;
     }
   }
+
+  wing.destroy(chain);
 
   wing.destroy(family);
 

@@ -39,8 +39,10 @@ int main() {
     }
   }
 
+  wg::SemaphoreChain* chain = wing.createSemaphoreChain();
+
   wg::Texture* texture = wing.createTexture(texture_width, texture_height);
-  texture->set(texture_buffer);
+  texture->set(texture_buffer, {chain});
 
   wg::VertexBuffer<float>* position_buffer =
     wing.createVertexBuffer<float>(num_points * 4);
@@ -110,17 +112,21 @@ int main() {
   
   while (win.isOpen()) {
 
-    family->submit();
+    family->submit({chain});
     
-    wing.present();
+    wing.present({chain});
 
     win.sleepMilliseconds(40);
+
+    wing.waitForLastPresent();
 
     win.flushEvents();
     if(win.isKeyPressed(WK_ESC)) {
       break;
     }
   }
+
+  wing.destroy(chain);
 
   wing.destroy(family);
 

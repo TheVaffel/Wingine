@@ -112,23 +112,29 @@ int main() {
   family->startRecording();
   family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
   family->endRecording();
+
+  wg::SemaphoreChain* chain = wing.createSemaphoreChain();
   
   while (win.isOpen()) {
     falg::Mat4 renderMatrix = camera.getRenderMatrix();
     
     cameraUniform->set(renderMatrix);
 
-    family->submit();
+    family->submit({chain});
     
-    wing.present();
+    wing.present({chain});
 
     win.sleepMilliseconds(40);
+
+    wing.waitForLastPresent();
 
     win.flushEvents();
     if(win.isKeyPressed(WK_ESC)) {
       break;
     }
   }
+
+  wing.destroy(chain);
 
   wing.destroy(family);
 

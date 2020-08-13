@@ -106,7 +106,7 @@ namespace wg {
       device.waitForFences(1, &this->commands[i].fence, true, UINT64_MAX);
 
       this->commands[i].buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-    
+
       this->commands[i].buffer.begin(begin);
 
       this->commands[i].buffer.beginRenderPass(rpb, vk::SubpassContents::eInline);

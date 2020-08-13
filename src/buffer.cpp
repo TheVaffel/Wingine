@@ -92,6 +92,9 @@ namespace wg {
       
       vk::CommandBufferBeginInfo cbbi;
 
+      device.waitForFences(1, &command.fence, VK_TRUE,
+			   (uint64_t)1e9);
+      
       command.buffer.begin(cbbi);
 
       command.buffer.copyBuffer(this->update_buffer,
@@ -104,8 +107,6 @@ namespace wg {
       si.setCommandBufferCount(1)
 	.setPCommandBuffers(&command.buffer);
 
-      device.waitForFences(1, &command.fence, VK_TRUE,
-			   (uint64_t)1e9);
       device.resetFences(1, &command.fence);
       
       queue.submit(1, &si, command.fence);

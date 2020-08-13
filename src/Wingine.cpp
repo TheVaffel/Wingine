@@ -209,7 +209,7 @@ namespace wg {
       .setPWaitSemaphoreValues(wait_vals)
       .setSignalSemaphoreValueCount(num_sig_sems)
       .setPSignalSemaphoreValues(signal_vals);
-    
+
     vk::SubmitInfo si;
     si.setCommandBufferCount(1)
       .setPCommandBuffers(&general_purpose_command.buffer)
@@ -221,14 +221,16 @@ namespace wg {
       .setPNext(&tssi);
 
     SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
+
     
     this->graphics_queue.submit(1, &si, general_purpose_command.fence);
 
+    
     if (semaphores.size() == 0) {
       // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
       this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9);
     }
-    
+
   }
   
   vk::RenderPass Wingine::create_render_pass(RenderPassType type,

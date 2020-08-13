@@ -404,7 +404,7 @@ namespace wg {
     vk::ApplicationInfo appInfo;
     appInfo.setPApplicationName("Wingine").setApplicationVersion(1)
       .setPEngineName("Wingine").setEngineVersion(1)
-      .setApiVersion(VK_API_VERSION_1_0);
+      .setApiVersion(VK_API_VERSION_1_2);
 
     vk::InstanceCreateInfo cInfo;
     cInfo.setPApplicationInfo(&appInfo).setEnabledExtensionCount(instance_extension_names.size())
@@ -467,10 +467,9 @@ namespace wg {
 	dev.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties>(this->dispatcher);
 
       vk::PhysicalDeviceProperties2 props2 = props.get<vk::PhysicalDeviceProperties2>();
-      // vk::PhysicalDeviceVulkan12Properties props12 = props.get<vk::PhysicalDeviceVulkan12Properties>();
 
       std::cout << "Device name: " << props2.properties.deviceName << std::endl;
-      // std::cout << "maxTimelineSemaphoreValueDifference: " << props12.maxTimelineSemaphoreValueDifference << std::endl;
+      
         this->graphics_queue_index = -1;
         this->present_queue_index = -1;
         this->compute_queue_index = -1;
@@ -1121,6 +1120,11 @@ namespace wg {
   }
 
   void Wingine::destroy(SemaphoreChain* semaphore_chain) {
+    // Using image_acquired fence...
+    this->waitForLastPresent();
+    this->device.resetFences(1, &this->image_acquired_fence);
+    
+    semaphore_chain->ensure_finished(this, this->image_acquired_fence);
     this->device.destroy(semaphore_chain->semaphore);
 
     delete semaphore_chain;
@@ -1198,6 +1202,8 @@ namespace wg {
     }
 
     this->device.destroyFence(this->image_acquired_fence);
+    this->device.destroy(this->image_acquire_semaphore);
+    this->device.destroy(this->finished_drawing_semaphore);
 
     this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX);
     this->device.destroy(this->general_purpose_command.fence);

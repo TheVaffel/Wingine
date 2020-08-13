@@ -97,6 +97,25 @@ namespace wg {
     return this->curr_pos == SemaphoreChain::initial_value;
   }
 
+  void SemaphoreChain::ensure_finished(Wingine* wing, const vk::Fence& fence) {
+    vk::PipelineStageFlags flag = this->getFlag();
+
+    vk::TimelineSemaphoreSubmitInfo tssi;
+    tssi.setWaitSemaphoreValueCount(1)
+      .setPWaitSemaphoreValues(&this->curr_pos);
+    
+    vk::SubmitInfo inf;
+    inf.setCommandBufferCount(0)
+      .setWaitSemaphoreCount(1)
+      .setPWaitSemaphores(&this->semaphore)
+      .setPWaitDstStageMask(&flag)
+      .setPNext(&tssi);
+
+    wing->present_queue.submit(1, &inf, fence);
+
+    wing->getDevice().waitForFences(1, &fence, true, UINT64_MAX);
+  }
+  
   bool SemaphoreChain::shouldBeWaitedUpon() const {
     return !this->isFirst();
   }

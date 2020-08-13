@@ -9,7 +9,7 @@ namespace wg {
     // semaphore will be a timeline semaphore. This is so that it can be used again and again
     // without the need to ensure that it has previously been unsignalled e.g.
     vk::Semaphore semaphore;
-    int curr_pos;
+    uint64_t curr_pos;
     static const int initial_value = 0;
 
     SemaphoreChain(Wingine& wing);
@@ -20,6 +20,8 @@ namespace wg {
     static int getSemaphoreSignalValues(uint64_t* values, SemaphoreChain* const * objs, int count);
     static int getWaitStages(vk::PipelineStageFlags* flags, SemaphoreChain* const * objs, int count);
     static void resetModifiers(SemaphoreChain* const * objs, int count);
+
+    void ensure_finished(Wingine* wing, const vk::Fence& fence);
 
     bool shouldBeSignalled() const;
     bool shouldBeWaitedUpon() const;

@@ -16,6 +16,7 @@ namespace wg {
   void _wlog_error(std::string str);
 
   void _wassert(bool test, std::string str = "Error");
+  void _wassert_result(vk::Result res, std::string str = "Error");
   uint32_t _get_memory_type_index(uint32_t type_bits,
 					 vk::MemoryPropertyFlags requirements_mask,
 					 vk::PhysicalDeviceMemoryProperties& mem_props);

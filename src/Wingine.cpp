@@ -114,8 +114,9 @@ namespace wg {
 			   vk::ImageAspectFlagBits aspect,
 			   const std::initializer_list<SemaphoreChain*>& semaphores) {
     vk::CommandBufferBeginInfo bg;
-    this->device.waitForFences(1, &general_purpose_command.fence,
-			       true, (uint64_t)1e9);
+    _wassert_result(this->device.waitForFences(1, &general_purpose_command.fence,
+					       true, (uint64_t)1e9),
+		    "wait for general purpose command in copy_image to finish");
 
     this->device.resetFences(1, &general_purpose_command.fence);
 
@@ -223,12 +224,14 @@ namespace wg {
     SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
     
-    this->graphics_queue.submit(1, &si, general_purpose_command.fence);
+    _wassert_result(this->graphics_queue.submit(1, &si, general_purpose_command.fence),
+		    "command submission to graphics queue in copy_image");
 
     
     if (semaphores.size() == 0) {
       // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
-      this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9);
+      _wassert_result(this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9),
+		      "wait for general purpose command in end of copy_image");
     }
 
   }
@@ -336,7 +339,8 @@ namespace wg {
       .setPWaitSemaphores(&this->finished_drawing_semaphore)
       .setPResults(nullptr);
     
-    this->present_queue.presentKHR(presentInfo);
+    _wassert_result(this->present_queue.presentKHR(presentInfo),
+		    "submit present command");
 
     this->stage_next_image(semaphores);
 
@@ -848,7 +852,8 @@ namespace wg {
   }
 
   void Wingine::waitForLastPresent() {
-      this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX);
+    _wassert_result(this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX), 
+		    "wait for last present");
   }
 
   void Wingine::stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphores) {
@@ -857,10 +862,11 @@ namespace wg {
     this->waitForLastPresent();
     this->device.resetFences(1, &this->image_acquired_fence);
     
-    this->device.acquireNextImageKHR(this->swapchain, UINT64_MAX,
-				     num_semaphores ? this->image_acquire_semaphore : vk::Semaphore((VkSemaphore)(VK_NULL_HANDLE)),
-				     image_acquired_fence,
-				     &(this->current_swapchain_image));
+    _wassert_result(this->device.acquireNextImageKHR(this->swapchain, UINT64_MAX,
+						     num_semaphores ? this->image_acquire_semaphore : vk::Semaphore((VkSemaphore)(VK_NULL_HANDLE)),
+						     image_acquired_fence,
+						     &(this->current_swapchain_image)),
+		    "acquiring next image");
 
     if(num_semaphores) {
       SemaphoreChain::semaphoreToChains(this, this->image_acquire_semaphore, std::begin(semaphores), num_semaphores);
@@ -1091,7 +1097,8 @@ namespace wg {
 
   void Wingine::destroy(RenderFamily* family) {
     for(int i = 0; i < family->num_buffers; i++) {
-      this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX);
+      _wassert_result(this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX),
+		      "wait for command finish");
       this->device.destroy(family->commands[i].fence);
 
       this->device.freeCommandBuffers(this->graphics_command_pool,
@@ -1190,7 +1197,8 @@ namespace wg {
     this->device.destroyCommandPool(this->graphics_command_pool);
     
     this->device.destroyCommandPool(this->present_command_pool);
-    this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX);
+    _wassert_result(this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
+		    "wait for present command finish");
     this->device.destroyFence(this->present_command.fence);
 
 
@@ -1199,7 +1207,8 @@ namespace wg {
 				      1, &this->compute_command.buffer);
       
       this->device.destroyCommandPool(this->compute_command_pool);
-      this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX);
+      _wassert_result(this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX),
+		      "wait for compute command finish");
       this->device.destroyFence(this->compute_command.fence);
     }
 
@@ -1207,7 +1216,8 @@ namespace wg {
     this->device.destroy(this->image_acquire_semaphore);
     this->device.destroy(this->finished_drawing_semaphore);
 
-    this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX);
+    _wassert_result(this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX),
+		    "wait for general purpose command finish");
     this->device.destroy(this->general_purpose_command.fence);
 
     this->device.destroy(this->swapchain);

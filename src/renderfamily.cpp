@@ -103,7 +103,8 @@ namespace wg {
     
       vk::Device device = this->wing->getDevice();
 
-      device.waitForFences(1, &this->commands[i].fence, true, UINT64_MAX);
+      _wassert_result(device.waitForFences(1, &this->commands[i].fence, true, UINT64_MAX),
+		      "wait for render family command finish");
 
       this->commands[i].buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 
@@ -212,10 +213,12 @@ namespace wg {
     SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
     // Ensure finished last submission
-    device.waitForFences(1, &this->commands[index].fence, true, (uint64_t)1e9);
+    _wassert_result(device.waitForFences(1, &this->commands[index].fence, true, (uint64_t)1e9),
+		    "wait for last submission in render family");
     
     device.resetFences(1, &this->commands[index].fence);
 
-    queue.submit(1, &si, this->commands[index].fence);
+    _wassert_result(queue.submit(1, &si, this->commands[index].fence),
+		    "submitting render family command to queue");
   }
 };

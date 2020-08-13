@@ -19,6 +19,13 @@ namespace wg {
     }
   }
 
+  void _wassert_result(vk::Result res, std::string str) {
+    if( res != vk::Result::eSuccess ) {
+      _wlog_error(str);
+      exit(-1);
+    }
+  }
+
   uint32_t _get_memory_type_index(uint32_t type_bits,
 					 vk::MemoryPropertyFlags requirements_mask,
 					 vk::PhysicalDeviceMemoryProperties& mem_props) {

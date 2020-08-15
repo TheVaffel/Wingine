@@ -13,6 +13,7 @@ set(WINGINE_ROOT "${CMAKE_HOME_DIRECTORY}")
 set(WINGINE_SRC_DIR "${WINGINE_ROOT}/src")
 set(WINGINE_EXAMPLES_DIR "${WINGINE_ROOT}/examples")
 set(WINGINE_INCLUDE_DIR "${WINGINE_ROOT}/include")
+set(VULKAN_INCLUDE_DIR "$ENV{VULKAN_SDK}/include")
 
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
@@ -20,7 +21,7 @@ set(WINGINE_SOURCES buffer.cpp image.cpp renderfamily.cpp Wingine.cpp framebuffe
 list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")
 
 if(WIN32)
-  add_definitions(/std:c++latest)
+  add_definitions(/std:c++latest /arch:AVX2)
   set(lib_search_path "${HCONLIB_ROOT}/lib/Debug")
   set(winval_libs Winval)
   set(VULKAN_LIB_NAME vulkan-1)
@@ -36,7 +37,7 @@ endif()
 set(common_libs ${VULKAN_LIB_NAME} ${winval_libs} FlatAlg spurv)
 set(all_libs ${common_libs} Wingine)
 
-include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/include)
+include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/include ${VULKAN_INCLUDE_DIR})
 
 
 if(WIN32)

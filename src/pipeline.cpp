@@ -65,8 +65,9 @@ namespace wg {
 #ifdef DEBUG
 
     // Check consistency of input parameters
-    int per_instance[vertex_binding_count];
-    int stride[vertex_binding_count];
+    std::vector<int> per_instance(vertex_binding_count);
+    std::vector<int> stride(vertex_binding_count);
+
     for(int i = 0; i < vertex_binding_count; i++) {
       per_instance[i] = -1;
       stride[i] = -1;

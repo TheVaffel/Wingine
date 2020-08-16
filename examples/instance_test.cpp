@@ -25,9 +25,9 @@ int main() {
   std::uniform_real_distribution<float> dist1(0.0, 1.0);
   
   const int num_instances = 20000;
-  float offsets[3 * num_instances];
-  float colors[3 * num_instances];
-  falg::Mat4 inst_mats[num_instances];
+  float* offsets = new float[3 * num_instances];
+  float* colors = new float[3 * num_instances];
+  falg::Mat4* inst_mats = new falg::Mat4[num_instances];
   for(int i = 0; i < num_instances; i++) {
     falg::Vec3 off;
     do {
@@ -228,6 +228,10 @@ int main() {
       break;
     }
   }
+
+  delete[] offsets;
+  delete[] colors;
+  delete[] inst_mats;
 
   wing.destroy(chain);
 

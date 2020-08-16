@@ -139,25 +139,25 @@ namespace wg {
 
   // Make empty command, causing signalling of multiple semaphore chains signal a single normal semaphore
   void SemaphoreChain::chainsToSemaphore(Wingine* wing, SemaphoreChain* const* chains, int num_chains, vk::Semaphore semaphore) {
-    vk::PipelineStageFlags pflags[num_chains];
-    vk::Semaphore semarr[num_chains];
-    uint64_t wait_values[num_chains];
+    std::vector<vk::PipelineStageFlags> pflags(num_chains);
+    std::vector<vk::Semaphore> semarr(num_chains);
+    std::vector<uint64_t> wait_values(num_chains);
 
-    int num_sems = SemaphoreChain::getWaitSemaphores(semarr, chains, num_chains);
-    int num_vals = SemaphoreChain::getSemaphoreWaitValues(wait_values, chains, num_chains);
-    int num_stages = SemaphoreChain::getWaitStages(pflags, chains, num_chains);
+    int num_sems = SemaphoreChain::getWaitSemaphores(semarr.data(), chains, num_chains);
+    int num_vals = SemaphoreChain::getSemaphoreWaitValues(wait_values.data(), chains, num_chains);
+    int num_stages = SemaphoreChain::getWaitStages(pflags.data(), chains, num_chains);
 
-    assert(num_sems == num_vals && num_vals == num_stages);
+    _wassert(num_sems == num_vals && num_vals == num_stages);
 
     vk::TimelineSemaphoreSubmitInfo tssi;
     tssi.setWaitSemaphoreValueCount(num_vals)
-      .setPWaitSemaphoreValues(wait_values);
+      .setPWaitSemaphoreValues(wait_values.data());
     
     vk::SubmitInfo inf;
     inf.setCommandBufferCount(0)
       .setWaitSemaphoreCount(num_sems)
-      .setPWaitDstStageMask(pflags)
-      .setPWaitSemaphores(semarr)
+      .setPWaitDstStageMask(pflags.data())
+      .setPWaitSemaphores(semarr.data())
       .setSignalSemaphoreCount(1)
       .setPSignalSemaphores(&semaphore)
       .setPNext(&tssi);
@@ -167,20 +167,20 @@ namespace wg {
 
   // Make empty command, causing signalling a single semaphore to signal multiple semaphore chains
   void SemaphoreChain::semaphoreToChains(Wingine* wing, vk::Semaphore semaphore, SemaphoreChain* const* chains, int num_chains) {
-    vk::Semaphore semarr[num_chains];
+    std::vector<vk::Semaphore> semarr(num_chains);
     vk::PipelineStageFlags pflag = vk::PipelineStageFlagBits::eTopOfPipe;
     
-    uint64_t signal_values[num_chains];
+    std::vector<uint64_t> signal_values(num_chains);
 
-    int num_sems = SemaphoreChain::getSignalSemaphores(semarr, chains, num_chains);
-    int num_vals = SemaphoreChain::getSemaphoreSignalValues(signal_values, chains, num_chains);
+    int num_sems = SemaphoreChain::getSignalSemaphores(semarr.data(), chains, num_chains);
+    int num_vals = SemaphoreChain::getSemaphoreSignalValues(signal_values.data(), chains, num_chains);
 
-    assert(num_sems == num_vals);
+    _wassert(num_sems == num_vals);
       
     vk::TimelineSemaphoreSubmitInfo tssi;
     tssi
       .setSignalSemaphoreValueCount(num_vals)
-      .setPSignalSemaphoreValues(signal_values);
+      .setPSignalSemaphoreValues(signal_values.data());
       
     vk::SubmitInfo inf;
     inf.setCommandBufferCount(0)
@@ -188,7 +188,7 @@ namespace wg {
       .setPWaitDstStageMask(&pflag)
       .setPWaitSemaphores(&semaphore)
       .setSignalSemaphoreCount(num_sems)
-      .setPSignalSemaphores(semarr)
+      .setPSignalSemaphores(semarr.data())
       .setPNext(&tssi);
     
     // Present queue is hopefully not that busy

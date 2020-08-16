@@ -192,33 +192,33 @@ namespace wg {
     general_purpose_command.buffer.end();
 
     
-    vk::Semaphore wait_sems[semaphores.size()];
-    vk::Semaphore signal_sems[semaphores.size()];
-    uint64_t wait_vals[semaphores.size()];
-    uint64_t signal_vals[semaphores.size()];
-    vk::PipelineStageFlags flags[semaphores.size()];
+    std::vector<vk::Semaphore> wait_sems(semaphores.size());
+    std::vector<vk::Semaphore> signal_sems(semaphores.size());
+    std::vector<uint64_t> wait_vals(semaphores.size());
+    std::vector<uint64_t> signal_vals(semaphores.size());
+    std::vector<vk::PipelineStageFlags> flags(semaphores.size());
 
-    int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems, std::begin(semaphores), semaphores.size());
-    int num_sig_sems = SemaphoreChain::getSignalSemaphores(signal_sems, std::begin(semaphores), semaphores.size());
+    int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems.data(), std::begin(semaphores), semaphores.size());
+    int num_sig_sems = SemaphoreChain::getSignalSemaphores(signal_sems.data(), std::begin(semaphores), semaphores.size());
     
-    SemaphoreChain::getSemaphoreWaitValues(wait_vals, std::begin(semaphores), semaphores.size());
-    SemaphoreChain::getSemaphoreSignalValues(signal_vals, std::begin(semaphores), semaphores.size());
-    SemaphoreChain::getWaitStages(flags, std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreWaitValues(wait_vals.data(), std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreSignalValues(signal_vals.data(), std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getWaitStages(flags.data(), std::begin(semaphores), semaphores.size());
 
     vk::TimelineSemaphoreSubmitInfo tssi;
     tssi.setWaitSemaphoreValueCount(num_wait_sems)
-      .setPWaitSemaphoreValues(wait_vals)
+      .setPWaitSemaphoreValues(wait_vals.data())
       .setSignalSemaphoreValueCount(num_sig_sems)
-      .setPSignalSemaphoreValues(signal_vals);
+      .setPSignalSemaphoreValues(signal_vals.data());
 
     vk::SubmitInfo si;
     si.setCommandBufferCount(1)
       .setPCommandBuffers(&general_purpose_command.buffer)
-      .setPWaitDstStageMask(flags)
+      .setPWaitDstStageMask(flags.data())
       .setWaitSemaphoreCount(num_wait_sems)
-      .setPWaitSemaphores(wait_sems)
+      .setPWaitSemaphores(wait_sems.data())
       .setSignalSemaphoreCount(num_sig_sems)
-      .setPSignalSemaphores(signal_sems)
+      .setPSignalSemaphores(signal_sems.data())
       .setPNext(&tssi);
 
     SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());

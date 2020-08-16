@@ -10,6 +10,8 @@ int main() {
   Winval win(width, height);
   wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
+  win.setPointerVisible(false);
+
   const int num_points = 4;
   const int num_triangles = 2;
   

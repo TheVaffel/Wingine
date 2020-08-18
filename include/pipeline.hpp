@@ -18,12 +18,10 @@ namespace wg {
     friend class Wingine;
   };
   
-  
   // Future addition
   struct PipelineSetup {
     bool clearScreen = true;
   };
-  
   
   class Pipeline {
     vk::Pipeline pipeline;
@@ -38,6 +36,18 @@ namespace wg {
 	     bool depthOnly);
 
     friend class RenderFamily;
+    friend class Wingine;
+  };
+
+  class ComputePipeline {
+    vk::Pipeline pipeline;
+    vk::PipelineLayout layout;
+
+    ComputePipeline(Wingine& wing,
+		    const std::vector<ResourceSetLayout>& resourceSetLayout,
+		    const std::vector<Shader*>& shaders);
+
+    friend class ComputeFamily;
     friend class Wingine;
   };
 };

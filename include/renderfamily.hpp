@@ -41,5 +41,22 @@ namespace wg {
     
     friend class Wingine;
   };
+
+  class ComputeFamily {
+    Wingine* wing;
+
+    ComputeFamily(Wingine& wing,
+		  Pipeline* pipeline);
+    
+  public:
+
+    void startRecording();
+    void recordCompute(const std::vector<ResourceSet*>& set, int x_extent, int y_extent, int z_extent);
+    void endRecording();
+
+    void submit(const std::initializer_list<SemaphoreChain*>& wait_semaphores = {}, int index = -1);
+
+    friend class Wingine;
+  };
 };
 #endif // WG_RENDERFAMILY_HPP

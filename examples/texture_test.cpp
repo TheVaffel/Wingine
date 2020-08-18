@@ -38,11 +38,41 @@ int main() {
       }
     }
   }
+  
+  wg::Image* tex_im = wing.createStorageImage(texture_width, texture_height);
+
+  std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
+
+  wg::ResourceSet* compute_set = wing.createResourceSet(computeSetLayout);
+  compute_set->set({tex_im});
+
+  std::vector<uint32_t> compute_spirv;
+  {
+    using namespace spurv;
+    ComputeShader shader;
+
+    uvec3_v global_id_1 = shader.getBuiltin<BUILTIN_GLOBAL_INVOCATION_ID>();
+
+    uvec2_v global_id = uvec2_s::cons(global_id_1[0], global_id_1[1]);
+
+    auto out_image = shader.constantUniform<image2D_s>(0, 0);
+
+    vec2_v coord = cast<vec2>(global_id) / vec2_s::cons(texture_width, texture_height);
+    
+    out_image.store(global_id, vec3_s::cons(coord[0], 0.0f, coord[1]));
+  }
+
+  wg::Shader* compute_shader = wing.createShader(compute_spirv);
+
+  wg::Pipeline* compute_pipeline = wing.createComputePipeline({compute_shader});
 
   wg::SemaphoreChain* chain = wing.createSemaphoreChain();
+  
+  wing.dispatchCompute(compute_pipeline, {chain});
 
   wg::Texture* texture = wing.createTexture(texture_width, texture_height);
-  texture->set(texture_buffer, {chain});
+  // texture->set(texture_buffer, {chain});
+  texture->set(tex_im, {chain});
 
   wg::VertexBuffer<float>* position_buffer =
     wing.createVertexBuffer<float>(num_points * 4);

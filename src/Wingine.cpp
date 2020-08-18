@@ -1062,6 +1062,20 @@ namespace wg {
     
   }
 
+  Image* Wingine::createStoreImage(uint32_t width, uint32_t height) {
+    Image* image = new Image;
+
+    Image::constructImage(this, *image,
+			  width, height,
+			  vk::Format::eB8G8R8A8Unorm,
+			  vk::ImageUsageFlagBits::eTransferSrc |
+			  vk::ImageUsageFlagBits::eStorage,
+			  vk::ImageTiling::eOptimal,
+			  vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+    return image;
+  }
+
   Texture* Wingine::createTexture(uint32_t width, uint32_t height, bool depth) {
     Texture* texture = new Texture(*this,
 				    width, height, depth);

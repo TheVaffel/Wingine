@@ -19,13 +19,20 @@ namespace wg {
     const vk::Image& getImage() const;
     const vk::DeviceMemory& getMemory() const;
     const vk::ImageView& getView() const;
+
+    static void constructImage(Wingine& wing,
+			       Image& image,
+			       int width, int height,
+			       vk::Format format,
+			       vk::ImageUsageFlags usage,
+			       vk::ImageTiling tiling,
+			       vk::MemoryPropertyFlags mem_flags);
     
     friend class Framebuffer;
     friend class Texture;
     friend class Wingine;
     friend class RenderFamily;
   };
-  
   
 }
 

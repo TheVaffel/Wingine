@@ -23,4 +23,23 @@ namespace wg {
   const Image& Framebuffer::getDepthImage() const {
     return this->depthImage;
   }
+
+  void Image::constructImage(Wingine* wing,
+			     Image& image,
+			     int width, int height,
+			     vk::Format format,
+			     vk::ImageUsageFlags usage,
+			     vk::ImageTiling tiling,
+			     vk::MemoryPropertyFlags mem_flags) {
+    wing->cons_image_image(image,
+		     width, height,
+		     format,
+		     usage,
+		     tiling);
+    wing->cons_image_memory(image,
+		      mem_flags);
+    wing->cons_image_view(image,
+			  wImageViewColor);
+  }
+  
 };

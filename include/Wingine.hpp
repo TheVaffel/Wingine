@@ -164,9 +164,14 @@ namespace wg {
 			     const std::vector<Shader*>& shaders,
 			     bool depthOnly = false,
 			     int width = -1, int height = -1);
+
+    ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
+					   const std::vector<Shader*>& shaders);
     
     Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
 				    bool depthOnly = false);
+
+    Image* createStoreImage(uint32_t width, uint32_t height);
 
     Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
 

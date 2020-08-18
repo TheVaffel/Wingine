@@ -55,7 +55,7 @@ namespace wg {
     resUniform = (uint64_t)VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
     resStorageBuffer = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
     resTexture = (uint64_t)VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    resStoreImage = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
+    resImage = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_IMAGE
   };
 
   // These are shifted, because we want to combine them
@@ -70,6 +70,7 @@ namespace wg {
   typedef int64_t ShaderType;
   const ShaderType shaVertex = (int64_t)VK_SHADER_STAGE_VERTEX_BIT << 32;
   const ShaderType shaFragment = (int64_t)VK_SHADER_STAGE_FRAGMENT_BIT << 32;
+  const ShaderType shaCompute = (int64_t)VK_SHADER_STAGE_COMPUTE_BIT << 32;
   
   enum ImageViewType {
     wImageViewColor,

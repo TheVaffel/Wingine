@@ -31,7 +31,15 @@ namespace wg {
     
     friend class Wingine;
   };
+  
 
+  class ResourceImage : public Image, public Resource {
+    ResourceImage(Wingine& wing,
+		  uint32_t width, uint32_t height);
+
+    friend class Wingine;
+  };
+  
 
   class Texture : public Image, public Resource {
     Wingine* wing;
@@ -59,6 +67,8 @@ namespace wg {
 	     const std::initializer_list<SemaphoreChain*>& wait_semaphores,
 	     bool fixed_stride = false);
     void set(Framebuffer* framebuffer,
+	     const std::initializer_list<SemaphoreChain*>& wait_semaphores);
+    void set(ResourceImage* image,
 	     const std::initializer_list<SemaphoreChain*>& wait_semaphores);
 
     friend class Wingine;

@@ -1033,12 +1033,11 @@ namespace wg {
 		      shader_bit,
 		      spirv);
   }
-
   
   Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
-				   const std::vector<std::vector<uint64_t> >& resourceSetLayout,
-				   const std::vector<Shader*>& shaders,
-				   bool depthOnly, int width, int height) {
+				    const std::vector<std::vector<uint64_t> >& resourceSetLayout,
+				    const std::vector<Shader*>& shaders,
+				    bool depthOnly, int width, int height) {
     std::vector<ResourceSetLayout> rsl;
     for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
       rsl.push_back(this->resourceSetLayoutMap[resourceSetLayout[i]]);
@@ -1053,6 +1052,18 @@ namespace wg {
 			depthOnly);
   }
 
+  ComputePipeline* Wingine::createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayouts,
+					   Shader* shader) {
+    std::vector<ResourceSetLayout> rsl;
+    for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
+      rsl.push_back(this->resourceSetLayoutMap[resourceSetLayouts[i]]);
+    }
+
+    return new ComputePipeline(*this,
+			       rsl,
+			       shader);
+  }
+
   Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
 					   bool depthOnly) {
     Framebuffer* framebuffer = new Framebuffer(*this,
@@ -1062,17 +1073,9 @@ namespace wg {
     
   }
 
-  Image* Wingine::createStoreImage(uint32_t width, uint32_t height) {
-    Image* image = new Image;
-
-    Image::constructImage(this, *image,
-			  width, height,
-			  vk::Format::eB8G8R8A8Unorm,
-			  vk::ImageUsageFlagBits::eTransferSrc |
-			  vk::ImageUsageFlagBits::eStorage,
-			  vk::ImageTiling::eOptimal,
-			  vk::MemoryPropertyFlagBits::eDeviceLocal);
-
+  ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {
+    ResourceImage* image = new ResourceImage(*this, width, height);
+    
     return image;
   }
 
@@ -1095,6 +1098,72 @@ namespace wg {
   RenderFamily* Wingine::createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers) {
     return new RenderFamily(*this,
 			    pipeline, clear, num_framebuffers);
+  }
+
+  void Wingine::dispatchCompute(ComputePipeline* compute,
+				const std::initializer_list<ResourceSet*>& resource_sets,
+				const std::initializer_list<SemaphoreChain*>& semaphores, int x_dim, int y_dim, int z_dim) {
+    compute->command.buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+
+    vk::CommandBufferBeginInfo begin;
+    compute->command.buffer.begin(begin);
+    compute->command.buffer.bindPipeline(vk::PipelineBindPoint::eCompute,
+					 compute->pipeline);
+
+    std::vector<vk::DescriptorSet> d_sets(resource_sets.size());
+    for(unsigned int i = 0; i < d_sets.size(); i++) {
+      d_sets[i] = std::begin(resource_sets)[i]->descriptor_set;
+    }
+
+    if(resource_sets.size()) {
+      compute->command.buffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+						 compute->layout,
+						 0, d_sets.size(),
+						 d_sets.data(),
+						 0, nullptr);
+    }
+
+    compute->command.buffer.dispatch(x_dim, y_dim, z_dim);
+    compute->command.buffer.end();
+
+
+    std::vector<vk::PipelineStageFlags> stage_flags(semaphores.size());
+    std::vector<vk::Semaphore> wait_sems(semaphores.size());
+    std::vector<vk::Semaphore> signal_sems(semaphores.size());
+    std::vector<uint64_t> wait_vals(semaphores.size());
+    std::vector<uint64_t> signal_vals(semaphores.size());
+
+    int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems.data(), std::begin(semaphores), semaphores.size());
+    int num_signal_sems = SemaphoreChain::getSignalSemaphores(signal_sems.data(), std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreWaitValues(wait_vals.data(), std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getSemaphoreSignalValues(signal_vals.data(), std::begin(semaphores), semaphores.size());
+    SemaphoreChain::getWaitStages(stage_flags.data(), std::begin(semaphores), semaphores.size());
+
+    vk::TimelineSemaphoreSubmitInfo tssi;
+    tssi.setSignalSemaphoreValueCount(num_signal_sems)
+      .setPSignalSemaphoreValues(signal_vals.data())
+      .setWaitSemaphoreValueCount(num_wait_sems)
+      .setPWaitSemaphoreValues(wait_vals.data());
+
+    vk::SubmitInfo si;
+    si.setCommandBufferCount(1)
+      .setPCommandBuffers(&compute->command.buffer)
+      .setPWaitDstStageMask(stage_flags.data())
+      .setSignalSemaphoreCount(num_signal_sems)
+      .setPSignalSemaphores(signal_sems.data())
+      .setWaitSemaphoreCount(num_wait_sems)
+      .setPWaitSemaphores(wait_sems.data())
+      .setPNext(&tssi);
+
+    SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
+
+    _wassert_result(device.waitForFences(1, &compute->command.fence, true,
+					 (uint64_t)1e9),
+		    "wait for last submission in compute submit");
+    this->device.resetFences(1, &compute->command.fence);
+
+    _wassert_result(this->compute_queue.submit(1, &si, compute->command.fence),
+		    "submitting compute command");
   }
   
   void Wingine::destroySwapchainImage(Image& image) {

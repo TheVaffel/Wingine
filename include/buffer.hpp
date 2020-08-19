@@ -91,6 +91,7 @@ namespace wg {
     friend class ResourceSet;
     friend class Wingine;
     friend class Pipeline;
+    friend class ComputePipeline;
   };
 
   // Template declarations

@@ -166,16 +166,20 @@ namespace wg {
 			     int width = -1, int height = -1);
 
     ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
-					   const std::vector<Shader*>& shaders);
+					   Shader* shaders);
     
     Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
 				    bool depthOnly = false);
 
-    Image* createStoreImage(uint32_t width, uint32_t height);
+    ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
     Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
 
     SemaphoreChain* createSemaphoreChain();
+
+    void dispatchCompute(ComputePipeline* compute,
+			 const std::initializer_list<ResourceSet*>& resource_sets,
+			 const std::initializer_list<SemaphoreChain*>& semaphores, int x_dim = 1, int y_dim = 1, int z_dim = 1);
     
     void present(const std::initializer_list<SemaphoreChain*>& semaphores);
 
@@ -210,6 +214,8 @@ namespace wg {
     friend class ResourceSet;
     friend class Texture;
     friend class SemaphoreChain;
+    friend class Image;
+    friend class ComputePipeline;
   };
 
 

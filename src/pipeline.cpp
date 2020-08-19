@@ -15,6 +15,11 @@ namespace wg {
     case shaFragment:
       stage_bit = vk::ShaderStageFlagBits::eFragment;
       break;
+    case shaCompute:
+      stage_bit = vk::ShaderStageFlagBits::eCompute;
+      break;
+    default:
+      std::cout << "[Wingine::Shader] Shader stage not yet supported" << std::endl;
     }
 
     this->shader_info.setStage(stage_bit)
@@ -28,7 +33,44 @@ namespace wg {
     this->shader_info.module = device.createShaderModule(smci);
     
   }
-  
+
+  ComputePipeline::ComputePipeline(Wingine& wing,
+				   const std::vector<ResourceSetLayout>& resourceSetLayouts,
+				   Shader* shader) {
+    vk::Device device = wing.getDevice();
+
+    std::vector<vk::DescriptorSetLayout> layouts(resourceSetLayouts.size());
+    for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
+      layouts[i] = resourceSetLayouts[i].layout;
+    }
+
+    vk::PipelineLayoutCreateInfo layoutCreateInfo;
+    layoutCreateInfo.setPushConstantRangeCount(0)
+      .setPPushConstantRanges(nullptr)
+      .setSetLayoutCount(layouts.size())
+      .setPSetLayouts(layouts.data());
+
+    this->layout = device.createPipelineLayout(layoutCreateInfo);
+
+    vk::ComputePipelineCreateInfo cpci;
+    cpci.setLayout(this->layout)
+      .setStage(shader->shader_info);
+
+    this->pipeline = vk::Pipeline(static_cast<vk::Pipeline&&>(device.createComputePipeline(wing.pipeline_cache,
+											 {cpci})));
+
+    vk::CommandBufferAllocateInfo cbi;
+    cbi.setCommandPool(wing.getGraphicsCommandPool())
+      .setLevel(vk::CommandBufferLevel::ePrimary)
+      .setCommandBufferCount(1);
+    command.buffer = device.allocateCommandBuffers(cbi)[0];
+
+    vk::FenceCreateInfo fci;
+    fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+    command.fence = device.createFence(fci);
+  }
+
   
   Pipeline::Pipeline(Wingine& wing,
 		     int width, int height,
@@ -44,6 +86,7 @@ namespace wg {
       vertex_binding_count = std::max(desc.binding_num + 1,
 				      (uint32_t)vertex_binding_count);
     }
+
     
 
     // Defaults okay sometimes

@@ -22,7 +22,7 @@ namespace wg {
 	this->render_passes[i] = wing.compatibleRenderPassMap[pipeline->render_pass_type];
       } else {
 	this->render_passes[i] = wing.create_render_pass(pipeline->render_pass_type,
-						    clear);
+							 clear);
       }
     }
 

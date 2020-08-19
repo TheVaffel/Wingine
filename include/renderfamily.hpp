@@ -7,11 +7,6 @@
 #include "resource.hpp"
 
 namespace wg {
-  
-  struct Command {
-    vk::CommandBuffer buffer;
-    vk::Fence fence;
-  };
 
   class RenderFamily {
     Wingine* wing;

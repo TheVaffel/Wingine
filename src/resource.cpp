@@ -75,6 +75,29 @@ namespace wg {
     this->buffer_info = nullptr;
   }
 
+
+  /*
+   * ResourceImage - represents resource images
+   */
+
+  ResourceImage::ResourceImage(Wingine& wing,
+			       uint32_t width, uint32_t height) :
+    Resource(vk::DescriptorType::eStorageImage) {
+
+    Image::constructImage(wing, *this,
+			  width, height,
+			  vk::Format::eB8G8R8A8Unorm,
+			  vk::ImageUsageFlagBits::eTransferSrc |
+			  vk::ImageUsageFlagBits::eStorage,
+			  vk::ImageTiling::eOptimal,
+			  vk::MemoryPropertyFlagBits::eDeviceLocal);
+
+    this->image_info = new vk::DescriptorImageInfo();
+    this->image_info->setImageView(this->view)
+      .setImageLayout(vk::ImageLayout::eGeneral);
+  }
+  
+
   /*
    * Texture - represents resource images with a sampler
    */
@@ -196,6 +219,22 @@ namespace wg {
 
     this->current_staging_layout = vk::ImageLayout::eGeneral;
     this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+  }
+
+  void Texture::set(ResourceImage* image, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {
+    vk::ImageLayout image_final = vk::ImageLayout::eGeneral;
+    
+    this->wing->copy_image(image->width, image->height,
+			   image->image, image->current_layout,
+			   image_final,
+			   this->width, this->height,
+			   this->image, this->current_layout,
+			   vk::ImageLayout::eShaderReadOnlyOptimal,
+			   this->aspect,
+			   wait_semaphores);
+
+    this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    image->current_layout = image_final;
   }
 
   void Texture::set(Framebuffer* framebuffer, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {

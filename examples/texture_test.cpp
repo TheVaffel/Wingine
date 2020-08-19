@@ -39,7 +39,7 @@ int main() {
     }
   }
   
-  wg::Image* tex_im = wing.createStorageImage(texture_width, texture_height);
+  wg::ResourceImage* tex_im = wing.createResourceImage(texture_width, texture_height);
 
   std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
 
@@ -55,20 +55,25 @@ int main() {
 
     uvec2_v global_id = uvec2_s::cons(global_id_1[0], global_id_1[1]);
 
-    auto out_image = shader.constantUniform<image2D_s>(0, 0);
+    image2D_v out_image = shader.uniformConstant<image2D_s>(0, 0).load();
 
-    vec2_v coord = cast<vec2>(global_id) / vec2_s::cons(texture_width, texture_height);
+    vec2_v coord = cast<vec2_s>(global_id) / vec2_s::cons(texture_width, texture_height);
     
-    out_image.store(global_id, vec3_s::cons(coord[0], 0.0f, coord[1]));
+    out_image.store(global_id, vec4_s::cons(coord[0], 0.0f, coord[1], 1.0f));
+
+    shader.compile(compute_spirv);
   }
+  
+  wg::Shader* compute_shader = wing.createShader(wg::shaCompute, compute_spirv);
 
-  wg::Shader* compute_shader = wing.createShader(compute_spirv);
-
-  wg::Pipeline* compute_pipeline = wing.createComputePipeline({compute_shader});
+  wg::ComputePipeline* compute_pipeline = wing.createComputePipeline({computeSetLayout},
+								     {compute_shader});
 
   wg::SemaphoreChain* chain = wing.createSemaphoreChain();
   
-  wing.dispatchCompute(compute_pipeline, {chain});
+  wing.dispatchCompute(compute_pipeline,
+		       {compute_set},
+		       {chain}, texture_width, texture_height);
 
   wg::Texture* texture = wing.createTexture(texture_width, texture_height);
   // texture->set(texture_buffer, {chain});

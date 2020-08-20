@@ -67,7 +67,8 @@ namespace wg {
     vk::Device device = this->wing->getDevice();
     
     if (this->host_updatable) {
-      device.mapMemory(this->memory, offsetInBytes, sizeInBytes, {}, &mapped);
+      _wassert_result(device.mapMemory(this->memory, offsetInBytes, sizeInBytes, {}, &mapped),
+		      "map memory in Buffer::set");
 
       memcpy(mapped, data, sizeInBytes);
 
@@ -79,7 +80,8 @@ namespace wg {
       vk::Queue queue = this->wing->getGraphicsQueue();
     
       
-      device.mapMemory(this->update_memory, offsetInBytes, sizeInBytes, {}, &mapped);
+      _wassert_result(device.mapMemory(this->update_memory, offsetInBytes, sizeInBytes, {}, &mapped),
+		      "map update memory in Buffer::set");
 
       memcpy(mapped, data, sizeInBytes);
 
@@ -92,8 +94,9 @@ namespace wg {
       
       vk::CommandBufferBeginInfo cbbi;
 
-      device.waitForFences(1, &command.fence, VK_TRUE,
-			   (uint64_t)1e9);
+      _wassert_result(device.waitForFences(1, &command.fence, VK_TRUE,
+					   (uint64_t)1e9),
+		      "wait for fence 1 in Buffer::set");
       
       command.buffer.begin(cbbi);
 
@@ -109,10 +112,12 @@ namespace wg {
 
       device.resetFences(1, &command.fence);
       
-      queue.submit(1, &si, command.fence);
+      _wassert_result(queue.submit(1, &si, command.fence),
+		      "submit command in Buffer::set");
 
-      device.waitForFences(1, &command.fence, VK_TRUE,
-			   (uint64_t)1e9);
+      _wassert_result(device.waitForFences(1, &command.fence, VK_TRUE,
+					   (uint64_t)1e9),
+		      "wait for fence 2 in Buffer::set");
     }
   }
 

@@ -194,7 +194,8 @@ namespace wg {
     uint32_t mem_size = this->staging_memory_memreq.size;
 
     vk::Device device = this->wing->getDevice();
-    device.mapMemory(this->staging_memory, 0, mem_size, {}, &mapped_memory);
+    _wassert_result(device.mapMemory(this->staging_memory, 0, mem_size, {}, &mapped_memory),
+		    "mapped memory in setting texture data");
 
     if (fixed_stride) {
       memcpy(mapped_memory, pixels, mem_size);

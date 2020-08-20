@@ -56,8 +56,8 @@ namespace wg {
     cpci.setLayout(this->layout)
       .setStage(shader->shader_info);
 
-    this->pipeline = vk::Pipeline(static_cast<vk::Pipeline&&>(device.createComputePipeline(wing.pipeline_cache,
-											 {cpci})));
+    this->pipeline = device.createComputePipeline(wing.pipeline_cache,
+						  {cpci}).value;
 
     vk::CommandBufferAllocateInfo cbi;
     cbi.setCommandPool(wing.getGraphicsCommandPool())

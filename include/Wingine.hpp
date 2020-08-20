@@ -190,6 +190,9 @@ namespace wg {
     void destroy(Texture* texture);
     void destroy(StorageBuffer* storageBuffer);
     void destroy(SemaphoreChain* semaphore_chain);
+    void destroy(ResourceImage* resource_image);
+    void destroy(ResourceSet* resource_set);
+    void destroy(ComputePipeline* compute_pipeline);
     
     template<typename Type>
     void destroy(Uniform<Type>* uniform);
@@ -216,6 +219,7 @@ namespace wg {
     friend class SemaphoreChain;
     friend class Image;
     friend class ComputePipeline;
+    friend class ResourceImage;
   };
 
 

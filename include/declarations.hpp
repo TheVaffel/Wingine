@@ -90,6 +90,7 @@ namespace wg {
   class Image;
   class Buffer;
   class SemaphoreChain;
+  class ResourceImage;
   
   template<typename tt>
   class VertexBuffer;

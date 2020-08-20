@@ -1178,6 +1178,32 @@ namespace wg {
     this->device.destroy(framebuffer->framebuffer);
   }
 
+  void Wingine::destroy(ResourceImage* resourceImage) {
+    this->device.free(resourceImage->memory);
+    this->device.destroy(resourceImage->view);
+    this->device.destroy(resourceImage->image);
+
+    delete resourceImage->image_info;
+    delete resourceImage;
+  }
+
+  void Wingine::destroy(ResourceSet* resource_set) {
+    delete resource_set;
+  }
+
+  void Wingine::destroy(ComputePipeline* compute_pipeline) {
+    this->device.destroy(compute_pipeline->layout);
+    this->device.destroy(compute_pipeline->pipeline);
+
+    this->device.destroy(compute_pipeline->command.fence);
+    this->device.freeCommandBuffers(this->graphics_command_pool,
+				    1, &compute_pipeline->command.buffer);
+
+    delete compute_pipeline;
+  }
+
+  
+
   void Wingine::destroy(RenderFamily* family) {
     for(int i = 0; i < family->num_buffers; i++) {
       _wassert_result(this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX),

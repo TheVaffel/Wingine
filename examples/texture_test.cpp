@@ -163,6 +163,11 @@ int main() {
 
   wing.destroy(chain);
 
+  wing.destroy(tex_im);
+  wing.destroy(compute_set);
+  wing.destroy(compute_shader);
+  wing.destroy(compute_pipeline);
+  
   wing.destroy(family);
 
   wing.destroy(vertex_shader);

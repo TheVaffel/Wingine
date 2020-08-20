@@ -77,7 +77,7 @@ namespace wg {
 
 
   /*
-   * ResourceImage - represents resource images
+   * ResourceImage - represents resource images (storage images)
    */
 
   ResourceImage::ResourceImage(Wingine& wing,
@@ -92,9 +92,34 @@ namespace wg {
 			  vk::ImageTiling::eOptimal,
 			  vk::MemoryPropertyFlagBits::eDeviceLocal);
 
+    vk::CommandBufferBeginInfo bg;
+    _wassert_result(wing.device.waitForFences(1, &wing.general_purpose_command.fence,
+					      true, (uint64_t)1e9),
+		    "wait for general purpose command in ResourceImage construction to finish");
+
+    wing.device.resetFences(1, &wing.general_purpose_command.fence);
+
+    wing.general_purpose_command.buffer.begin(bg);
+
+    wing.cmd_set_layout(wing.general_purpose_command.buffer, this->image,
+			vk::ImageAspectFlagBits::eColor, this->current_layout, vk::ImageLayout::eGeneral);
+    wing.general_purpose_command.buffer.end();
+
+    vk::SubmitInfo si;
+    si.setCommandBufferCount(1)
+      .setPCommandBuffers(&wing.general_purpose_command.buffer);
+    
+    _wassert_result(wing.graphics_queue.submit(1, &si, wing.general_purpose_command.fence),
+		    "command submission in ResourceImage construction");
+
+    this->current_layout = vk::ImageLayout::eGeneral;
     this->image_info = new vk::DescriptorImageInfo();
     this->image_info->setImageView(this->view)
-      .setImageLayout(vk::ImageLayout::eGeneral);
+      .setImageLayout(this->current_layout);
+    
+    _wassert_result(wing.device.waitForFences(1, &wing.general_purpose_command.fence, true, (uint64_t)1e9),
+		    "wait for operation finish in ResourceImage construction");
+
   }
   
 

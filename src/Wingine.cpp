@@ -856,6 +856,13 @@ namespace wg {
 		    "wait for last present");
   }
 
+    void Wingine::waitIdle() {
+	
+	this->graphics_queue.waitIdle();
+	this->compute_queue.waitIdle();
+	this->present_queue.waitIdle();
+    }
+
   void Wingine::stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphores) {
     int num_semaphores = semaphores.size();
 

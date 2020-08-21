@@ -135,6 +135,7 @@ namespace wg {
   public:
 
     void waitForLastPresent();
+      void waitIdle();
     
     Framebuffer* getCurrentFramebuffer();
     int getCurrentFramebufferIndex();

@@ -6,33 +6,33 @@
 namespace wg {
   
   
-  class Image {
-  protected:
-    vk::Image image;
-    vk::DeviceMemory memory;
-    vk::ImageView view;
+    class Image {
+    protected:
+        vk::Image image;
+        vk::DeviceMemory memory;
+        vk::ImageView view;
     
-    vk::ImageLayout current_layout;
+        vk::ImageLayout current_layout;
 
-    uint32_t width, height;
+        uint32_t width, height;
     
-    const vk::Image& getImage() const;
-    const vk::DeviceMemory& getMemory() const;
-    const vk::ImageView& getView() const;
+        const vk::Image& getImage() const;
+        const vk::DeviceMemory& getMemory() const;
+        const vk::ImageView& getView() const;
 
-    static void constructImage(Wingine& wing,
-			       Image& image,
-			       int width, int height,
-			       vk::Format format,
-			       vk::ImageUsageFlags usage,
-			       vk::ImageTiling tiling,
-			       vk::MemoryPropertyFlags mem_flags);
+        static void constructImage(Wingine& wing,
+                                   Image& image,
+                                   int width, int height,
+                                   vk::Format format,
+                                   vk::ImageUsageFlags usage,
+                                   vk::ImageTiling tiling,
+                                   vk::MemoryPropertyFlags mem_flags);
     
-    friend class Framebuffer;
-    friend class Texture;
-    friend class Wingine;
-    friend class RenderFamily;
-  };
+        friend class Framebuffer;
+        friend class Texture;
+        friend class Wingine;
+        friend class RenderFamily;
+    };
   
 }
 

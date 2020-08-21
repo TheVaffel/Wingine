@@ -7,57 +7,57 @@
 
 namespace wg {
 
-  struct Command {
-    vk::CommandBuffer buffer;
-    vk::Fence fence;
-  };
+    struct Command {
+        vk::CommandBuffer buffer;
+        vk::Fence fence;
+    };
   
-  class Shader {
-    vk::PipelineShaderStageCreateInfo shader_info;
+    class Shader {
+        vk::PipelineShaderStageCreateInfo shader_info;
     
-    Shader(vk::Device& device,
-	   uint64_t stage,
-	   std::vector<uint32_t>& spirv);
+        Shader(vk::Device& device,
+               uint64_t stage,
+               std::vector<uint32_t>& spirv);
 
-    friend class Pipeline;
-    friend class Wingine;
-    friend class ComputePipeline;
-  };
+        friend class Pipeline;
+        friend class Wingine;
+        friend class ComputePipeline;
+    };
   
-  // Future addition
-  struct PipelineSetup {
-    bool clearScreen = true;
-  };
+    // Future addition
+    struct PipelineSetup {
+        bool clearScreen = true;
+    };
   
-  class Pipeline {
-    vk::Pipeline pipeline;
-    vk::PipelineLayout layout;
-    RenderPassType render_pass_type;
+    class Pipeline {
+        vk::Pipeline pipeline;
+        vk::PipelineLayout layout;
+        RenderPassType render_pass_type;
     
-    Pipeline(Wingine& wing,
-	     int width, int height,
-	     const std::vector<VertexAttribDesc>& descriptions,
-	     const std::vector<ResourceSetLayout>& resourceSetLayout,
-	     const std::vector<Shader*>& shaders,
-	     bool depthOnly);
+        Pipeline(Wingine& wing,
+                 int width, int height,
+                 const std::vector<VertexAttribDesc>& descriptions,
+                 const std::vector<ResourceSetLayout>& resourceSetLayout,
+                 const std::vector<Shader*>& shaders,
+                 bool depthOnly);
 
-    friend class RenderFamily;
-    friend class Wingine;
-  };
+        friend class RenderFamily;
+        friend class Wingine;
+    };
 
-  class ComputePipeline {
-    vk::Pipeline pipeline;
-    vk::PipelineLayout layout;
+    class ComputePipeline {
+        vk::Pipeline pipeline;
+        vk::PipelineLayout layout;
 
-    Command command;
+        Command command;
 
-    ComputePipeline(Wingine& wing,
-		    const std::vector<ResourceSetLayout>& resourceSetLayout,
-		    Shader* shaders);
+        ComputePipeline(Wingine& wing,
+                        const std::vector<ResourceSetLayout>& resourceSetLayout,
+                        Shader* shaders);
 
-    friend class ComputeFamily;
-    friend class Wingine;
-  };
+        friend class ComputeFamily;
+        friend class Wingine;
+    };
 };
 
 #endif // ndef WG_PIPELINE_HPP

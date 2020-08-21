@@ -1,13 +1,13 @@
 #include <Wingine.hpp>
 
 namespace wg {
-  struct PipelineSetup {
+    struct PipelineSetup {
     
-    bool clear_color = true;
-    bool clear_depth = true;
+        bool clear_color = true;
+        bool clear_depth = true;
 
-    void setClear(bool );
-    void setClearColor();
+        void setClear(bool );
+        void setClearColor();
     
-  };
+    };
 };

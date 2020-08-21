@@ -3,9 +3,9 @@
 
 namespace wgut {
   
-  class Camera;
+    class Camera;
   
-  class Model;
+    class Model;
 };
 
 #endif // WGUT_DECLARATIONS_HPP

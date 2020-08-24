@@ -1039,13 +1039,21 @@ namespace wg {
                           shader_bit,
                           spirv);
     }
-  
+
+    void Wingine::ensure_resource_set_layout_exists(const std::vector<uint64_t>& resourceSetLayout) {
+        if(this->resourceSetLayoutMap.find(resourceSetLayout) ==
+           this->resourceSetLayoutMap.end()) {
+            this->resourceSetLayoutMap[resourceSetLayout] = ResourceSetLayout(*this, resourceSetLayout);
+        }
+    }
+    
     Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
                                       const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                       const std::vector<Shader*>& shaders,
                                       bool depthOnly, int width, int height) {
         std::vector<ResourceSetLayout> rsl;
         for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
+            this->ensure_resource_set_layout_exists(resourceSetLayout[i]);
             rsl.push_back(this->resourceSetLayoutMap[resourceSetLayout[i]]);
         }
 
@@ -1062,6 +1070,7 @@ namespace wg {
                                                     Shader* shader) {
         std::vector<ResourceSetLayout> rsl;
         for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
+            this->ensure_resource_set_layout_exists(resourceSetLayouts[i]);
             rsl.push_back(this->resourceSetLayoutMap[resourceSetLayouts[i]]);
         }
 

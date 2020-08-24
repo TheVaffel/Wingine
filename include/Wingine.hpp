@@ -112,6 +112,8 @@ namespace wg {
         void cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
                             vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
                             vk::ImageLayout finalLayout);
+
+        void ensure_resource_set_layout_exists(const std::vector<uint64_t>& resourceSetLayout);
     
         // Don't delete color images, those are handled by swapchain
         void destroySwapchainFramebuffer(Framebuffer* framebuffer);

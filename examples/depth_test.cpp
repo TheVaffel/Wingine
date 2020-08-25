@@ -86,8 +86,11 @@ int main() {
 
     wg::Framebuffer* depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
                                                                 shadow_buffer_height, true);
+
+    wg::TextureSetup tex_setup;
+    tex_setup.setDepth(true);
     wg::Texture* shadow_texture = wing.createTexture(shadow_buffer_width,
-                                                     shadow_buffer_height, true);
+                                                     shadow_buffer_height, tex_setup);
 
     // Initialize texture set layout
 

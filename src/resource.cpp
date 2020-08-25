@@ -120,14 +120,47 @@ namespace wg {
   
 
     /*
+     * TextureSetup - setup structure for Texture
+     */
+
+    TextureSetup& TextureSetup::setAddressModeX(TextureAddressMode mode) {
+        this->address_mode_x = mode;
+        return *this;
+    }
+
+    TextureSetup& TextureSetup::setAddressModeY(TextureAddressMode mode) {
+        this->address_mode_y = mode;
+        return *this;
+    }
+
+    TextureSetup& TextureSetup::setAddressModeZ(TextureAddressMode mode) {
+        this->address_mode_z = mode;
+        return *this;
+    }
+
+    TextureSetup& TextureSetup::setAddressMode(TextureAddressMode mode) {
+        this->address_mode_x = mode;
+        this->address_mode_y = mode;
+        this->address_mode_z = mode;
+        return *this;
+    }
+
+    TextureSetup& TextureSetup::setDepth(bool depth) {
+        this->depth = depth;
+        return *this;
+    }
+    
+    /*
      * Texture - represents resource images with a sampler
      */
 
     Texture::Texture(Wingine& wing,
                      uint32_t width, uint32_t height,
-                     bool depth) :
+                     const TextureSetup& setup) :
         Resource(vk::DescriptorType::eCombinedImageSampler) {
-    
+
+        bool depth = setup.depth;
+        
         this->wing = &wing;
         this->aspect = depth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
         vk::Device device = wing.getDevice();
@@ -182,9 +215,9 @@ namespace wg {
         sci.setMagFilter(vk::Filter::eLinear)
             .setMinFilter(vk::Filter::eLinear)
             .setMipmapMode(vk::SamplerMipmapMode::eNearest)
-            .setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
-            .setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
-            .setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
+            .setAddressModeU((vk::SamplerAddressMode)setup.address_mode_x)
+            .setAddressModeV((vk::SamplerAddressMode)setup.address_mode_y)
+            .setAddressModeW((vk::SamplerAddressMode)setup.address_mode_z)
             .setMipLodBias(0.0f)
             .setAnisotropyEnable(false)
             .setMaxAnisotropy(1)

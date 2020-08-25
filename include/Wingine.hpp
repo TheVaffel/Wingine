@@ -176,7 +176,7 @@ namespace wg {
 
         ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
-        Texture* createTexture(uint32_t width, uint32_t height, bool depth = false);
+        Texture* createTexture(uint32_t width, uint32_t height, const TextureSetup& setup = TextureSetup());
 
         SemaphoreChain* createSemaphoreChain();
 

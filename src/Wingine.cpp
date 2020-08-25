@@ -1094,9 +1094,9 @@ namespace wg {
         return image;
     }
 
-    Texture* Wingine::createTexture(uint32_t width, uint32_t height, bool depth) {
+    Texture* Wingine::createTexture(uint32_t width, uint32_t height, const TextureSetup& setup) {
         Texture* texture = new Texture(*this,
-                                       width, height, depth);
+                                       width, height, setup);
         return texture;
     }
 

@@ -39,8 +39,35 @@ namespace wg {
 
         friend class Wingine;
     };
-  
 
+    /*
+     * Texture setup
+     */
+
+    enum class TextureAddressMode {
+        CLAMP_TO_EDGE = (int)vk::SamplerAddressMode::eClampToEdge,
+        REPEAT = (int)vk::SamplerAddressMode::eRepeat,
+        MIRROR = (int)vk::SamplerAddressMode::eMirroredRepeat
+    };
+    
+    struct TextureSetup {
+        TextureAddressMode address_mode_x = TextureAddressMode::CLAMP_TO_EDGE;
+        TextureAddressMode address_mode_y = TextureAddressMode::CLAMP_TO_EDGE;
+        TextureAddressMode address_mode_z = TextureAddressMode::CLAMP_TO_EDGE;
+        bool depth = false;
+
+        TextureSetup& setAddressModeX(TextureAddressMode mode);
+        TextureSetup& setAddressModeY(TextureAddressMode mode);
+        TextureSetup& setAddressModeZ(TextureAddressMode mode);
+        TextureSetup& setAddressMode(TextureAddressMode mode);
+        TextureSetup& setDepth(bool depth);
+    };
+
+
+    /*
+     * Texture resource
+     */
+    
     class Texture : public Image, public Resource {
         Wingine* wing;
     
@@ -57,7 +84,7 @@ namespace wg {
 
         Texture(Wingine& wing,
                 uint32_t width, uint32_t height,
-                bool depth);
+                const TextureSetup& setup);
     public:
 
         // Returns stride in bytes

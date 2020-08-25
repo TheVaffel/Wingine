@@ -79,6 +79,8 @@ int main() {
     // texture->set(texture_buffer, {chain});
     texture->set(tex_im, {chain});
 
+    delete[] texture_buffer;
+
     wg::VertexBuffer<float>* position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
     position_buffer->set(positions, num_points * 4);

@@ -4,6 +4,9 @@ namespace wgut {
   
     Camera::Camera(float horizontalFOVRadians, float invAspect, float near, float far){
 
+        this->aspect_ratio = 1.0f / invAspect;
+        this->fov_x = horizontalFOVRadians;
+        
         view = falg::Mat4(falg::FLATALG_MATRIX_IDENTITY);
         projection = falg::Mat4(falg::FLATALG_MATRIX_PROJECTION, horizontalFOVRadians, invAspect, near, far);
         altered = true;
@@ -56,19 +59,27 @@ namespace wgut {
         return view;
     }
 
-    falg::Vec3 Camera::getForwardVector() {
+    falg::Vec3 Camera::getForwardVector() const {
         return falg::Vec3(-view(2, 0), -view(2, 1), -view(2, 2));
     }
 
-    falg::Vec3 Camera::getRightVector() {
+    falg::Vec3 Camera::getRightVector() const {
         return falg::Vec3(view(0, 0), view(0, 1), view(0, 2));
     }
 
-    falg::Vec3 Camera::getUpVector() {
+    falg::Vec3 Camera::getUpVector() const {
         return falg::Vec3(view(1, 0), view(1, 1), view(1, 2));
     }
 
-    falg::Vec3 Camera::getPosition() {
+    falg::Vec3 Camera::getPosition() const {
         return (~view.submatrix<3, 3>(0, 0))*-falg::Vec3(view(0, 3), view(1, 3), view(2, 3));
+    }
+
+    float Camera::getFovX() const {
+        return this->fov_x;
+    }
+
+    float Camera::getAspectRatio() const {
+        return this->aspect_ratio;
     }
 };

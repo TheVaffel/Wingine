@@ -10,6 +10,9 @@ namespace wgut {
                                  0.f, 0.f, 0.5f, 0.5f,
                                  0.f, 0.f, 0.0f, 1.f};
         falg::Mat4 projection, view, total;
+
+        float aspect_ratio;
+        float fov_x;
         bool altered;
     public:
 
@@ -27,11 +30,14 @@ namespace wgut {
         falg::Mat4 getTransformMatrix();
         falg::Mat4 getViewMatrix();
 
-        falg::Vec3 getForwardVector();
-        falg::Vec3 getRightVector();
-        falg::Vec3 getUpVector();
+        falg::Vec3 getForwardVector() const;
+        falg::Vec3 getRightVector() const;
+        falg::Vec3 getUpVector() const;
 
-        falg::Vec3 getPosition();
+        falg::Vec3 getPosition() const;
+
+        float getFovX() const;
+        float getAspectRatio() const;
     };
 };
 

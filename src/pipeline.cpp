@@ -175,7 +175,7 @@ namespace wg {
             .setTopology(vk::PrimitiveTopology::eTriangleList);
 
         rs.setPolygonMode(vk::PolygonMode::eFill)
-            .setCullMode(vk::CullModeFlagBits::eNone)
+            .setCullMode(vk::CullModeFlagBits::eBack)
             .setFrontFace(vk::FrontFace::eClockwise)
             .setDepthClampEnable(false)
             .setRasterizerDiscardEnable(false)

@@ -14,8 +14,8 @@ int main() {
     const int num_triangles = 1;
   
     float positions[num_points * 4] = {
-        -1.0f, -1.0f, -2.5f, 1.0f,
         1.0f, -1.0f, -2.5f, 1.0f,
+        -1.0f, -1.0f, -2.5f, 1.0f,
         0.0f, 1.0f, -2.5f, 1.0f,
     };
 

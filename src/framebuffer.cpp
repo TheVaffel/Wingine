@@ -21,7 +21,8 @@ namespace wg {
             wing.cons_image_memory(this->colorImage,
                                    vk::MemoryPropertyFlagBits::eDeviceLocal);
             wing.cons_image_view(this->colorImage,
-                                 wImageViewColor);
+                                 wImageViewColor,
+                                 vk::Format::eB8G8R8A8Unorm);
 
             attachments.push_back(this->colorImage.view);
         }
@@ -37,7 +38,8 @@ namespace wg {
         wing.cons_image_memory(this->depthImage,
                                vk::MemoryPropertyFlagBits::eDeviceLocal);
         wing.cons_image_view(this->depthImage,
-                             wImageViewDepth);
+                             wImageViewDepth,
+                             vk::Format::eD32Sfloat);
 
         attachments.push_back(this->depthImage.view);
 

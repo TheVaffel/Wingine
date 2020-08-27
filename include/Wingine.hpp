@@ -100,7 +100,8 @@ namespace wg {
         void cons_image_memory(Image& image,
                                vk::MemoryPropertyFlags memProps);
         void cons_image_view(Image& image,
-                             ImageViewType type);
+                             ImageViewType type,
+                             vk::Format format);
 
         void copy_image(uint32_t w1, uint32_t h1, vk::Image src,
                         vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,

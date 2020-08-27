@@ -41,7 +41,8 @@ namespace wg {
         wing.cons_image_memory(image,
                                mem_flags);
         wing.cons_image_view(image,
-                             wImageViewColor);
+                             wImageViewColor,
+                             format);
     }
   
 };

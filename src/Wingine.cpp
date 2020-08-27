@@ -784,7 +784,8 @@ namespace wg {
             vk::MemoryAllocateInfo mai;
 
             this->cons_image_view(framebuffer->colorImage,
-                                  wImageViewColor);
+                                  wImageViewColor,
+                                  vk::Format::eB8G8R8A8Unorm);
       
 
             this->cons_image_image(framebuffer->depthImage,
@@ -797,7 +798,8 @@ namespace wg {
             this->cons_image_memory(framebuffer->depthImage,
                                     vk::MemoryPropertyFlagBits::eDeviceLocal);
             this->cons_image_view(framebuffer->depthImage,
-                                  wImageViewDepth);
+                                  wImageViewDepth,
+                                  vk::Format::eD32Sfloat);
 
             vk::ImageView attachments[] = {
                 framebuffer->colorImage.view,
@@ -943,7 +945,8 @@ namespace wg {
     }
   
     void Wingine::cons_image_view(Image& image,
-                                  ImageViewType type) {
+                                  ImageViewType type,
+                                  vk::Format format) {
         vk::ImageViewCreateInfo ivci;
         ivci.setImage(image.image)
             .setViewType(vk::ImageViewType::e2D)
@@ -954,7 +957,7 @@ namespace wg {
     
         switch(type) {
         case wImageViewColor:
-            ivci.setFormat(vk::Format::eB8G8R8A8Unorm)
+            ivci.setFormat(format)
                 .setSubresourceRange({vk::ImageAspectFlagBits::eColor,
                                       0, 1, 0, 1});
             break; 

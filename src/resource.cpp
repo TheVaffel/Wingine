@@ -80,9 +80,11 @@ namespace wg {
                                  uint32_t width, uint32_t height) :
         Resource(vk::DescriptorType::eStorageImage) {
 
+        vk::Format rgb_format = vk::Format::eR8G8B8A8Unorm;
+        
         Image::constructImage(wing, *this,
                               width, height,
-                              vk::Format::eB8G8R8A8Unorm,
+                              rgb_format,
                               vk::ImageUsageFlagBits::eTransferSrc |
                               vk::ImageUsageFlagBits::eStorage,
                               vk::ImageTiling::eOptimal,
@@ -159,6 +161,8 @@ namespace wg {
                      const TextureSetup& setup) :
         Resource(vk::DescriptorType::eCombinedImageSampler) {
 
+        vk::Format rgb_format = vk::Format::eR8G8B8A8Unorm;
+        
         bool depth = setup.depth;
         
         this->wing = &wing;
@@ -167,14 +171,15 @@ namespace wg {
     
         wing.cons_image_image(*this,
                               width, height,
-                              depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
+                              depth ? vk::Format::eD32Sfloat : rgb_format,
                               vk::ImageUsageFlagBits::eSampled |
                               vk::ImageUsageFlagBits::eTransferDst,
                               vk::ImageTiling::eOptimal);
         wing.cons_image_memory(*this,
                                vk::MemoryPropertyFlagBits::eDeviceLocal);
         wing.cons_image_view(*this,
-                             depth ? wImageViewDepth : wImageViewColor);
+                             depth ? wImageViewDepth : wImageViewColor,
+                             rgb_format);
 
 
         this->width = width;
@@ -184,7 +189,7 @@ namespace wg {
             Image pseudo;
             wing.cons_image_image(pseudo,
                                   width, height,
-                                  depth ? vk::Format::eD32Sfloat : vk::Format::eB8G8R8A8Unorm,
+                                  depth ? vk::Format::eD32Sfloat : rgb_format,
                                   vk::ImageUsageFlagBits::eTransferSrc,
                                   vk::ImageTiling::eLinear,
                                   vk::ImageLayout::ePreinitialized);

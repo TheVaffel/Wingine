@@ -246,7 +246,7 @@ namespace wg {
         return this->stride_in_bytes;
     }
    
-    void Texture::set(unsigned char* pixels,
+    void Texture::set(const unsigned char* pixels,
                       const std::initializer_list<SemaphoreChain*>& semaphores,
                       bool fixed_stride) {
         void* mapped_memory;
@@ -260,7 +260,7 @@ namespace wg {
             memcpy(mapped_memory, pixels, mem_size);
         } else {
             unsigned char* curr_mapped = (unsigned char*)mapped_memory;
-            unsigned char* curr_pixels = pixels;
+            const unsigned char* curr_pixels = pixels;
             for (unsigned int i = 0; i < this->height; i++) {
                 memcpy(curr_mapped, curr_pixels, this->width * 4);
                 curr_mapped += this->stride_in_bytes;

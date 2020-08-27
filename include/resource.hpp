@@ -90,7 +90,7 @@ namespace wg {
         // Returns stride in bytes
         uint32_t getStride();
     
-        void set(unsigned char* pixels,
+        void set(const unsigned char* pixels,
                  const std::initializer_list<SemaphoreChain*>& wait_semaphores,
                  bool fixed_stride = false);
         void set(Framebuffer* framebuffer,

@@ -62,6 +62,23 @@ namespace wg {
         device.bindBufferMemory(this->buffer, this->memory, 0); // Buffer, memory, memoryOffset
     }
 
+    void* Buffer::_mapMemory() {
+        void* data;
+        
+        vk::Device device = this->wing->getDevice();
+        
+        _wassert(this->host_updatable, "must have host_updatable set for memory to be mappable");
+
+        _wassert_result(device.mapMemory(this->memory, 0, VK_WHOLE_SIZE, {}, &data));
+
+        return data;
+    }
+
+    void Buffer::_unmapMemory() {
+        vk::Device device = this->wing->getDevice();
+        device.unmapMemory(this->memory);
+    }
+
     void Buffer::set(void* data, uint32_t sizeInBytes, uint32_t offsetInBytes) {
         void* mapped;
         vk::Device device = this->wing->getDevice();
@@ -137,6 +154,14 @@ namespace wg {
         Buffer::set((void*)indices,
                     num * sizeof(uint32_t),
                     offsetElements * sizeof(uint32_t));
+    }
+
+    uint32_t* IndexBuffer::mapMemory() {
+        return reinterpret_cast<uint32_t*>(this->_mapMemory());
+    }
+
+    void IndexBuffer::unmapMemory() {
+        this->_unmapMemory();
     }
 
     int IndexBuffer::getNumIndices() const {

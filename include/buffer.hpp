@@ -24,8 +24,12 @@ namespace wg {
                vk::BufferUsageFlags flags,
                uint32_t size,
                bool host_updatable = true); // True means faster to update, slower to use
+
         void set(void* data, uint32_t sizeInBytes, uint32_t offsetInBytes = 0);
 
+        void* _mapMemory();
+        void _unmapMemory();
+        
         template<typename Type>
         friend class Uniform;
         friend class StorageBuffer;
@@ -55,6 +59,9 @@ namespace wg {
     public:
         void set(Type* t, uint32_t num, uint32_t offsetElements = 0);
 
+        Type* mapMemory();
+        void unmapMemory();
+
         friend class Wingine;
         friend class Resource;
         friend class wgut::Model;
@@ -69,6 +76,8 @@ namespace wg {
     public:
         void set(uint32_t* indices,
                  uint32_t num, uint32_t offsetElements = 0);
+        uint32_t* mapMemory();
+        void unmapMemory();
         int getNumIndices() const;
 
         friend class RenderFamily;
@@ -108,6 +117,16 @@ namespace wg {
     template<typename Type>
     void VertexBuffer<Type>::set(Type* t, uint32_t num, uint32_t offsetElements) {
         Buffer::set((void*)t, num * sizeof(Type), offsetElements * sizeof(Type));
+    }
+
+    template<typename Type>
+    Type* VertexBuffer<Type>::mapMemory() {
+        return reinterpret_cast<Type*>(this->_mapMemory());
+    }
+
+    template<typename Type>
+    void VertexBuffer<Type>::unmapMemory() {
+        this->_unmapMemory();
     }
 };
 

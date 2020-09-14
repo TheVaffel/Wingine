@@ -71,15 +71,37 @@ namespace wg {
         command.fence = device.createFence(fci);
     }
 
-  
+    PipelineSetup& PipelineSetup::setDepthOnly(bool depthOnly) {
+        this->depthOnly = depthOnly;
+        return *this;
+    }
+
+    PipelineSetup& PipelineSetup::setEnableDepth(bool enableDepth) {
+        this->enableDepth = enableDepth;
+        return *this;
+    }
+
+    PipelineSetup& PipelineSetup::setWidth(int width) {
+        this->width = width;
+        return *this;
+    }
+
+    PipelineSetup& PipelineSetup::setHeight(int height) {
+        this->height = height;
+        return *this;
+    }
+    
     Pipeline::Pipeline(Wingine& wing,
-                       int width, int height,
                        const std::vector<VertexAttribDesc>& descriptions,
                        const std::vector<ResourceSetLayout>& resourceSetLayouts,
-                       const std::vector<Shader*>& shaders, bool depthOnly) {
+                       const std::vector<Shader*>& shaders,
+                       const PipelineSetup& setup) {
 
         vk::Device device = wing.getDevice();
-    
+
+        int width = setup.width == -1 ? wing.getWindowWidth() : setup.width;
+        int height = setup.height == -1 ? wing.getWindowHeight() : setup.height;
+        
         int vertex_binding_count = 0;
     
         for(const VertexAttribDesc& desc : descriptions) {
@@ -206,8 +228,8 @@ namespace wg {
             .setPScissors(&scissor)
             .setPViewports(&viewport);
 
-        ds.setDepthTestEnable(true)
-            .setDepthWriteEnable(true)
+        ds.setDepthTestEnable(setup.enableDepth)
+            .setDepthWriteEnable(setup.enableDepth)
             .setDepthCompareOp(vk::CompareOp::eLessOrEqual)
             .setDepthBoundsTestEnable(false)
             .setBack({vk::StencilOp::eKeep,
@@ -248,7 +270,7 @@ namespace wg {
     
         RenderPassType rpt;
       
-        if (depthOnly) {
+        if (setup.depthOnly) {
             rpt = renDepth;
         } else {
             rpt = renColorDepth;

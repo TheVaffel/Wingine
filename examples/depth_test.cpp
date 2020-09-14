@@ -119,10 +119,14 @@ int main() {
 
     wg::Shader* depth_shader = wing.createShader(wg::shaVertex, depth_vertex_shader);
 
+    wg::PipelineSetup shadow_pipeline_setup;
+    shadow_pipeline_setup.setWidth(shadow_buffer_width)
+        .setHeight(shadow_buffer_height)
+        .setDepthOnly(true);
     wg::Pipeline* depth_pipeline = wing.createPipeline({vertAttrDesc[0]},
                                                        {resourceSetLayout},
-                                                       {depth_shader}, true,
-                                                       shadow_buffer_width, shadow_buffer_height);
+                                                       {depth_shader},
+                                                       shadow_pipeline_setup);
   
   
     std::vector<uint32_t> vertex_spirv;

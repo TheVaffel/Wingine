@@ -26,7 +26,16 @@ namespace wg {
   
     // Future addition
     struct PipelineSetup {
-        bool clearScreen = true;
+        bool depthOnly = false;
+        bool enableDepth = true;
+        
+        int width = -1;
+        int height = -1;
+
+        PipelineSetup& setDepthOnly(bool depthOnly);
+        PipelineSetup& setEnableDepth(bool enableDepth);
+        PipelineSetup& setWidth(int width);
+        PipelineSetup& setHeight(int height);
     };
   
     class Pipeline {
@@ -35,11 +44,10 @@ namespace wg {
         RenderPassType render_pass_type;
     
         Pipeline(Wingine& wing,
-                 int width, int height,
                  const std::vector<VertexAttribDesc>& descriptions,
                  const std::vector<ResourceSetLayout>& resourceSetLayout,
                  const std::vector<Shader*>& shaders,
-                 bool depthOnly);
+                 const PipelineSetup& setup);
 
         friend class RenderFamily;
         friend class Wingine;

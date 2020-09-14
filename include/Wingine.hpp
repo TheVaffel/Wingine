@@ -166,8 +166,7 @@ namespace wg {
         Pipeline* createPipeline(const std::vector<VertexAttribDesc>& descriptions,
                                  const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                  const std::vector<Shader*>& shaders,
-                                 bool depthOnly = false,
-                                 int width = -1, int height = -1);
+                                 const PipelineSetup& setup = PipelineSetup());
 
         ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                                Shader* shaders);

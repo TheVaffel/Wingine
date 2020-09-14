@@ -1053,7 +1053,7 @@ namespace wg {
     Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
                                       const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                       const std::vector<Shader*>& shaders,
-                                      bool depthOnly, int width, int height) {
+                                      const PipelineSetup& setup) {
         std::vector<ResourceSetLayout> rsl;
         for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
             this->ensure_resource_set_layout_exists(resourceSetLayout[i]);
@@ -1061,12 +1061,10 @@ namespace wg {
         }
 
         return new Pipeline(*this,
-                            width < 0 ? this->window_width : width,
-                            height < 0 ? this->window_height : height,
                             descriptions,
                             rsl,
                             shaders,
-                            depthOnly);
+                            setup);
     }
 
     ComputePipeline* Wingine::createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayouts,

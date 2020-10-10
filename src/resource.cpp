@@ -31,7 +31,7 @@ namespace wg {
 
     ResourceSetLayout::ResourceSetLayout() { }
 
-    ResourceSet* Wingine::createResourceSet(std::vector<uint64_t>& flags) {
+    ResourceSet* Wingine::createResourceSet(const std::vector<uint64_t>& flags) {
 
         this->ensure_resource_set_layout_exists(flags);
     

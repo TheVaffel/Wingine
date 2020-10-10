@@ -12,14 +12,14 @@ namespace wg {
         Wingine* wing;
 
         std::vector<Command> commands;
-        Pipeline* pipeline;
+        const Pipeline* pipeline;
         std::vector<vk::RenderPass> render_passes;
         bool clears;
         int num_buffers;
         std::vector<Framebuffer*> framebuffers;
     
         RenderFamily(Wingine& wing,
-                     Pipeline* pipeline,
+                     const Pipeline* pipeline,
                      bool clear,
                      int num_buffers = 0);
 
@@ -28,7 +28,7 @@ namespace wg {
     public:
         void startRecording(std::vector<Framebuffer*> framebuffer = {});
 
-        void recordDraw(const std::vector<Buffer*>& buffers, const IndexBuffer* ind_buf,
+        void recordDraw(const std::vector<const Buffer*>& buffers, const IndexBuffer* ind_buf,
                         const std::vector<ResourceSet*>& sets, int instanceCount = 1);
         void endRecording();
 

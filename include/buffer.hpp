@@ -25,7 +25,7 @@ namespace wg {
                uint32_t size,
                bool host_updatable = true); // True means faster to update, slower to use
 
-        void set(void* data, uint32_t sizeInBytes, uint32_t offsetInBytes = 0);
+        void set(const void* data, uint32_t sizeInBytes, uint32_t offsetInBytes = 0);
 
         void* _mapMemory();
         void _unmapMemory();
@@ -57,7 +57,7 @@ namespace wg {
                      bool host_updatable = true);
 
     public:
-        void set(Type* t, uint32_t num, uint32_t offsetElements = 0);
+        void set(const Type* t, uint32_t num, uint32_t offsetElements = 0);
 
         Type* mapMemory();
         void unmapMemory();
@@ -74,7 +74,7 @@ namespace wg {
                     bool host_updatable = false);
 
     public:
-        void set(uint32_t* indices,
+        void set(const uint32_t* indices,
                  uint32_t num, uint32_t offsetElements = 0);
         uint32_t* mapMemory();
         void unmapMemory();
@@ -115,8 +115,8 @@ namespace wg {
                       host_updatable) { }
 
     template<typename Type>
-    void VertexBuffer<Type>::set(Type* t, uint32_t num, uint32_t offsetElements) {
-        Buffer::set((void*)t, num * sizeof(Type), offsetElements * sizeof(Type));
+    void VertexBuffer<Type>::set(const Type* t, uint32_t num, uint32_t offsetElements) {
+        Buffer::set((const void*)t, num * sizeof(Type), offsetElements * sizeof(Type));
     }
 
     template<typename Type>

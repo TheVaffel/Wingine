@@ -79,7 +79,7 @@ namespace wg {
         device.unmapMemory(this->memory);
     }
 
-    void Buffer::set(void* data, uint32_t sizeInBytes, uint32_t offsetInBytes) {
+    void Buffer::set(const void* data, uint32_t sizeInBytes, uint32_t offsetInBytes) {
         void* mapped;
         vk::Device device = this->wing->getDevice();
     
@@ -148,10 +148,10 @@ namespace wg {
         this->num_indices = numIndices;
     }
 
-    void IndexBuffer::set(uint32_t* indices,
+    void IndexBuffer::set(const uint32_t* indices,
                           uint32_t num,
                           uint32_t offsetElements) {
-        Buffer::set((void*)indices,
+        Buffer::set((const void*)indices,
                     num * sizeof(uint32_t),
                     offsetElements * sizeof(uint32_t));
     }

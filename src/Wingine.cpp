@@ -1111,7 +1111,7 @@ namespace wg {
                                  num_bytes, host_updatable);
     }
 
-    RenderFamily* Wingine::createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers) {
+    RenderFamily* Wingine::createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers) {
         return new RenderFamily(*this,
                                 pipeline, clear, num_framebuffers);
     }

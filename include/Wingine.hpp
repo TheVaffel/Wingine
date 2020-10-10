@@ -157,9 +157,9 @@ namespace wg {
 
         StorageBuffer* createStorageBuffer(uint32_t num_bytes, bool host_updatable = true);
 
-        RenderFamily* createRenderFamily(Pipeline* pipeline, bool clear, int num_framebuffers = 0);
+        RenderFamily* createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers = 0);
       
-        ResourceSet* createResourceSet(std::vector<uint64_t>& resourceLayout);
+        ResourceSet* createResourceSet(const std::vector<uint64_t>& resourceLayout);
 
         Shader* createShader(uint64_t stage_bit, std::vector<uint32_t>& spirv);
 

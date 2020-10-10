@@ -4,7 +4,7 @@
 
 namespace wg {
     RenderFamily::RenderFamily(Wingine& wing,
-                               Pipeline* pipeline,
+                               const Pipeline* pipeline,
                                bool clear,
                                int num_framebuffers) :
         wing(&wing), pipeline(pipeline) {
@@ -25,8 +25,6 @@ namespace wg {
                                                                  clear);
             }
         }
-
-    
     
         vk::CommandPool pool = wing.getGraphicsCommandPool();
         vk::Device device = wing.getDevice();
@@ -116,7 +114,7 @@ namespace wg {
         }
     }
 
-    void RenderFamily::recordDraw(const std::vector<Buffer*>& vertex_buffers, const IndexBuffer* ind_buf,
+    void RenderFamily::recordDraw(const std::vector<const Buffer*>& vertex_buffers, const IndexBuffer* ind_buf,
                                   const std::vector<ResourceSet*>& sets, int instanceCount){
 
         for(int j = 0; j < this->num_buffers; j++) {

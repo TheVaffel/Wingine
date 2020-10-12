@@ -15,6 +15,7 @@ namespace wgut {
   
     class Model {
         std::vector<wg::Buffer*> vertex_buffers;
+        std::vector<const wg::Buffer*> const_vertex_buffers;
         wg::IndexBuffer* index_buffer;
 
     public:
@@ -25,7 +26,7 @@ namespace wgut {
                               const std::string& file_name,
                               const std::vector<ReadAttribType>& attribs);
     
-        const std::vector<wg::Buffer*>& getVertexBuffers();
+        const std::vector<const wg::Buffer*>& getVertexBuffers();
         const wg::IndexBuffer* getIndexBuffer();
 
         void destroy(wg::Wingine& wing);

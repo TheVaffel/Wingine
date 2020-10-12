@@ -12,7 +12,11 @@ namespace wgut {
                  wg::IndexBuffer* _index_buffer) :
         vertex_buffers(_vertex_buffer),
         index_buffer(_index_buffer)
-    { }
+    {
+        this->const_vertex_buffers =
+            std::vector<const wg::Buffer*>(this->vertex_buffers.begin(),
+                                           this->vertex_buffers.end());
+    }
 
     Model Model::fromFile(wg::Wingine& wing,
                           const std::string& file_name,
@@ -134,8 +138,8 @@ namespace wgut {
         return Model(buffers, index_buffer);
     }
 
-    const std::vector<wg::Buffer*>& Model::getVertexBuffers() {
-        return this->vertex_buffers;
+    const std::vector<const wg::Buffer*>& Model::getVertexBuffers() {
+        return this->const_vertex_buffers;
     }
   
     const wg::IndexBuffer* Model::getIndexBuffer() {

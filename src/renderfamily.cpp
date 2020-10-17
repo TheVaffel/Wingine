@@ -16,12 +16,14 @@ namespace wg {
         this->clears = clear;
         this->num_buffers = num_framebuffers;
 
+        this->render_pass_type = pipeline->render_pass_type;
+
         this->render_passes = std::vector<vk::RenderPass>(num_framebuffers);
         for(int i = 0; i < num_framebuffers; i++) {
             if(!clear) {
-                this->render_passes[i] = wing.compatibleRenderPassMap[pipeline->render_pass_type];
+                this->render_passes[i] = wing.compatibleRenderPassMap[this->render_pass_type];
             } else {
-                this->render_passes[i] = wing.create_render_pass(pipeline->render_pass_type,
+                this->render_passes[i] = wing.create_render_pass(this->render_pass_type,
                                                                  clear);
             }
         }
@@ -81,7 +83,7 @@ namespace wg {
             std::vector<vk::ClearValue> clear_values;
 
             if(this->clears) {
-                switch (this->pipeline->render_pass_type) {
+                switch (this->render_pass_type) {
                 case renDepth:
                     clear_values.resize(1);
                     clear_values[0].depthStencil.depth = 1.0f;

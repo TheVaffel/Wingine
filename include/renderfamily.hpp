@@ -17,6 +17,7 @@ namespace wg {
         bool clears;
         int num_buffers;
         std::vector<Framebuffer*> framebuffers;
+        RenderPassType render_pass_type;
     
         RenderFamily(Wingine& wing,
                      const Pipeline* pipeline,

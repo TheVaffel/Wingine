@@ -1229,7 +1229,7 @@ namespace wg {
             this->device.freeCommandBuffers(this->graphics_command_pool,
                                             1, &family->commands[i].buffer);
 
-            if(family->render_passes[i] != this->compatibleRenderPassMap[family->pipeline->render_pass_type]) {
+            if(family->render_passes[i] != this->compatibleRenderPassMap[family->render_pass_type]) {
                 this->device.destroy(family->render_passes[i]);
             }
         }

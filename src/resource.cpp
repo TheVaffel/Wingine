@@ -95,7 +95,8 @@ namespace wg {
                                                   true, (uint64_t)1e9),
                         "wait for general purpose command in ResourceImage construction to finish");
 
-        wing.device.resetFences(1, &wing.general_purpose_command.fence);
+        _wassert_result(wing.device.resetFences(1, &wing.general_purpose_command.fence),
+                        "reset fence in producing resource image");
 
         wing.general_purpose_command.buffer.begin(bg);
 

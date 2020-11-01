@@ -118,7 +118,8 @@ namespace wg {
                                                    true, (uint64_t)1e9),
                         "wait for general purpose command in copy_image to finish");
 
-        this->device.resetFences(1, &general_purpose_command.fence);
+        vk::Result res = this->device.resetFences(1, &general_purpose_command.fence);
+        _wassert_result(res, "reset fence in copy_image");
 
         general_purpose_command.buffer.begin(bg);
 
@@ -868,7 +869,8 @@ namespace wg {
         int num_semaphores = semaphores.size();
 
         this->waitForLastPresent();
-        this->device.resetFences(1, &this->image_acquired_fence);
+        _wassert_result(this->device.resetFences(1, &this->image_acquired_fence),
+                        "reset fence in stage_next_image");
     
         _wassert_result(this->device.acquireNextImageKHR(this->swapchain, UINT64_MAX,
                                                          num_semaphores ? this->image_acquire_semaphore : vk::Semaphore((VkSemaphore)(VK_NULL_HANDLE)),
@@ -1176,28 +1178,29 @@ namespace wg {
         _wassert_result(device.waitForFences(1, &compute->command.fence, true,
                                              (uint64_t)1e9),
                         "wait for last submission in compute submit");
-        this->device.resetFences(1, &compute->command.fence);
+        _wassert_result(this->device.resetFences(1, &compute->command.fence),
+                        "reset fence at end of compute submit");
 
         _wassert_result(this->compute_queue.submit(1, &si, compute->command.fence),
                         "submitting compute command");
     }
   
     void Wingine::destroySwapchainImage(Image& image) {
-        this->device.free(image.memory);
-        this->device.destroy(image.view);
+        this->device.free(image.memory, nullptr, this->dispatcher);
+        this->device.destroy(image.view, nullptr, this->dispatcher);
     }
   
     void Wingine::destroySwapchainFramebuffer(Framebuffer* framebuffer) {
         this->destroySwapchainImage(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
     
-        this->device.destroy(framebuffer->framebuffer);
+        this->device.destroy(framebuffer->framebuffer, nullptr, this->dispatcher);
     }
 
     void Wingine::destroy(ResourceImage* resourceImage) {
-        this->device.free(resourceImage->memory);
-        this->device.destroy(resourceImage->view);
-        this->device.destroy(resourceImage->image);
+        this->device.free(resourceImage->memory, nullptr, this->dispatcher);
+        this->device.destroy(resourceImage->view, nullptr, this->dispatcher);
+        this->device.destroy(resourceImage->image, nullptr, this->dispatcher);
 
         delete resourceImage->image_info;
         delete resourceImage;
@@ -1208,10 +1211,10 @@ namespace wg {
     }
 
     void Wingine::destroy(ComputePipeline* compute_pipeline) {
-        this->device.destroy(compute_pipeline->layout);
-        this->device.destroy(compute_pipeline->pipeline);
+        this->device.destroy(compute_pipeline->layout, nullptr, this->dispatcher);
+        this->device.destroy(compute_pipeline->pipeline, nullptr, this->dispatcher);
 
-        this->device.destroy(compute_pipeline->command.fence);
+        this->device.destroy(compute_pipeline->command.fence, nullptr, this->dispatcher);
         this->device.freeCommandBuffers(this->graphics_command_pool,
                                         1, &compute_pipeline->command.buffer);
 
@@ -1224,13 +1227,13 @@ namespace wg {
         for(int i = 0; i < family->num_buffers; i++) {
             _wassert_result(this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX),
                             "wait for command finish");
-            this->device.destroy(family->commands[i].fence);
+            this->device.destroy(family->commands[i].fence, nullptr, this->dispatcher);
 
             this->device.freeCommandBuffers(this->graphics_command_pool,
                                             1, &family->commands[i].buffer);
 
             if(family->render_passes[i] != this->compatibleRenderPassMap[family->render_pass_type]) {
-                this->device.destroy(family->render_passes[i]);
+                this->device.destroy(family->render_passes[i], nullptr, this->dispatcher);
             }
         }
     
@@ -1238,61 +1241,62 @@ namespace wg {
     }
 
     void Wingine::destroy(Shader* shader) {
-        this->device.destroy(shader->shader_info.module);
+        this->device.destroy(shader->shader_info.module, nullptr, this->dispatcher);
         delete shader;
     }
 
     void Wingine::destroy(Texture* texture) {
         delete texture->image_info;
 
-        this->device.destroy(texture->sampler);
+        this->device.destroy(texture->sampler, nullptr, this->dispatcher);
         this->destroy(*(Image*)texture);
 
-        this->device.destroy(texture->staging_image);
-        this->device.free(texture->staging_memory);
+        this->device.destroy(texture->staging_image, nullptr, this->dispatcher);
+        this->device.free(texture->staging_memory, nullptr, this->dispatcher);
         delete texture;
     }
 
     void Wingine::destroy(SemaphoreChain* semaphore_chain) {
         // Using image_acquired fence...
         this->waitForLastPresent();
-        this->device.resetFences(1, &this->image_acquired_fence);
+        _wassert_result(this->device.resetFences(1, &this->image_acquired_fence),
+                        "reset fence in destroying semaphore chain");
     
         semaphore_chain->ensure_finished(this, this->image_acquired_fence);
-        this->device.destroy(semaphore_chain->semaphore);
+        this->device.destroy(semaphore_chain->semaphore, nullptr, this->dispatcher);
 
         delete semaphore_chain;
     }
   
     void Wingine::destroy(Pipeline* pipeline) {
-        this->device.destroy(pipeline->layout);
-        this->device.destroy(pipeline->pipeline);
+        this->device.destroy(pipeline->layout, nullptr, this->dispatcher);
+        this->device.destroy(pipeline->pipeline, nullptr, this->dispatcher);
         delete pipeline;
     }
 
     void Wingine::destroy(Buffer* buffer) {
-        this->device.destroy(buffer->buffer);
-        this->device.free(buffer->memory);
+        this->device.destroy(buffer->buffer, nullptr, this->dispatcher);
+        this->device.free(buffer->memory, nullptr, this->dispatcher);
 
         if( !buffer->host_updatable ) {
-            this->device.destroy(buffer->update_buffer);
-            this->device.free(buffer->update_memory);
+            this->device.destroy(buffer->update_buffer, nullptr, this->dispatcher);
+            this->device.free(buffer->update_memory, nullptr, this->dispatcher);
         }
 
         delete buffer;
     }
 
     void Wingine::destroy(Image& image) {
-        this->device.destroy(image.image);
-        this->device.free(image.memory);
-        this->device.destroy(image.view);
+        this->device.destroy(image.image, nullptr, this->dispatcher);
+        this->device.free(image.memory, nullptr, this->dispatcher);
+        this->device.destroy(image.view, nullptr, this->dispatcher);
     }
   
     void Wingine::destroy(Framebuffer* framebuffer) {
         this->destroy(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
 
-        this->device.destroy(framebuffer->framebuffer);
+        this->device.destroy(framebuffer->framebuffer, nullptr, this->dispatcher);
     
         delete framebuffer;
     }
@@ -1305,8 +1309,8 @@ namespace wg {
   
     Wingine::~Wingine() {
     
-        this->device.destroy(this->descriptor_pool);
-        this->device.destroy(this->pipeline_cache);
+        this->device.destroy(this->descriptor_pool, nullptr, this->dispatcher);
+        this->device.destroy(this->pipeline_cache, nullptr, this->dispatcher);
 
         for(Framebuffer* fb : this->framebuffers) {
             this->destroySwapchainFramebuffer(fb);
@@ -1319,49 +1323,49 @@ namespace wg {
                                         1, &this->present_command.buffer);
     
     
-        this->device.destroyCommandPool(this->graphics_command_pool);
+        this->device.destroyCommandPool(this->graphics_command_pool, nullptr, this->dispatcher);
     
-        this->device.destroyCommandPool(this->present_command_pool);
+        this->device.destroyCommandPool(this->present_command_pool, nullptr, this->dispatcher);
         _wassert_result(this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
                         "wait for present command finish");
-        this->device.destroyFence(this->present_command.fence);
+        this->device.destroyFence(this->present_command.fence, nullptr, this->dispatcher);
 
 
         if(this->compute_queue_index >= 0) {
             this->device.freeCommandBuffers(this->compute_command_pool,
                                             1, &this->compute_command.buffer);
       
-            this->device.destroyCommandPool(this->compute_command_pool);
+            this->device.destroyCommandPool(this->compute_command_pool, nullptr, this->dispatcher);
             _wassert_result(this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX),
                             "wait for compute command finish");
-            this->device.destroyFence(this->compute_command.fence);
+            this->device.destroyFence(this->compute_command.fence, nullptr, this->dispatcher);
         }
 
-        this->device.destroyFence(this->image_acquired_fence);
-        this->device.destroy(this->image_acquire_semaphore);
-        this->device.destroy(this->finished_drawing_semaphore);
+        this->device.destroyFence(this->image_acquired_fence, nullptr, this->dispatcher);
+        this->device.destroy(this->image_acquire_semaphore, nullptr, this->dispatcher);
+        this->device.destroy(this->finished_drawing_semaphore, nullptr, this->dispatcher);
 
         _wassert_result(this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX),
                         "wait for general purpose command finish");
-        this->device.destroy(this->general_purpose_command.fence);
+        this->device.destroy(this->general_purpose_command.fence, nullptr, this->dispatcher);
 
-        this->device.destroy(this->swapchain);
+        this->device.destroy(this->swapchain, nullptr, this->dispatcher);
     
-        this->vulkan_instance.destroy(this->surface);
+        this->vulkan_instance.destroy(this->surface, nullptr, this->dispatcher);
     
         for (auto it : this->resourceSetLayoutMap) {
-            this->device.destroy(it.second.layout);
+            this->device.destroy(it.second.layout, nullptr, this->dispatcher);
         }
 
         for(auto it : this->compatibleRenderPassMap) {
-            this->device.destroy(it.second);
+            this->device.destroy(it.second, nullptr, this->dispatcher);
         }
     
-        this->device.destroy();
+        this->device.destroy(nullptr, this->dispatcher);
     
         this->vulkan_instance.destroyDebugReportCallbackEXT(this->debug_callback,
                                                             nullptr, this->dispatcher);
-        this->vulkan_instance.destroy();
+        this->vulkan_instance.destroy(nullptr, this->dispatcher);
     }
   
 };

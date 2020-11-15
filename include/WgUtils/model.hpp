@@ -7,10 +7,24 @@
 
 namespace wgut {
 
+    // NB: Remember to update this whenever a new attribute is added
+    const int WGUT_MODEL_ATTRIB_COUNT = 3;
+    
     enum class ReadAttribType {
         attTypePosition,
         attTypeNormal,
         attTypeTexture
+    };
+
+    class AttribUtil {
+        std::vector<int> type_indices;
+        int getAttribNumber(ReadAttribType type);
+    public:
+        AttribUtil(const std::vector<ReadAttribType>& types);
+
+        bool isDefined(ReadAttribType type);
+        int getIndex(ReadAttribType);
+
     };
   
     class Model {
@@ -25,11 +39,20 @@ namespace wgut {
         static Model fromFile(wg::Wingine& wing,
                               const std::string& file_name,
                               const std::vector<ReadAttribType>& attribs);
-    
+        static Model constructModel(wg::Wingine& wing, const std::vector<std::vector<float>>& data_buffers,
+                                    const std::vector<uint32_t>& index_data);
+
+        
         const std::vector<const wg::Buffer*>& getVertexBuffers();
         const wg::IndexBuffer* getIndexBuffer();
 
+
         void destroy(wg::Wingine& wing);
+    };
+
+    namespace SimpleModels {
+        Model createCube(wg::Wingine& wing,
+                         const std::vector<ReadAttribType>& attTypes);
     };
 };
 

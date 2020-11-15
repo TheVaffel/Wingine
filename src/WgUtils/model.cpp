@@ -2,12 +2,42 @@
 
 #include "Wingine.hpp"
 
+#include <FlatAlg.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
 namespace wgut {
-  
+
+    AttribUtil::AttribUtil(const std::vector<ReadAttribType>& types) : type_indices(WGUT_MODEL_ATTRIB_COUNT, -1) {
+        for (unsigned int i = 0; i < types.size(); i++) {
+            type_indices[getAttribNumber(types[i])] = i;
+        }
+    }
+
+    bool AttribUtil::isDefined(ReadAttribType type) {
+        return type_indices[getAttribNumber(type)] != -1;
+    }
+
+    int AttribUtil::getIndex(ReadAttribType type) {
+        return type_indices[getAttribNumber(type)];
+    }
+
+    int AttribUtil::getAttribNumber(ReadAttribType type) {
+        switch(type) {
+        case ReadAttribType::attTypePosition:
+            return 0;
+        case ReadAttribType::attTypeNormal:
+            return 1;
+        case ReadAttribType::attTypeTexture:
+            return 2;
+        default:
+            std::cerr << "[AttribUtil::getAttribNumber] Unhandled attribute type" << std::endl;
+            exit(-1);
+        }
+    }
+    
     Model::Model(const std::vector<wg::Buffer*>& _vertex_buffer,
                  wg::IndexBuffer* _index_buffer) :
         vertex_buffers(_vertex_buffer),
@@ -123,7 +153,14 @@ namespace wgut {
                 data_buffers[index_pos][3 * i + 2] = (data_buffers[index_pos][3 * i + 2] - min_coord) / max_diff * 2.0 - 1.0;
             }
         }
-    
+
+        
+
+        return Model::constructModel(wing, data_buffers, index_data);
+    }
+
+    Model Model::constructModel(wg::Wingine& wing, const std::vector<std::vector<float>>& data_buffers,
+                                const std::vector<uint32_t>& index_data) {
         std::vector<wg::Buffer*> buffers;
         wg::VertexBuffer<float> *buf;
         for(unsigned int i = 0; i < data_buffers.size(); i++) {
@@ -152,4 +189,63 @@ namespace wgut {
         }
         wing.destroy(this->index_buffer);
     }
+
+
+    namespace SimpleModels {
+    
+        Model createCube(wg::Wingine& wing,
+                         const std::vector<ReadAttribType>& attribs) {
+            AttribUtil attut(attribs);
+            
+            std::vector<std::vector<float>> attribute_vectors(attribs.size());
+            std::vector<uint32_t> indices;
+
+            for (int i = 0; i < 6; i++) {
+                
+                int dir_out = i % 3;
+                int dn = (dir_out + 1) % 3;
+                int dnn = (dn + 1) % 3;
+                    
+                int dir_comp = (i / 3) * 2 - 1;
+                for (int j = 0; j < 4; j++) {    
+                    
+                    if (attut.isDefined(ReadAttribType::attTypePosition)) {
+                        falg::Vec3 pos;
+                        
+                        pos[dir_out] = 0.5f * dir_comp;
+                        pos[dn] = 0.5f * (j % 2 == 0 ? - 1.0f : 1.0f);
+                        pos[dnn] = 0.5f * (j / 2 == 0 ? - 1.0f : 1.0f) * dir_comp;
+
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[0]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[1]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[2]);
+                    }
+
+                    if (attut.isDefined(ReadAttribType::attTypeNormal)) {
+                        falg::Vec3 norm(0.0f, 0.0f, 0.0f);
+                        norm[dir_out] = dir_comp;
+                        
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[0]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[1]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[2]);
+                    }
+
+                    if (attut.isDefined(ReadAttribType::attTypeTexture)) {
+                        falg::Vec2 tc(j % 2, j / 2);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tc[0]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tc[1]);
+                    }
+                }
+                
+                indices.push_back(4 * i + 0);
+                indices.push_back(4 * i + 2);
+                indices.push_back(4 * i + 1);
+                indices.push_back(4 * i + 1);
+                indices.push_back(4 * i + 2);
+                indices.push_back(4 * i + 3);
+            }
+
+            return Model::constructModel(wing, attribute_vectors, indices);
+        }
+    };
 };

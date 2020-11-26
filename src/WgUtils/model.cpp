@@ -247,5 +247,95 @@ namespace wgut {
 
             return Model::constructModel(wing, attribute_vectors, indices);
         }
+
+        Model createSphere(wg::Wingine& wing,
+                           const std::vector<ReadAttribType>& attribs,
+                           int res) {
+            AttribUtil attut(attribs);
+
+            std::vector<std::vector<float>> attribute_vectors(attribs.size());
+            std::vector<uint32_t> indices;
+
+            for (int i = 0; i < res - 1; i++) {
+                float phi = F_PI / 2 - F_PI * (i + 1) / res;
+                for (int j = 0; j <= 2 * res; j++) {
+                    float theta = 2 * F_PI * j / (2 * res);
+
+                    if (attut.isDefined(ReadAttribType::attTypePosition)) {
+                        falg::Vec3 pos(cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[0]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[1]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[2]);
+                    }
+
+                    if (attut.isDefined(ReadAttribType::attTypeNormal)) {
+                        
+                        falg::Vec3 norm(cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[0]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[1]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[2]);
+                    }
+
+                    if (attut.isDefined(ReadAttribType::attTypeTexture)) {
+                        falg::Vec2 tex((float)(i + 1) / res,
+                                       (float)j / (2 * res));
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tex[0]);
+                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tex[1]);
+                    }
+
+                    if (i != res - 2 && j != 2 * res) {
+                        indices.push_back(i * (2 * res + 1) + j);
+                        indices.push_back((i + 1) * (2 * res + 1) + j);
+                        indices.push_back(i * (2 * res + 1) + j + 1);
+                        
+                        indices.push_back((i + 1) * (2 * res + 1) + j);
+                        indices.push_back((i + 1) * (2 * res + 1) + j + 1);
+                        indices.push_back(i * (2 * res + 1) + j + 1);
+                    }
+                }
+            }
+
+            // Top / bottom
+
+            if (attut.isDefined(ReadAttribType::attTypePosition)) {
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(1.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
+
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(-1.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
+            }
+
+            if (attut.isDefined(ReadAttribType::attTypeNormal)) {
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(1.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
+                
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(-1.0f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
+            }
+
+            if (attut.isDefined(ReadAttribType::attTypeTexture)) {
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(0.5f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(0.0f);
+
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(0.5f);
+                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(1.0f);
+            }
+
+            for (int i = 0; i < 2 * res; i++) {
+                indices.push_back((res - 1) * (2 * res + 1) + 0);
+                indices.push_back(i);
+                indices.push_back(i + 1);
+
+                indices.push_back((res - 1) * (2 * res + 1) + 1);
+                indices.push_back((res - 2) * (2 * res + 1) + i + 1);
+                indices.push_back((res - 2) * (2 * res + 1) + i);
+            }
+
+            return Model::constructModel(wing, attribute_vectors, indices);
+        }
     };
 };

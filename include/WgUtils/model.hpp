@@ -53,6 +53,9 @@ namespace wgut {
     namespace SimpleModels {
         Model createCube(wg::Wingine& wing,
                          const std::vector<ReadAttribType>& attTypes);
+        Model createSphere(wg::Wingine& wing,
+                           const std::vector<ReadAttribType>& attTypes,
+                           int res);
     };
 };
 

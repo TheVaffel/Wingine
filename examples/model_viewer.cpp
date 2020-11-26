@@ -10,9 +10,9 @@ int main() {
     Winval win(width, height);
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
   
-    wgut::Model model = wgut::Model::fromFile(wing, "../models/teapot.obj",
-                                              {wgut::ReadAttribType::attTypePosition,
-                                               wgut::ReadAttribType::attTypeNormal}); 
+    wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::ReadAttribType::attTypePosition,
+            wgut::ReadAttribType::attTypeNormal},
+        5);
 
     wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 

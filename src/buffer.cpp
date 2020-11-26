@@ -127,7 +127,8 @@ namespace wg {
             si.setCommandBufferCount(1)
                 .setPCommandBuffers(&command.buffer);
 
-            device.resetFences(1, &command.fence);
+            _wassert_result(device.resetFences(1, &command.fence),
+                            "reset fence in Buffer::set");
       
             _wassert_result(queue.submit(1, &si, command.fence),
                             "submit command in Buffer::set");

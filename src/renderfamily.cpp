@@ -216,7 +216,8 @@ namespace wg {
         _wassert_result(device.waitForFences(1, &this->commands[index].fence, true, (uint64_t)1e9),
                         "wait for last submission in render family");
     
-        device.resetFences(1, &this->commands[index].fence);
+        _wassert_result(device.resetFences(1, &this->commands[index].fence),
+                        "reset fence in render family");
 
         _wassert_result(queue.submit(1, &si, this->commands[index].fence),
                         "submitting render family command to queue");

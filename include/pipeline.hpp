@@ -11,10 +11,10 @@ namespace wg {
         vk::CommandBuffer buffer;
         vk::Fence fence;
     };
-  
+
     class Shader {
         vk::PipelineShaderStageCreateInfo shader_info;
-    
+
         Shader(vk::Device& device,
                uint64_t stage,
                std::vector<uint32_t>& spirv);
@@ -23,26 +23,34 @@ namespace wg {
         friend class Wingine;
         friend class ComputePipeline;
     };
-  
-    // Future addition
+
+    enum class PolygonMode {
+        Point,
+        Line,
+        Fill
+    };
+
     struct PipelineSetup {
         bool depthOnly = false;
         bool enableDepth = true;
-        
+
         int width = -1;
         int height = -1;
+
+        PolygonMode polygonMode = PolygonMode::Fill;
 
         PipelineSetup& setDepthOnly(bool depthOnly);
         PipelineSetup& setEnableDepth(bool enableDepth);
         PipelineSetup& setWidth(int width);
         PipelineSetup& setHeight(int height);
+        PipelineSetup& setPolygonMode(PolygonMode polygonMode);
     };
-  
+
     class Pipeline {
         vk::Pipeline pipeline;
         vk::PipelineLayout layout;
         RenderPassType render_pass_type;
-    
+
         Pipeline(Wingine& wing,
                  const std::vector<VertexAttribDesc>& descriptions,
                  const std::vector<ResourceSetLayout>& resourceSetLayout,

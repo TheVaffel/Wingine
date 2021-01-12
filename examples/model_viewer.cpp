@@ -65,7 +65,7 @@ int main() {
 
         vec4_v hcol = vec4_s::cons(s_col[0], s_col[1], s_col[2], 1.0);
         // vec4_v hcol = vec4_s::cons(1.0f, 0.0f, 0.0f, 1.0f);
-    
+
         shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
         shader.compile(vertex_spirv, hcol);
     }
@@ -82,44 +82,69 @@ int main() {
         shader.compile(fragment_spirv, in_col);
     }
 
+    std::vector<uint32_t> black_fragment_spirv;
+    {
+        using namespace spurv;
+        FragmentShader<vec4_s> shader;
+        vec4_v in_shader = shader.input<0>();
+        vec4_v in_col = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f);
+        shader.compile(black_fragment_spirv, in_col);
+    }
+
     wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-  
+    wg::Shader* black_fragment_shader = wing.createShader(wg::shaFragment, black_fragment_spirv);
+
+    wg::PipelineSetup pipelineSetup;
+    pipelineSetup.setPolygonMode(wg::PolygonMode::Fill);
     wg::Pipeline* pipeline = wing.
         createPipeline(vertAttrDesc,
                        {resourceSetLayout},
-                       {vertex_shader, fragment_shader});
+                       {vertex_shader, fragment_shader}, pipelineSetup);
+
+    pipelineSetup.setPolygonMode(wg::PolygonMode::Line);
+    wg::Pipeline* line_pipeline = wing.
+        createPipeline(vertAttrDesc,
+                       {resourceSetLayout},
+                       {vertex_shader, black_fragment_shader}, pipelineSetup);
 
     wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
-  
+    wg::RenderFamily* line_family = wing.createRenderFamily(line_pipeline, false);
+
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
     float phi = 0.0;
-  
+
     family->startRecording();
     family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
     family->endRecording();
 
+    line_family->startRecording();
+    line_family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    line_family->endRecording();
+
     wg::SemaphoreChain* chain = wing.createSemaphoreChain();
-  
+
     while (win.isOpen()) {
 
-        phi += 0.01;
-    
-        camera.setLookAt(3.0f * falg::Vec3(sin(phi), 1.0f, cos(phi)),
+        phi += -0.01f;
+        // phi += 0.01;
+
+        camera.setLookAt(3.0f * falg::Vec3(sin(phi), 0.0f, cos(phi)),
                          falg::Vec3(0.0f, 0.0f, 0.0f),
                          falg::Vec3(0.0f, 1.0f, 0.0f));
-    
+
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
-    
+
         cameraUniform->set(renderMatrix);
-    
+
         family->submit({chain});
-    
+        line_family->submit({chain});
+
         wing.present({chain});
 
         win.sleepMilliseconds(40);
 
         wing.waitForLastPresent();
-    
+
         win.flushEvents();
         if(win.isKeyPressed(WK_ESC)) {
             break;
@@ -128,11 +153,14 @@ int main() {
 
     wing.destroy(chain);
     wing.destroy(family);
+    wing.destroy(line_family);
 
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);
-  
+    wing.destroy(black_fragment_shader);
+
     wing.destroy(pipeline);
+    wing.destroy(line_pipeline);
 
     model.destroy(wing);
     wing.destroy(cameraUniform);

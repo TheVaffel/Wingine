@@ -4,9 +4,9 @@
 
 namespace wg {
 
-    
+
     Shader::Shader(vk::Device& device, uint64_t shader_type, std::vector<uint32_t>& spirv) {
-    
+
         vk::ShaderStageFlagBits stage_bit;
         switch(shader_type) {
         case shaVertex:
@@ -28,10 +28,10 @@ namespace wg {
         vk::ShaderModuleCreateInfo smci;
         smci.setCodeSize(spirv.size() * sizeof(uint32_t))
             .setPCode(spirv.data());
-    
-    
+
+
         this->shader_info.module = device.createShaderModule(smci);
-    
+
     }
 
     ComputePipeline::ComputePipeline(Wingine& wing,
@@ -90,7 +90,12 @@ namespace wg {
         this->height = height;
         return *this;
     }
-    
+
+    PipelineSetup& PipelineSetup::setPolygonMode(PolygonMode polygonMode) {
+        this->polygonMode = polygonMode;
+        return *this;
+    }
+
     Pipeline::Pipeline(Wingine& wing,
                        const std::vector<VertexAttribDesc>& descriptions,
                        const std::vector<ResourceSetLayout>& resourceSetLayouts,
@@ -101,15 +106,22 @@ namespace wg {
 
         int width = setup.width == -1 ? wing.getWindowWidth() : setup.width;
         int height = setup.height == -1 ? wing.getWindowHeight() : setup.height;
-        
+
         int vertex_binding_count = 0;
-    
+
+        vk::PolygonMode vkPolygonMode;
+        switch (setup.polygonMode) {
+        case PolygonMode::Point: vkPolygonMode = vk::PolygonMode::ePoint; break;
+        case PolygonMode::Line: vkPolygonMode = vk::PolygonMode::eLine; break;
+        case PolygonMode::Fill: vkPolygonMode = vk::PolygonMode::eFill; break;
+        }
+
+
         for(const VertexAttribDesc& desc : descriptions) {
             vertex_binding_count = std::max(desc.binding_num + 1,
                                             (uint32_t)vertex_binding_count);
         }
 
-    
 
         // Defaults okay sometimes
         vk::PipelineDynamicStateCreateInfo state_info;
@@ -175,7 +187,7 @@ namespace wg {
                                        descriptions[i].num_elements))
                 .setOffset(descriptions[i].offset_in_bytes);
         }
-    
+
         vk::Viewport viewport;
         viewport.setWidth((float)width)
             .setHeight((float)height)
@@ -187,7 +199,7 @@ namespace wg {
         vk::Rect2D scissor;
         scissor.setExtent({(uint32_t)width, (uint32_t)height})
             .setOffset({(uint32_t)0, (uint32_t)0});
-    
+
         vi.setVertexBindingDescriptionCount(vertex_binding_count)
             .setPVertexBindingDescriptions(vi_bindings.data())
             .setVertexAttributeDescriptionCount(descriptions.size())
@@ -196,7 +208,7 @@ namespace wg {
         ia.setPrimitiveRestartEnable(false)
             .setTopology(vk::PrimitiveTopology::eTriangleList);
 
-        rs.setPolygonMode(vk::PolygonMode::eFill)
+        rs.setPolygonMode(vkPolygonMode)
             .setCullMode(vk::CullModeFlagBits::eBack)
             .setFrontFace(vk::FrontFace::eClockwise)
             .setDepthClampEnable(false)
@@ -215,7 +227,7 @@ namespace wg {
             .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
             .setSrcAlphaBlendFactor(vk::BlendFactor::eZero)
             .setDstAlphaBlendFactor(vk::BlendFactor::eOne);
-    
+
         cb.setPAttachments(&att_state)
             .setAttachmentCount(1)
             .setLogicOpEnable(false)
@@ -249,12 +261,12 @@ namespace wg {
             .setAlphaToOneEnable(false)
             .setMinSampleShading(0.0f);
 
-    
+
         std::vector<vk::DescriptorSetLayout> layouts(resourceSetLayouts.size());
         for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
             layouts[i] = resourceSetLayouts[i].layout;
         }
-    
+
         layoutCreateInfo.setPushConstantRangeCount(0)
             .setPPushConstantRanges(nullptr)
             .setSetLayoutCount(layouts.size())
@@ -267,22 +279,22 @@ namespace wg {
             pssci[i] = shaders[i]->shader_info;
         }
 
-    
+
         RenderPassType rpt;
-      
+
         if (setup.depthOnly) {
             rpt = renDepth;
         } else {
             rpt = renColorDepth;
         }
 
-    
+
 
         if(wing.compatibleRenderPassMap.find(rpt) == wing.compatibleRenderPassMap.end()) {
             wing.register_compatible_render_pass(rpt);
         }
-    
-    
+
+
         createInfo.setLayout(this->layout)
             .setBasePipelineHandle(nullptr)
             .setBasePipelineIndex(0)
@@ -301,10 +313,10 @@ namespace wg {
             .setSubpass(0);
 
         this->render_pass_type = rpt;
-    
+
         this->pipeline = device.createGraphicsPipelines(wing.pipeline_cache,
                                                         {createInfo}).value[0];
     }
 
-  
+
 };

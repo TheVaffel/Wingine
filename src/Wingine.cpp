@@ -347,7 +347,7 @@ namespace wg {
 
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     }
-  
+
     void Wingine::init_instance(int width, int height, const char* str) {
         std::vector<const char*> instance_extension_names;
         std::vector<const char*> instance_layer_names;
@@ -423,14 +423,14 @@ namespace wg {
 
         this->vulkan_instance = vk::createInstance(cInfo);
 
-    
+
         vk::DynamicLoader dl;
         PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
         this->dispatcher.init(vkGetInstanceProcAddr);
         this->dispatcher.init(this->vulkan_instance);
-    
+
 #ifdef DEBUG
-    
+
         vk::DebugReportCallbackCreateInfoEXT callbackInfo;
         callbackInfo.setFlags(vk::DebugReportFlagBitsEXT::eError |
                               vk::DebugReportFlagBitsEXT::eWarning |
@@ -439,7 +439,7 @@ namespace wg {
 
         this->debug_callback = this->vulkan_instance
             .createDebugReportCallbackEXT(callbackInfo, nullptr, this->dispatcher);
-    
+
 #endif // DEBUG
 
         this->window_width = width;
@@ -461,7 +461,7 @@ namespace wg {
             .createXlibSurfaceKHR(info, nullptr, this->dispatcher);
 #endif // WIN32
     }
-  
+
     void Wingine::init_device() {
         std::vector<vk::PhysicalDevice> found_devices = this->vulkan_instance.enumeratePhysicalDevices();
 
@@ -476,7 +476,7 @@ namespace wg {
             vk::PhysicalDeviceProperties2 props2 = props.get<vk::PhysicalDeviceProperties2>();
 
             std::cout << "Device name: " << props2.properties.deviceName << std::endl;
-      
+
             this->graphics_queue_index = -1;
             this->present_queue_index = -1;
             this->compute_queue_index = -1;
@@ -489,7 +489,7 @@ namespace wg {
                 if(supportsGraphics) {
                     this->graphics_queue_index = i;
                 }
-	
+
                 vk::Bool32 supportsPresent = dev.getSurfaceSupportKHR(i, this->surface);
                 if(supportsPresent) {
                     this->present_queue_index = i;
@@ -504,14 +504,14 @@ namespace wg {
 
             if(this->graphics_queue_index != -1 &&
                this->present_queue_index != -1) {
-	
+
                 if(this->compute_queue_index == -1) {
                     _wlog_error("Chosen graphics device does not support compute kernels");
                 }
-	
+
                 this->physical_device = dev;
                 this->device_memory_props = dev.getMemoryProperties();
-       
+
                 found = true;
                 break;
             }
@@ -522,10 +522,10 @@ namespace wg {
             std::exit(-1);
         }
 
-    
+
         std::vector<const char*> device_extension_names;
         device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    
+
         std::vector<vk::DeviceQueueCreateInfo> c_infos;
         c_infos.reserve(3);
 
@@ -548,11 +548,12 @@ namespace wg {
         }
 
         vk::PhysicalDeviceFeatures feats = {};
-        feats.setShaderClipDistance(VK_TRUE);
+        feats.setShaderClipDistance(VK_TRUE)
+            .setFillModeNonSolid(VK_TRUE);
 
         vk::PhysicalDeviceVulkan12Features feats12;
         feats12.setTimelineSemaphore(VK_TRUE);
-    
+
         vk::DeviceCreateInfo device_info;
         device_info.setQueueCreateInfoCount(c_infos.size())
             .setPQueueCreateInfos(c_infos.data())
@@ -594,7 +595,7 @@ namespace wg {
             setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
         this->graphics_command_pool = this->device.createCommandPool(cpi);
-    
+
         cpi.setQueueFamilyIndex(this->present_queue_index);
         this->present_command_pool = this->device.createCommandPool(cpi);
 
@@ -610,18 +611,18 @@ namespace wg {
 
         vk::FenceCreateInfo fci;
         fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
-    
+
         this->present_command.fence =
             this->device.createFence(fci);
 
-    
+
         this->general_purpose_command.fence =
             this->device.createFence(fci);
 
         cbi.setCommandPool(this->graphics_command_pool);
         this->general_purpose_command.buffer =
             this->device.allocateCommandBuffers(cbi)[0];
-    
+
         if(this->compute_queue_index >= 0) {
             // Reuse CreateInfo
             cpi.setQueueFamilyIndex(this->compute_queue_index);
@@ -646,7 +647,7 @@ namespace wg {
             this->device.createSemaphore(sci);
         this->finished_drawing_semaphore =
             this->device.createSemaphore(sci);
-    
+
     }
 
     void Wingine::init_swapchain() {
@@ -654,16 +655,16 @@ namespace wg {
             this->physical_device.getSurfaceFormatsKHR(this->surface);
 
         vk::ColorSpaceKHR colorSpace = surfaceFormats[0].colorSpace;
-    
+
         if(surfaceFormats.size() == 1 &&
            surfaceFormats[0].format == vk::Format::eUndefined) {
-      
+
             this->surface_format = vk::Format::eB8G8R8A8Unorm;
-      
+
         } else {
-      
+
             this->surface_format = surfaceFormats[0].format;
-      
+
         }
 
         vk::SurfaceCapabilitiesKHR caps =
@@ -680,7 +681,7 @@ namespace wg {
                 std::min(caps.maxImageExtent.height,
                          std::max(caps.minImageExtent.height,
                                   this->window_height));
-      
+
         } else {
             swapchainExtent = caps.currentExtent;
             this->window_width = caps.currentExtent.width;
@@ -760,13 +761,13 @@ namespace wg {
             sci.setImageSharingMode(vk::SharingMode::eConcurrent)
                 .setQueueFamilyIndexCount(2)
                 .setPQueueFamilyIndices(queue_indices);
-      
+
         }
 
         this->swapchain = this->device.createSwapchainKHR(sci);
 
         this->swapchain_images = this->device.getSwapchainImagesKHR(swapchain);
-    
+
     }
 
     void Wingine::init_generic_render_pass() {
@@ -778,7 +779,7 @@ namespace wg {
             vk::Image sim = this->swapchain_images[i];
 
             Framebuffer* framebuffer = new Framebuffer();;
-      
+
             framebuffer->colorImage.image = sim;
             framebuffer->colorImage.width = this->window_width;
             framebuffer->colorImage.height = this->window_height;
@@ -787,7 +788,7 @@ namespace wg {
             this->cons_image_view(framebuffer->colorImage,
                                   wImageViewColor,
                                   vk::Format::eB8G8R8A8Unorm);
-      
+
 
             this->cons_image_image(framebuffer->depthImage,
                                    this->window_width,
@@ -806,7 +807,7 @@ namespace wg {
                 framebuffer->colorImage.view,
                 framebuffer->depthImage.view
             };
-      
+
             vk::FramebufferCreateInfo finf;
             finf.setRenderPass(this->compatibleRenderPassMap[renColorDepth])
                 .setAttachmentCount(2)
@@ -814,16 +815,16 @@ namespace wg {
                 .setWidth(this->window_width)
                 .setHeight(this->window_height)
                 .setLayers(1);
-      
+
             framebuffer->framebuffer = this->device.createFramebuffer(finf);
-      
+
             this->framebuffers.push_back(framebuffer);
         }
     }
 
     void Wingine::init_descriptor_pool() {
         const int max_num_descriptors = 16; // Use as placeholder - refactor this part if necessary
-    
+
         std::vector<vk::DescriptorPoolSize> sizes(4);
         sizes[0].setType(vk::DescriptorType::eUniformBuffer)
             .setDescriptorCount(max_num_descriptors);
@@ -843,7 +844,7 @@ namespace wg {
             .setPPoolSizes(sizes.data());
 
         this->descriptor_pool = this->device.createDescriptorPool(dpi);
-    
+
     }
 
     void Wingine::init_pipeline_cache() {
@@ -855,7 +856,7 @@ namespace wg {
     }
 
     void Wingine::waitForLastPresent() {
-        _wassert_result(this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX), 
+        _wassert_result(this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX),
                         "wait for last present");
     }
 
@@ -871,7 +872,7 @@ namespace wg {
         this->waitForLastPresent();
         _wassert_result(this->device.resetFences(1, &this->image_acquired_fence),
                         "reset fence in stage_next_image");
-    
+
         _wassert_result(this->device.acquireNextImageKHR(this->swapchain, UINT64_MAX,
                                                          num_semaphores ? this->image_acquire_semaphore : vk::Semaphore((VkSemaphore)(VK_NULL_HANDLE)),
                                                          image_acquired_fence,
@@ -882,13 +883,13 @@ namespace wg {
             SemaphoreChain::semaphoreToChains(this, this->image_acquire_semaphore, std::begin(semaphores), num_semaphores);
         }
     }
-  
+
     void Wingine::init_vulkan(int width, int height,
                               winval_type_0 arg0, winval_type_1 arg1, const char* str) {
         this->init_instance(width, height, str);
-  
+
         this->init_surface(arg0, arg1);
-  
+
         this->init_device();
 
         this->init_command_buffers();
@@ -896,7 +897,7 @@ namespace wg {
         this->init_swapchain();
 
         this->init_generic_render_pass();
-    
+
         this->init_framebuffers();
 
         this->init_descriptor_pool();
@@ -904,7 +905,7 @@ namespace wg {
         this->init_pipeline_cache();
 
         this->stage_next_image({});
-        this->waitForLastPresent(); // Ensure image is already acquired    
+        this->waitForLastPresent(); // Ensure image is already acquired
     }
 
     void Wingine::cons_image_image(Image& image, uint32_t width, uint32_t height,
@@ -927,7 +928,7 @@ namespace wg {
         image.height = height;
 
         image.current_layout = inf.initialLayout;
-    
+
         image.image = this->device.createImage(inf);
     }
 
@@ -945,7 +946,7 @@ namespace wg {
         image.memory = this->device.allocateMemory(mai);
         this->device.bindImageMemory(image.image, image.memory, 0); // 0 offset from memory start
     }
-  
+
     void Wingine::cons_image_view(Image& image,
                                   ImageViewType type,
                                   vk::Format format) {
@@ -956,20 +957,20 @@ namespace wg {
                             vk::ComponentSwizzle::eG,
                             vk::ComponentSwizzle::eB,
                             vk::ComponentSwizzle::eA});
-    
+
         switch(type) {
         case wImageViewColor:
             ivci.setFormat(format)
                 .setSubresourceRange({vk::ImageAspectFlagBits::eColor,
                                       0, 1, 0, 1});
-            break; 
+            break;
         case wImageViewDepth:
             ivci.setFormat(vk::Format::eD32Sfloat)
                 .setSubresourceRange({vk::ImageAspectFlagBits::eDepth,
                                       0, 1, 0, 1});
             break;
         }
-    
+
         image.view = this->device.createImageView(ivci);
     }
 
@@ -979,18 +980,18 @@ namespace wg {
                           arg0, arg1, str);
     }
 
-  
+
     Wingine::Wingine(Winval& win) {
 #ifdef WIN32
-    
+
         this->init_vulkan(win.getWidth(), win.getHeight(),
                           win.getInstance(), win.getHWND(), win.getTitle());
-    
+
 #else // WIN32
-    
+
         this->init_vulkan(win.getWidth(), win.getHeight(),
                           win.getWindow(), win.getDisplay(), win.getTitle());
-    
+
 #endif // WIN32
     }
 
@@ -1033,7 +1034,7 @@ namespace wg {
     int Wingine::getCurrentFramebufferIndex() {
         return this->current_swapchain_image;
     }
-  
+
     IndexBuffer* Wingine::createIndexBuffer(uint32_t numIndices) {
         return new IndexBuffer(*this, numIndices);
     }
@@ -1051,7 +1052,7 @@ namespace wg {
             this->resourceSetLayoutMap[resourceSetLayout] = ResourceSetLayout(*this, resourceSetLayout);
         }
     }
-    
+
     Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
                                       const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                       const std::vector<Shader*>& shaders,
@@ -1088,12 +1089,12 @@ namespace wg {
                                                    width, height,
                                                    depthOnly);
         return framebuffer;
-    
+
     }
 
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {
         ResourceImage* image = new ResourceImage(*this, width, height);
-    
+
         return image;
     }
 
@@ -1184,16 +1185,16 @@ namespace wg {
         _wassert_result(this->compute_queue.submit(1, &si, compute->command.fence),
                         "submitting compute command");
     }
-  
+
     void Wingine::destroySwapchainImage(Image& image) {
         this->device.free(image.memory, nullptr, this->dispatcher);
         this->device.destroy(image.view, nullptr, this->dispatcher);
     }
-  
+
     void Wingine::destroySwapchainFramebuffer(Framebuffer* framebuffer) {
         this->destroySwapchainImage(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
-    
+
         this->device.destroy(framebuffer->framebuffer, nullptr, this->dispatcher);
     }
 
@@ -1221,7 +1222,7 @@ namespace wg {
         delete compute_pipeline;
     }
 
-  
+
 
     void Wingine::destroy(RenderFamily* family) {
         for(int i = 0; i < family->num_buffers; i++) {
@@ -1236,7 +1237,7 @@ namespace wg {
                 this->device.destroy(family->render_passes[i], nullptr, this->dispatcher);
             }
         }
-    
+
         delete family;
     }
 
@@ -1261,13 +1262,13 @@ namespace wg {
         this->waitForLastPresent();
         _wassert_result(this->device.resetFences(1, &this->image_acquired_fence),
                         "reset fence in destroying semaphore chain");
-    
+
         semaphore_chain->ensure_finished(this, this->image_acquired_fence);
         this->device.destroy(semaphore_chain->semaphore, nullptr, this->dispatcher);
 
         delete semaphore_chain;
     }
-  
+
     void Wingine::destroy(Pipeline* pipeline) {
         this->device.destroy(pipeline->layout, nullptr, this->dispatcher);
         this->device.destroy(pipeline->pipeline, nullptr, this->dispatcher);
@@ -1291,13 +1292,13 @@ namespace wg {
         this->device.free(image.memory, nullptr, this->dispatcher);
         this->device.destroy(image.view, nullptr, this->dispatcher);
     }
-  
+
     void Wingine::destroy(Framebuffer* framebuffer) {
         this->destroy(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
 
         this->device.destroy(framebuffer->framebuffer, nullptr, this->dispatcher);
-    
+
         delete framebuffer;
     }
 
@@ -1306,9 +1307,9 @@ namespace wg {
         delete storagebuffer->buffer_info;
         delete storagebuffer;
     }
-  
+
     Wingine::~Wingine() {
-    
+
         this->device.destroy(this->descriptor_pool, nullptr, this->dispatcher);
         this->device.destroy(this->pipeline_cache, nullptr, this->dispatcher);
 
@@ -1321,10 +1322,10 @@ namespace wg {
                                         1, &this->general_purpose_command.buffer);
         this->device.freeCommandBuffers(this->present_command_pool,
                                         1, &this->present_command.buffer);
-    
-    
+
+
         this->device.destroyCommandPool(this->graphics_command_pool, nullptr, this->dispatcher);
-    
+
         this->device.destroyCommandPool(this->present_command_pool, nullptr, this->dispatcher);
         _wassert_result(this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
                         "wait for present command finish");
@@ -1334,7 +1335,7 @@ namespace wg {
         if(this->compute_queue_index >= 0) {
             this->device.freeCommandBuffers(this->compute_command_pool,
                                             1, &this->compute_command.buffer);
-      
+
             this->device.destroyCommandPool(this->compute_command_pool, nullptr, this->dispatcher);
             _wassert_result(this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX),
                             "wait for compute command finish");
@@ -1350,9 +1351,9 @@ namespace wg {
         this->device.destroy(this->general_purpose_command.fence, nullptr, this->dispatcher);
 
         this->device.destroy(this->swapchain, nullptr, this->dispatcher);
-    
+
         this->vulkan_instance.destroy(this->surface, nullptr, this->dispatcher);
-    
+
         for (auto it : this->resourceSetLayoutMap) {
             this->device.destroy(it.second.layout, nullptr, this->dispatcher);
         }
@@ -1360,12 +1361,12 @@ namespace wg {
         for(auto it : this->compatibleRenderPassMap) {
             this->device.destroy(it.second, nullptr, this->dispatcher);
         }
-    
+
         this->device.destroy(nullptr, this->dispatcher);
-    
+
         this->vulkan_instance.destroyDebugReportCallbackEXT(this->debug_callback,
                                                             nullptr, this->dispatcher);
         this->vulkan_instance.destroy(nullptr, this->dispatcher);
     }
-  
+
 };

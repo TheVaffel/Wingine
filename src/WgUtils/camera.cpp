@@ -1,21 +1,21 @@
 #include "WgUtils/camera.hpp"
 
 namespace wgut {
-  
+
     Camera::Camera(float horizontalFOVRadians, float invAspect, float near, float far){
 
         this->aspect_ratio = 1.0f / invAspect;
         this->fov_x = horizontalFOVRadians;
-        
+
         view = falg::Mat4(falg::FLATALG_MATRIX_IDENTITY);
         projection = falg::Mat4(falg::FLATALG_MATRIX_PROJECTION, horizontalFOVRadians, invAspect, near, far);
         altered = true;
     }
 
     void Camera::setPosition(const falg::Vec3& v){
-        view(0, 3) = -falg::Vec3(view(0, 0), view(0, 1), view(0, 2))*v;
-        view(1, 3) = -falg::Vec3(view(1, 0), view(1, 1), view(1, 2))*v;
-        view(2, 3) = -falg::Vec3(view(2, 0), view(2, 1), view(2, 2))*v;
+        view(0, 3) = -falg::dot(falg::Vec3(view(0, 0), view(0, 1), view(0, 2)), v);
+        view(1, 3) = -falg::dot(falg::Vec3(view(1, 0), view(1, 1), view(1, 2)), v);
+        view(2, 3) = -falg::dot(falg::Vec3(view(2, 0), view(2, 1), view(2, 2)), v);
         altered = true;
     }
 
@@ -34,7 +34,7 @@ namespace wgut {
         falg::Vec3 viewUp = cross(right, dir);
 
         falg::Vec3 pos = (~view.submatrix<3, 3>(0, 0))*-falg::Vec3(view(0, 3), view(1, 3), view(2, 3));
-  
+
         view = falg::Mat4(right.x(), right.y(), right.z(), 0.f,
                           viewUp.x(), viewUp.y(), viewUp.z(), 0.f,
                           -dir.x(), -dir.y(), -dir.z(), 0.f,

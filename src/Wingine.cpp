@@ -12,7 +12,7 @@ _debugCallbackFun(VkDebugReportFlagsEXT flags,
                   size_t location, int32_t messageCode,
                   const char* pLayerPrefix, const char* pMessage,
                   void* pUserData) {
-  
+
     std::cout << "[" << pLayerPrefix << "] Message: " << pMessage << std::endl;
 
     return false;
@@ -31,7 +31,7 @@ namespace wg {
     int Wingine::getWindowHeight() {
         return this->window_height;
     }
-  
+
     void Wingine::cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
                                  vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
                                  vk::ImageLayout finalLayout) {
@@ -43,14 +43,14 @@ namespace wg {
             .setLevelCount(1)
             .setBaseArrayLayer(0)
             .setLayerCount(1);
-    
+
         image_memory_barrier.setOldLayout(currentLayout)
             .setNewLayout(finalLayout)
             .setImage(image)
             .setSubresourceRange(sbr);
 
         vk::PipelineStageFlags srcStage, destStage;
-    
+
         switch(currentLayout) {
         case vk::ImageLayout::eColorAttachmentOptimal:
             image_memory_barrier.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
@@ -105,7 +105,7 @@ namespace wg {
 
         commandBuffer.pipelineBarrier(srcStage, destStage, {}, 0,  nullptr, 0, nullptr, 1, &image_memory_barrier);
     }
-			       
+
 
     void Wingine::copy_image(uint32_t w1, uint32_t h1, vk::Image src,
                              vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
@@ -132,15 +132,15 @@ namespace wg {
         if (aspect == vk::ImageAspectFlagBits::eDepth) {
             _wassert(w1 == w2 && h1 == h2,
                      "Cannot copy depth image where source and destination have different extents");
-      
+
             vk::ImageCopy copy;
-      
+
             vk::ImageSubresourceLayers subr;
             subr.setAspectMask(aspect)
                 .setMipLevel(0)
                 .setBaseArrayLayer(0)
                 .setLayerCount(1);
-      
+
             vk::Offset3D offs;
             offs.setX(0)
                 .setY(0)
@@ -150,7 +150,7 @@ namespace wg {
             ext.setWidth(w1)
                 .setHeight(h1)
                 .setDepth(1);
-      
+
             copy.setSrcSubresource(subr)
                 .setSrcOffset(offs)
                 .setDstSubresource(subr)
@@ -192,7 +192,7 @@ namespace wg {
 
         general_purpose_command.buffer.end();
 
-    
+
         std::vector<vk::Semaphore> wait_sems(semaphores.size());
         std::vector<vk::Semaphore> signal_sems(semaphores.size());
         std::vector<uint64_t> wait_vals(semaphores.size());
@@ -201,7 +201,7 @@ namespace wg {
 
         int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems.data(), std::begin(semaphores), semaphores.size());
         int num_sig_sems = SemaphoreChain::getSignalSemaphores(signal_sems.data(), std::begin(semaphores), semaphores.size());
-    
+
         SemaphoreChain::getSemaphoreWaitValues(wait_vals.data(), std::begin(semaphores), semaphores.size());
         SemaphoreChain::getSemaphoreSignalValues(signal_vals.data(), std::begin(semaphores), semaphores.size());
         SemaphoreChain::getWaitStages(flags.data(), std::begin(semaphores), semaphores.size());
@@ -224,11 +224,11 @@ namespace wg {
 
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
-    
+
         _wassert_result(this->graphics_queue.submit(1, &si, general_purpose_command.fence),
                         "command submission to graphics queue in copy_image");
 
-    
+
         if (semaphores.size() == 0) {
             // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
             _wassert_result(this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9),
@@ -236,7 +236,7 @@ namespace wg {
         }
 
     }
-  
+
     vk::RenderPass Wingine::create_render_pass(RenderPassType type,
                                                bool clear) {
 
@@ -292,7 +292,7 @@ namespace wg {
         vk::SubpassDescription spd;
         spd.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
         if(type == renColorDepth) {
-      
+
             spd.setColorAttachmentCount(1)
                 .setPColorAttachments(references.data())
                 .setPDepthStencilAttachment(references.data() + 1);
@@ -309,14 +309,14 @@ namespace wg {
 
         return this->device.createRenderPass(rpci);
     }
-					     
-  
+
+
     void Wingine::register_compatible_render_pass(RenderPassType type) {
         this->compatibleRenderPassMap[type] =
             this->create_render_pass(type, false);
     }
-  
-  
+
+
 
     void Wingine::present(const std::initializer_list<SemaphoreChain*>& semaphores) {
 
@@ -326,20 +326,20 @@ namespace wg {
                       << std::endl;
         }
 #endif // DEBUG
-    
+
         vk::PresentInfoKHR presentInfo;
-    
+
         SemaphoreChain::chainsToSemaphore(this, std::begin(semaphores), semaphores.size(), this->finished_drawing_semaphore);
 
         // Present, but wait for finished_drawing_semaphore, which waits on the rest of the semaphores
-    
+
         presentInfo.setSwapchainCount(1)
             .setPSwapchains(&this->swapchain)
             .setPImageIndices(&this->current_swapchain_image)
             .setWaitSemaphoreCount(1)
             .setPWaitSemaphores(&this->finished_drawing_semaphore)
             .setPResults(nullptr);
-    
+
         _wassert_result(this->present_queue.presentKHR(presentInfo),
                         "submit present command");
 

@@ -14,6 +14,9 @@ set(WINGINE_SRC_DIR "${WINGINE_ROOT}/src")
 set(WINGINE_EXAMPLES_DIR "${WINGINE_ROOT}/examples")
 set(WINGINE_INCLUDE_DIR "${WINGINE_ROOT}/include")
 set(VULKAN_INCLUDE_DIR "$ENV{VULKAN_SDK}/include")
+set(GENERELLE_ROOT "${CMAKE_HOME_DIRECTORY}/../generelle")
+set(GENERELLE_INCLUDE_DIR "${GENERELLE_ROOT}/include")
+set(GENERELLE_LIB_DIR "${GENERELLE_ROOT}/lib")
 
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
@@ -35,9 +38,10 @@ else()
 endif()
 
 set(common_libs ${VULKAN_LIB_NAME} ${winval_libs} FlatAlg spurv)
-set(all_libs ${common_libs} Wingine)
+set(all_libs ${common_libs} Wingine generelle)
 
-include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include ${SPURV_ROOT}/include ${VULKAN_INCLUDE_DIR})
+include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include
+	${SPURV_ROOT}/include ${VULKAN_INCLUDE_DIR}, ${GENERELLE_INCLUDE_DIR})
 
 
 if(WIN32)
@@ -46,6 +50,7 @@ endif()
 
 link_directories(${HCONLIB_ROOT}/lib)
 link_directories(${SPURV_ROOT}/lib)
+link_directories(${GENERELLE_LIB_DIR})
 include_directories(${WINGINE_INCLUDE_DIR})
 
 add_library(Wingine STATIC ${WINGINE_SOURCES})

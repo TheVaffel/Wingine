@@ -5,19 +5,37 @@
 
 #include <spurv.hpp>
 
+#include <generelle/modelling.hpp>
+namespace gn = generelle;
+
+
 int main() {
     const int width = 800, height = 800;
     Winval win(width, height);
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
-  
-    wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::ReadAttribType::attTypePosition,
+
+    gn::GE scene = gn::makeSphere(1.0f).translate(falg::Vec3(0.01f, 0.01f, 0.01f)).scale(falg::Vec3(1.0f, 0.5f, 1.0f))
+        .add(gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f)).translate(falg::Vec3(0.0f, 0.0f, 1.0f)));
+    // gn::GE scene = gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f));
+    gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.4f, 3.0f, falg::Vec3(1.0f, 1.0f, 1.0f));
+
+    /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::ReadAttribType::attTypePosition,
             wgut::ReadAttribType::attTypeNormal},
-        5);
+            5); */
+
+    std::vector<float> positions, normals;
+    for (unsigned int i = 0; i < mesh.positions.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            positions.push_back(mesh.positions[i][j]);
+            normals.push_back(mesh.normals[i][j]);
+        }
+    }
+    wgut::Model model = wgut::Model::constructModel(wing, {positions, normals}, mesh.indices);
 
     wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-  
+
     wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
     resourceSet->set({cameraUniform});
 

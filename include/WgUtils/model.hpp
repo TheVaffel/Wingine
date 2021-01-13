@@ -10,7 +10,7 @@ namespace wgut {
     // NB: Remember to update this whenever a new attribute is added
     const int WGUT_MODEL_ATTRIB_COUNT = 3;
 
-    enum class VerrtexAttribute {
+    enum class VertexAttribute {
         Position,
         Normal,
         Texture

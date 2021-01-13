@@ -111,7 +111,6 @@ int main() {
     wg::RenderFamily* line_family = wing.createRenderFamily(line_pipeline, false);
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
-    float phi = 0.0;
 
     family->startRecording();
     family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
@@ -123,12 +122,26 @@ int main() {
 
     wg::SemaphoreChain* chain = wing.createSemaphoreChain();
 
+    int lock_x = width / 2, lock_y = height / 2;
+
+    win.lockPointer(true, width / 2, height / 2);
+    win.setPointerVisible(false);
+
+    float pointer_speed = 0.005f;
+    float zoom_speed = 0.2f;
+
+    float radius = 3.0f;
+
+    float phi = 0.0, theta = 0.0;
+    int diff_x = 0, diff_y = 0, scroll = 0;
+
     while (win.isOpen()) {
 
-        phi += -0.01f;
-        // phi += 0.01;
+        phi = phi + diff_x * pointer_speed;
+        theta = std::min(F_PI / 2 - 0.02f, std::max(- F_PI / 2 + 0.02f, theta - diff_y * pointer_speed));
+        radius += zoom_speed * scroll;
 
-        camera.setLookAt(3.0f * falg::Vec3(sin(phi), 0.0f, cos(phi)),
+        camera.setLookAt(radius * falg::Vec3(sin(phi) * cos(theta), sin(theta), cos(phi) * cos(theta)),
                          falg::Vec3(0.0f, 0.0f, 0.0f),
                          falg::Vec3(0.0f, 1.0f, 0.0f));
 
@@ -146,6 +159,13 @@ int main() {
         wing.waitForLastPresent();
 
         win.flushEvents();
+
+        win.getPointerPosition(&diff_x, &diff_y);
+
+        diff_x -= lock_x;
+        diff_y -= lock_y;
+        scroll = win.getScroll();
+
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }

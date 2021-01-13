@@ -15,15 +15,15 @@ int main() {
 
     width = wing.getWindowWidth();
     height = wing.getWindowHeight();
-  
+
     wgut::Model model = wgut::Model::fromFile(wing, "../models/teapot.obj",
-                                              {wgut::ReadAttribType::attTypePosition,
-                                               wgut::ReadAttribType::attTypeNormal});
+                                              {wgut::VertexAttribute::Position,
+                                               wgut::VertexAttribute::Normal});
 
     std::default_random_engine generator;
     std::uniform_real_distribution<float> dist(-50.0, 50.0);
     std::uniform_real_distribution<float> dist1(0.0, 1.0);
-  
+
     const int num_instances = 20000;
     float* offsets = new float[3 * num_instances];
     float* colors = new float[3 * num_instances];
@@ -41,7 +41,7 @@ int main() {
 
         float phi = 2 * F_PI * dist1(generator) - F_PI;
         float theta = F_PI * dist1(generator) - F_PI / 2;
-    
+
         inst_mats[i] = falg::Mat4(falg::FLATALG_MATRIX_ROTATION_Y, phi) *
             falg::Mat4(falg::FLATALG_MATRIX_ROTATION_X, theta);
     }
@@ -59,12 +59,12 @@ int main() {
     struct CamColl {
         falg::Mat4 cam, view;
     };
-  
+
     wg::Uniform<CamColl>* cameraUniform = wing.createUniform<CamColl>();
 
     std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex,
                                                 wg::resStorageBuffer | wg::shaVertex };
-  
+
     wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
     resourceSet->set({cameraUniform, storage_buffer});
 
@@ -108,32 +108,32 @@ int main() {
 
         // Just to demonstrate matrix construction for columns
         // mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
-    
+
         auto inst_trans_bind = shader.storageBuffer<mat4_sarr_s>(0, 1);
         auto mat_array = inst_trans_bind.member<0>();
 
         uint_v instance_id = shader.getBuiltin<BUILTIN_INSTANCE_INDEX>();
-    
+
         mat4_v this_mat = mat_array[instance_id].load();
-    
+
         vec4_v het = vec4_s::cons(s_pos, 1.0f);
         vec4_v het_off = vec4_s::cons(s_off, 0.0f);
         vec4_v world_pos = het_off + this_mat * het;
-    
+
         vec4_v transformed_pos = trans * world_pos;
         vec4_v norm_view = view * this_mat * vec4_s::cons(s_norm, 0.0f);
         vec4_v pos_view = view * world_pos;
-			      
+
         vec3_v trunc_norm = vec3_s::cons(norm_view[0], norm_view[1], norm_view[2]);
 
         // vec4_v hcol = vec4_s::cons(1.0f, 0.0f, 0.0f, 1.0f);
-    
+
         shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
         shader.compile(vertex_spirv, s_col, trunc_norm, pos_view);
 
         // prettyprint(vertex_spirv);
     }
-  
+
     wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
     std::vector<uint32_t> fragment_spirv;
@@ -164,17 +164,17 @@ int main() {
     }
 
     wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-  
+
     wg::Pipeline* pipeline = wing.
         createPipeline(vertAttrDesc,
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
     wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
-  
+
     wgut::Camera camera(F_PI / 3.f, (float)height / (float)width, 0.01f, 1000.0f);
     float phi = 0.0;
-      
+
     family->startRecording();
     family->recordDraw({model.getVertexBuffers()[0], model.getVertexBuffers()[1], offset_buffer, color_buffer},
                        model.getIndexBuffer(), {resourceSet}, num_instances);
@@ -188,11 +188,11 @@ int main() {
 
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
-  
+
     while (win.isOpen()) {
 
         phi += 0.003;
-    
+
         camera.setLookAt(3.0f * falg::Vec3(sin(phi), 1.0f, cos(phi)),
                          falg::Vec3(0.0f, 0.0f, 0.0f),
                          falg::Vec3(0.0f, 1.0f, 0.0f));
@@ -201,14 +201,14 @@ int main() {
         falg::Mat4 rViewMatrix = ~camera.getViewMatrix();
 
         camcoll = {renderMatrix, rViewMatrix};
-    
+
         cameraUniform->set(camcoll);
 
         family->submit({chain});
-    
+
         wing.present({chain});
 
-    
+
         auto now = clock.now();
 
         double duration = std::chrono::duration<double>(now - start).count();
@@ -218,9 +218,9 @@ int main() {
             fps = 0;
             start = now;
         }
-    
+
         // win.sleepMilliseconds(30);
-    
+
         wing.waitForLastPresent();
 
         win.flushEvents();
@@ -243,7 +243,7 @@ int main() {
 
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);
-  
+
     wing.destroy(pipeline);
 
     model.destroy(wing);

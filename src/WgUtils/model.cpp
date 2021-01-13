@@ -10,34 +10,34 @@
 
 namespace wgut {
 
-    AttribUtil::AttribUtil(const std::vector<ReadAttribType>& types) : type_indices(WGUT_MODEL_ATTRIB_COUNT, -1) {
+    AttribUtil::AttribUtil(const std::vector<VertexAttribute>& types) : type_indices(WGUT_MODEL_ATTRIB_COUNT, -1) {
         for (unsigned int i = 0; i < types.size(); i++) {
             type_indices[getAttribNumber(types[i])] = i;
         }
     }
 
-    bool AttribUtil::isDefined(ReadAttribType type) {
+    bool AttribUtil::isDefined(VertexAttribute type) {
         return type_indices[getAttribNumber(type)] != -1;
     }
 
-    int AttribUtil::getIndex(ReadAttribType type) {
+    int AttribUtil::getIndex(VertexAttribute type) {
         return type_indices[getAttribNumber(type)];
     }
 
-    int AttribUtil::getAttribNumber(ReadAttribType type) {
+    int AttribUtil::getAttribNumber(VertexAttribute type) {
         switch(type) {
-        case ReadAttribType::attTypePosition:
+        case VertexAttribute::Position:
             return 0;
-        case ReadAttribType::attTypeNormal:
+        case VertexAttribute::Normal:
             return 1;
-        case ReadAttribType::attTypeTexture:
+        case VertexAttribute::Texture:
             return 2;
         default:
             std::cerr << "[AttribUtil::getAttribNumber] Unhandled attribute type" << std::endl;
             exit(-1);
         }
     }
-    
+
     Model::Model(const std::vector<wg::Buffer*>& _vertex_buffer,
                  wg::IndexBuffer* _index_buffer) :
         vertex_buffers(_vertex_buffer),
@@ -50,7 +50,7 @@ namespace wgut {
 
     Model Model::fromFile(wg::Wingine& wing,
                           const std::string& file_name,
-                          const std::vector<ReadAttribType>& atts) {
+                          const std::vector<VertexAttribute>& atts) {
         std::ifstream file;
         file.open(file_name);
 
@@ -68,13 +68,13 @@ namespace wgut {
 
         std::vector<std::vector<float> > data_buffers(atts.size());
         std::vector<uint32_t> index_data;
-   
+
         for(unsigned int i = 0; i < atts.size(); i++) {
-            if(atts[i] == ReadAttribType::attTypePosition) {
+            if(atts[i] == VertexAttribute::Position) {
                 index_pos = i;
-            } else if (atts[i] == ReadAttribType::attTypeNormal) {
+            } else if (atts[i] == VertexAttribute::Normal) {
                 index_norm = i;
-            } else if (atts[i] == ReadAttribType::attTypeTexture) {
+            } else if (atts[i] == VertexAttribute::Texture) {
                 index_tex = i;
             } else {
                 std::cerr << "[Model::fromFile] Unrecognized attrib type" << std::endl;
@@ -86,7 +86,7 @@ namespace wgut {
         float maxa = 0.0f, maxb = 0.0f, maxc = 0.0f;
         float mina = 0.0f, minb = 0.0f, minc = 0.0f;
         int aa, bb, cc;
-    
+
         while(std::getline(file, line)) {
             std::istringstream iss(line);
             iss >> type;
@@ -115,7 +115,7 @@ namespace wgut {
                     data_buffers[index_norm].push_back(b);
                     data_buffers[index_norm].push_back(c);
                 }
-	
+
             } else if(type == "vt") {
                 if(index_tex != -1) {
                     iss >> a >> b;
@@ -123,9 +123,9 @@ namespace wgut {
                     data_buffers[index_tex].push_back(b);
                 }
             } else if(type == "f") {
-	
+
                 iss >> aa >> bb >> cc;
-	
+
                 index_data.push_back(aa - 1);
                 index_data.push_back(bb - 1);
                 index_data.push_back(cc - 1);
@@ -146,7 +146,7 @@ namespace wgut {
                 max_diff = maxc - minc;
                 min_coord = minc;
             }
-      
+
             for(unsigned int i = 0; i < data_buffers[index_pos].size() / 3; i++) {
                 data_buffers[index_pos][3 * i + 0] = (data_buffers[index_pos][3 * i + 0] - min_coord) / max_diff * 2.0 - 1.0;
                 data_buffers[index_pos][3 * i + 1] = (data_buffers[index_pos][3 * i + 1] - min_coord) / max_diff * 2.0 - 1.0;
@@ -154,7 +154,7 @@ namespace wgut {
             }
         }
 
-        
+
 
         return Model::constructModel(wing, data_buffers, index_data);
     }
@@ -168,7 +168,7 @@ namespace wgut {
             buf->set(data_buffers[i].data(), data_buffers[i].size());
             buffers.push_back(buf);
         }
-    
+
         wg::IndexBuffer* index_buffer = new wg::IndexBuffer(wing, index_data.size());
         index_buffer->set(index_data.data(), index_data.size(), 0);
 
@@ -178,7 +178,7 @@ namespace wgut {
     const std::vector<const wg::Buffer*>& Model::getVertexBuffers() {
         return this->const_vertex_buffers;
     }
-  
+
     const wg::IndexBuffer* Model::getIndexBuffer() {
         return this->index_buffer;
     }
@@ -192,51 +192,51 @@ namespace wgut {
 
 
     namespace SimpleModels {
-    
+
         Model createCube(wg::Wingine& wing,
-                         const std::vector<ReadAttribType>& attribs) {
+                         const std::vector<VertexAttribute>& attribs) {
             AttribUtil attut(attribs);
-            
+
             std::vector<std::vector<float>> attribute_vectors(attribs.size());
             std::vector<uint32_t> indices;
 
             for (int i = 0; i < 6; i++) {
-                
+
                 int dir_out = i % 3;
                 int dn = (dir_out + 1) % 3;
                 int dnn = (dn + 1) % 3;
-                    
+
                 int dir_comp = (i / 3) * 2 - 1;
-                for (int j = 0; j < 4; j++) {    
-                    
-                    if (attut.isDefined(ReadAttribType::attTypePosition)) {
+                for (int j = 0; j < 4; j++) {
+
+                    if (attut.isDefined(VertexAttribute::Position)) {
                         falg::Vec3 pos;
-                        
+
                         pos[dir_out] = 0.5f * dir_comp;
                         pos[dn] = 0.5f * (j % 2 == 0 ? - 1.0f : 1.0f);
                         pos[dnn] = 0.5f * (j / 2 == 0 ? - 1.0f : 1.0f) * dir_comp;
 
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[0]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[1]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[2]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(pos[0]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(pos[1]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(pos[2]);
                     }
 
-                    if (attut.isDefined(ReadAttribType::attTypeNormal)) {
+                    if (attut.isDefined(VertexAttribute::Normal)) {
                         falg::Vec3 norm(0.0f, 0.0f, 0.0f);
                         norm[dir_out] = dir_comp;
-                        
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[0]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[1]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[2]);
+
+                        attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(norm[0]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(norm[1]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(norm[2]);
                     }
 
-                    if (attut.isDefined(ReadAttribType::attTypeTexture)) {
+                    if (attut.isDefined(VertexAttribute::Texture)) {
                         falg::Vec2 tc(j % 2, j / 2);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tc[0]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tc[1]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(tc[0]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(tc[1]);
                     }
                 }
-                
+
                 indices.push_back(4 * i + 0);
                 indices.push_back(4 * i + 2);
                 indices.push_back(4 * i + 1);
@@ -249,7 +249,7 @@ namespace wgut {
         }
 
         Model createSphere(wg::Wingine& wing,
-                           const std::vector<ReadAttribType>& attribs,
+                           const std::vector<VertexAttribute>& attribs,
                            int res) {
             AttribUtil attut(attribs);
 
@@ -261,33 +261,33 @@ namespace wgut {
                 for (int j = 0; j <= 2 * res; j++) {
                     float theta = 2 * F_PI * j / (2 * res);
 
-                    if (attut.isDefined(ReadAttribType::attTypePosition)) {
+                    if (attut.isDefined(VertexAttribute::Position)) {
                         falg::Vec3 pos(cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[0]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[1]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(pos[2]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(pos[0]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(pos[1]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(pos[2]);
                     }
 
-                    if (attut.isDefined(ReadAttribType::attTypeNormal)) {
-                        
+                    if (attut.isDefined(VertexAttribute::Normal)) {
+
                         falg::Vec3 norm(cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[0]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[1]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(norm[2]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(norm[0]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(norm[1]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(norm[2]);
                     }
 
-                    if (attut.isDefined(ReadAttribType::attTypeTexture)) {
+                    if (attut.isDefined(VertexAttribute::Texture)) {
                         falg::Vec2 tex((float)(i + 1) / res,
                                        (float)j / (2 * res));
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tex[0]);
-                        attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(tex[1]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(tex[0]);
+                        attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(tex[1]);
                     }
 
                     if (i != res - 2 && j != 2 * res) {
                         indices.push_back(i * (2 * res + 1) + j);
                         indices.push_back((i + 1) * (2 * res + 1) + j);
                         indices.push_back(i * (2 * res + 1) + j + 1);
-                        
+
                         indices.push_back((i + 1) * (2 * res + 1) + j);
                         indices.push_back((i + 1) * (2 * res + 1) + j + 1);
                         indices.push_back(i * (2 * res + 1) + j + 1);
@@ -297,32 +297,32 @@ namespace wgut {
 
             // Top / bottom
 
-            if (attut.isDefined(ReadAttribType::attTypePosition)) {
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(1.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
+            if (attut.isDefined(VertexAttribute::Position)) {
+                attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(1.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(0.0f);
 
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(-1.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypePosition)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(-1.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Position)].push_back(0.0f);
             }
 
-            if (attut.isDefined(ReadAttribType::attTypeNormal)) {
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(1.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
-                
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(-1.0f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeNormal)].push_back(0.0f);
+            if (attut.isDefined(VertexAttribute::Normal)) {
+                attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(1.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(0.0f);
+
+                attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(0.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(-1.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Normal)].push_back(0.0f);
             }
 
-            if (attut.isDefined(ReadAttribType::attTypeTexture)) {
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(0.5f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(0.0f);
+            if (attut.isDefined(VertexAttribute::Texture)) {
+                attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(0.5f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(0.0f);
 
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(0.5f);
-                attribute_vectors[attut.getIndex(ReadAttribType::attTypeTexture)].push_back(1.0f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(0.5f);
+                attribute_vectors[attut.getIndex(VertexAttribute::Texture)].push_back(1.0f);
             }
 
             for (int i = 0; i < 2 * res; i++) {

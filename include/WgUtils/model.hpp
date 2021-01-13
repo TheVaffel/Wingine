@@ -9,24 +9,24 @@ namespace wgut {
 
     // NB: Remember to update this whenever a new attribute is added
     const int WGUT_MODEL_ATTRIB_COUNT = 3;
-    
-    enum class ReadAttribType {
-        attTypePosition,
-        attTypeNormal,
-        attTypeTexture
+
+    enum class VerrtexAttribute {
+        Position,
+        Normal,
+        Texture
     };
 
     class AttribUtil {
         std::vector<int> type_indices;
-        int getAttribNumber(ReadAttribType type);
+        int getAttribNumber(VertexAttribute type);
     public:
-        AttribUtil(const std::vector<ReadAttribType>& types);
+        AttribUtil(const std::vector<VertexAttribute>& types);
 
-        bool isDefined(ReadAttribType type);
-        int getIndex(ReadAttribType);
+        bool isDefined(VertexAttribute type);
+        int getIndex(VertexAttribute);
 
     };
-  
+
     class Model {
         std::vector<wg::Buffer*> vertex_buffers;
         std::vector<const wg::Buffer*> const_vertex_buffers;
@@ -38,11 +38,11 @@ namespace wgut {
 
         static Model fromFile(wg::Wingine& wing,
                               const std::string& file_name,
-                              const std::vector<ReadAttribType>& attribs);
+                              const std::vector<VertexAttribute>& attribs);
         static Model constructModel(wg::Wingine& wing, const std::vector<std::vector<float>>& data_buffers,
                                     const std::vector<uint32_t>& index_data);
 
-        
+
         const std::vector<const wg::Buffer*>& getVertexBuffers();
         const wg::IndexBuffer* getIndexBuffer();
 
@@ -52,9 +52,9 @@ namespace wgut {
 
     namespace SimpleModels {
         Model createCube(wg::Wingine& wing,
-                         const std::vector<ReadAttribType>& attTypes);
+                         const std::vector<VertexAttribute>& attTypes);
         Model createSphere(wg::Wingine& wing,
-                           const std::vector<ReadAttribType>& attTypes,
+                           const std::vector<VertexAttribute>& attTypes,
                            int res);
     };
 };

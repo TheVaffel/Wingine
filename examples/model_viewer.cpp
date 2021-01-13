@@ -19,8 +19,8 @@ int main() {
     // gn::GE scene = gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f));
     gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.4f, 3.0f, falg::Vec3(1.0f, 1.0f, 1.0f));
 
-    /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::ReadAttribType::attTypePosition,
-            wgut::ReadAttribType::attTypeNormal},
+    /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::VertexAttribute::Position,
+            wgut::VertexAttribute::Normal},
             5); */
 
     std::vector<float> positions, normals;

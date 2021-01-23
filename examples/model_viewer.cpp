@@ -17,7 +17,8 @@ int main() {
     gn::GE scene = gn::makeSphere(1.0f).translate(falg::Vec3(0.01f, 0.01f, 0.01f)).scale(falg::Vec3(1.0f, 0.5f, 1.0f))
         .add(gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f)).translate(falg::Vec3(0.0f, 0.0f, 1.0f)));
     // gn::GE scene = gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f));
-    gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), false);
+    gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), true);
+    gn::Mesh mesh2 = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), false);
 
     /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::VertexAttribute::Position,
             wgut::VertexAttribute::Normal},
@@ -30,7 +31,15 @@ int main() {
             normals.push_back(mesh.normals[i][j]);
         }
     }
+
+    std::vector<float> positions2 = std::vector<float>((float*)mesh2.positions.data(),
+                                                       (float*)(mesh2.positions.data() + mesh2.positions.size()));
+    std::vector<float> normals2 = std::vector<float>((float*)mesh2.normals.data(),
+                                                     (float*)(mesh2.normals.data() + mesh2.normals.size()));
+
     wgut::Model model = wgut::Model::constructModel(wing, {positions, normals}, mesh.indices);
+    wgut::Model model2 = wgut::Model::constructModel(wing, {positions2, normals2}, mesh2.indices);
+
 
     wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
@@ -134,6 +143,8 @@ int main() {
 
     float phi = 0.0, theta = 0.0;
     int diff_x = 0, diff_y = 0, scroll = 0;
+    bool is_switch = false;
+    int switch_state = 0;
 
     while (win.isOpen()) {
 
@@ -165,6 +176,22 @@ int main() {
         diff_x -= lock_x;
         diff_y -= lock_y;
         scroll = win.getScroll();
+        bool new_is_switch = win.isKeyPressed(WK_B);
+        if (new_is_switch && !is_switch) {
+            switch_state = switch_state ^ 1;
+
+            wgut::Model& curr_model = switch_state == 0 ? model : model2;
+
+            family->startRecording();
+            family->recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
+            family->endRecording();
+
+            line_family->startRecording();
+            line_family->recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
+            line_family->endRecording();
+        }
+
+        is_switch = new_is_switch;
 
         if(win.isKeyPressed(WK_ESC)) {
             break;
@@ -183,6 +210,7 @@ int main() {
     wing.destroy(line_pipeline);
 
     model.destroy(wing);
+    model2.destroy(wing);
     wing.destroy(cameraUniform);
 
 }

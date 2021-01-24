@@ -17,8 +17,15 @@ int main() {
     gn::GE scene = gn::makeSphere(1.0f).translate(falg::Vec3(0.01f, 0.01f, 0.01f)).scale(falg::Vec3(1.0f, 0.5f, 1.0f))
         .add(gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f)).translate(falg::Vec3(0.0f, 0.0f, 1.0f)));
     // gn::GE scene = gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f));
-    gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), true);
-    gn::Mesh mesh2 = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), false);
+
+    gn::MeshConstructor::ConstructMeshSetup meshSetup1, meshSetup2;
+
+    meshSetup1.numRectify = 1;
+
+    meshSetup2.numRectify = 2;
+
+    gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), meshSetup1);
+    gn::Mesh mesh2 = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), meshSetup2);
 
     /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::VertexAttribute::Position,
             wgut::VertexAttribute::Normal},

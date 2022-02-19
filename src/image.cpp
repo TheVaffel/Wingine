@@ -1,11 +1,11 @@
-#include "image.hpp"
+#include "./image.hpp"
 
-#include "framebuffer.hpp"
+#include "./framebuffer.hpp"
 
-#include "Wingine.hpp"
+#include "./Wingine.hpp"
 
 namespace wg {
-  
+
     const vk::Image& Image::getImage() const {
         return this->image;
     }
@@ -44,5 +44,5 @@ namespace wg {
                              wImageViewColor,
                              format);
     }
-  
+
 };

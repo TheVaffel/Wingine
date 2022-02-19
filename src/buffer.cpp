@@ -1,26 +1,26 @@
-#include "buffer.hpp"
-#include "util.hpp"
+#include "./buffer.hpp"
+#include "./util.hpp"
 
-#include "Wingine.hpp"
+#include "./Wingine.hpp"
 
 namespace wg {
-  
+
     Buffer::Buffer(Wingine& wing,
                    vk::BufferUsageFlags usage,
                    uint32_t size,
                    bool host_updatable) {
         this->wing = &wing;
-    
+
         vk::Device device = wing.getDevice();
-    
+
         this->host_updatable = host_updatable;
-    
+
         vk::BufferCreateInfo bci;
         bci.setSize(size)
             .setSharingMode(vk::SharingMode::eExclusive)
             .setUsage(usage |
                       vk::BufferUsageFlagBits::eTransferDst);
-    
+
         this->buffer = device.createBuffer(bci);
 
         vk::MemoryRequirements memReqs =
@@ -40,11 +40,11 @@ namespace wg {
             mai.setMemoryTypeIndex(_get_memory_type_index(memReqs.memoryTypeBits,
                                                           vk::MemoryPropertyFlagBits::eDeviceLocal,
                                                           wing.device_memory_props));
-      
+
             this->memory = device.allocateMemory(mai);
-      
+
             bci.setUsage(vk::BufferUsageFlagBits::eTransferSrc);
-      
+
             this->update_buffer = device.createBuffer(bci);
 
             memReqs = device.getBufferMemoryRequirements(this->update_buffer);
@@ -58,15 +58,15 @@ namespace wg {
             device.bindBufferMemory(this->update_buffer, this->update_memory, 0);
         }
 
-    
+
         device.bindBufferMemory(this->buffer, this->memory, 0); // Buffer, memory, memoryOffset
     }
 
     void* Buffer::_mapMemory() {
         void* data;
-        
+
         vk::Device device = this->wing->getDevice();
-        
+
         _wassert(this->host_updatable, "must have host_updatable set for memory to be mappable");
 
         _wassert_result(device.mapMemory(this->memory, 0, VK_WHOLE_SIZE, {}, &data));
@@ -82,7 +82,7 @@ namespace wg {
     void Buffer::set(const void* data, uint32_t sizeInBytes, uint32_t offsetInBytes) {
         void* mapped;
         vk::Device device = this->wing->getDevice();
-    
+
         if (this->host_updatable) {
             _wassert_result(device.mapMemory(this->memory, offsetInBytes, sizeInBytes, {}, &mapped),
                             "map memory in Buffer::set");
@@ -90,13 +90,13 @@ namespace wg {
             memcpy(mapped, data, sizeInBytes);
 
             device.unmapMemory(this->memory);
-        } else {      
+        } else {
 
             vk::Device device = this->wing->getDevice();
             Command command = this->wing->getCommand();
             vk::Queue queue = this->wing->getGraphicsQueue();
-    
-      
+
+
             _wassert_result(device.mapMemory(this->update_memory, offsetInBytes, sizeInBytes, {}, &mapped),
                             "map update memory in Buffer::set");
 
@@ -108,19 +108,19 @@ namespace wg {
             bc.setSrcOffset(offsetInBytes)
                 .setDstOffset(offsetInBytes)
                 .setSize(sizeInBytes);
-      
+
             vk::CommandBufferBeginInfo cbbi;
 
             _wassert_result(device.waitForFences(1, &command.fence, VK_TRUE,
                                                  (uint64_t)1e9),
                             "wait for fence 1 in Buffer::set");
-      
+
             command.buffer.begin(cbbi);
 
             command.buffer.copyBuffer(this->update_buffer,
                                       this->buffer,
                                       1, &bc);
-      
+
             command.buffer.end();
 
             vk::SubmitInfo si;
@@ -129,7 +129,7 @@ namespace wg {
 
             _wassert_result(device.resetFences(1, &command.fence),
                             "reset fence in Buffer::set");
-      
+
             _wassert_result(queue.submit(1, &si, command.fence),
                             "submit command in Buffer::set");
 
@@ -169,7 +169,7 @@ namespace wg {
         return this->num_indices;
     }
 
-  
+
     _VertexBuffer::_VertexBuffer(Wingine& wing,
                                  vk::BufferUsageFlagBits bit,
                                  int size,

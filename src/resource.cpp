@@ -1,16 +1,16 @@
-#include "resource.hpp"
+#include "./resource.hpp"
 
-#include "Wingine.hpp"
+#include "./Wingine.hpp"
 
 namespace wg {
-  
+
     ResourceSetLayout::ResourceSetLayout(Wingine& wing, const std::vector<uint64_t>& flags) {
         std::vector<vk::DescriptorSetLayoutBinding> lbs(flags.size());
 
         this->wing = &wing;
 
         vk::Device device = this->wing->getDevice();
-    
+
         int i = 0;
         for(uint64_t flag : flags) {
             lbs[i].setBinding(i)
@@ -26,7 +26,7 @@ namespace wg {
 
         this->layout =
             device.createDescriptorSetLayout(dlc);
-      
+
     }
 
     ResourceSetLayout::ResourceSetLayout() { }
@@ -34,7 +34,7 @@ namespace wg {
     ResourceSet* Wingine::createResourceSet(const std::vector<uint64_t>& flags) {
 
         this->ensure_resource_set_layout_exists(flags);
-    
+
         return new ResourceSet(*this, this->resourceSetLayoutMap[flags].layout);
     }
 
@@ -81,7 +81,7 @@ namespace wg {
         Resource(vk::DescriptorType::eStorageImage) {
 
         vk::Format rgb_format = vk::Format::eR8G8B8A8Unorm;
-        
+
         Image::constructImage(wing, *this,
                               width, height,
                               rgb_format,
@@ -107,7 +107,7 @@ namespace wg {
         vk::SubmitInfo si;
         si.setCommandBufferCount(1)
             .setPCommandBuffers(&wing.general_purpose_command.buffer);
-    
+
         _wassert_result(wing.graphics_queue.submit(1, &si, wing.general_purpose_command.fence),
                         "command submission in ResourceImage construction");
 
@@ -115,12 +115,12 @@ namespace wg {
         this->image_info = new vk::DescriptorImageInfo();
         this->image_info->setImageView(this->view)
             .setImageLayout(this->current_layout);
-    
+
         _wassert_result(wing.device.waitForFences(1, &wing.general_purpose_command.fence, true, (uint64_t)1e9),
                         "wait for operation finish in ResourceImage construction");
 
     }
-  
+
 
     /*
      * TextureSetup - setup structure for Texture
@@ -152,7 +152,7 @@ namespace wg {
         this->depth = depth;
         return *this;
     }
-    
+
     /*
      * Texture - represents resource images with a sampler
      */
@@ -163,13 +163,13 @@ namespace wg {
         Resource(vk::DescriptorType::eCombinedImageSampler) {
 
         vk::Format rgb_format = vk::Format::eR8G8B8A8Unorm;
-        
+
         bool depth = setup.depth;
-        
+
         this->wing = &wing;
         this->aspect = depth ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor;
         vk::Device device = wing.getDevice();
-    
+
         wing.cons_image_image(*this,
                               width, height,
                               depth ? vk::Format::eD32Sfloat : rgb_format,
@@ -216,7 +216,7 @@ namespace wg {
 
             this->stride_in_bytes = lay.rowPitch;
         }
-      
+
         vk::SamplerCreateInfo sci;
         sci.setMagFilter(vk::Filter::eLinear)
             .setMinFilter(vk::Filter::eLinear)
@@ -235,7 +235,7 @@ namespace wg {
 
         this->sampler = device.createSampler(sci);
 
-    
+
         this->image_info = new vk::DescriptorImageInfo();
         this->image_info->setSampler(this->sampler)
             .setImageView(this->view)
@@ -246,7 +246,7 @@ namespace wg {
     uint32_t Texture::getStride() {
         return this->stride_in_bytes;
     }
-   
+
     void Texture::set(const unsigned char* pixels,
                       const std::initializer_list<SemaphoreChain*>& semaphores,
                       bool fixed_stride) {
@@ -284,7 +284,7 @@ namespace wg {
 
     void Texture::set(ResourceImage* image, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {
         vk::ImageLayout image_final = vk::ImageLayout::eGeneral;
-    
+
         this->wing->copy_image(image->width, image->height,
                                image->image, image->current_layout,
                                image_final,
@@ -300,7 +300,7 @@ namespace wg {
 
     void Texture::set(Framebuffer* framebuffer, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {
         bool depth = this->aspect == vk::ImageAspectFlagBits::eDepth;
-    
+
         this->wing->copy_image(depth ? framebuffer->depthImage.width : framebuffer->colorImage.width,
                                depth ? framebuffer->depthImage.height : framebuffer->colorImage.height,
                                depth ? framebuffer->depthImage.image : framebuffer->colorImage.image,
@@ -313,14 +313,14 @@ namespace wg {
                                wait_semaphores);
 
         this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    
+
         if (depth) {
             framebuffer->depthImage.current_layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
         } else {
             framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
         }
     }
-  
+
     StorageBuffer::StorageBuffer(Wingine& wing,
                                  int size_bytes,
                                  bool host_updatable) :

@@ -1,4 +1,4 @@
-#include "WgUtils/camera.hpp"
+#include "./camera.hpp"
 
 namespace wgut {
 

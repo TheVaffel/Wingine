@@ -1,6 +1,6 @@
-#include "pipeline.hpp"
+#include "./pipeline.hpp"
 
-#include "Wingine.hpp"
+#include "./Wingine.hpp"
 
 namespace wg {
 

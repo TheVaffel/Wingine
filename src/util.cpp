@@ -1,9 +1,9 @@
-#include "util.hpp"
+#include "./util.hpp"
 
 #include <iostream>
 
 namespace wg {
-  
+
     /*
      * Utility functions
      */
@@ -30,7 +30,7 @@ namespace wg {
                                     vk::MemoryPropertyFlags requirements_mask,
                                     vk::PhysicalDeviceMemoryProperties& mem_props) {
         for(uint32_t i = 0; i < mem_props.memoryTypeCount; i++) {
-            if ((type_bits & (1 << i))) { 
+            if ((type_bits & (1 << i))) {
                 if ((mem_props.memoryTypes[i].propertyFlags & requirements_mask) == requirements_mask) {
                     return i;
                 }
@@ -47,7 +47,7 @@ namespace wg {
         // At least for now, formats are a bit strict
 
         // VK_FORMAT_R32_SFLOAT = 100 etc.. are defined in vulkan_core.h
-  
+
         switch(type) {
         case wg::tFloat32:
             return vk::Format(97 + num_components * 3);
@@ -61,5 +61,5 @@ namespace wg {
 
         return vk::Format::eR32Sfloat;
     }
-  
+
 };

@@ -1,6 +1,6 @@
-#include "WgUtils/model.hpp"
+#include "./model.hpp"
 
-#include "Wingine.hpp"
+#include "../Wingine.hpp"
 
 #include <FlatAlg.hpp>
 

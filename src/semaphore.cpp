@@ -1,23 +1,23 @@
-#include "semaphore.hpp"
-#include "Wingine.hpp"
+#include "./semaphore.hpp"
+#include "./Wingine.hpp"
 
 namespace wg {
 
     SemaphoreChain::SemaphoreChain(Wingine& wing) {
         this->curr_pos = SemaphoreChain::initial_value;
-    
+
         vk::SemaphoreCreateInfo sci;
 
         // Create timeline semaphore with initial value 0
         vk::SemaphoreTypeCreateInfo stci;
         stci.setSemaphoreType(vk::SemaphoreType::eTimeline)
             .setInitialValue(this->curr_pos);
-    
+
         sci.setPNext(&stci);
 
         this->semaphore = wing.device.createSemaphore(sci);
     }
-  
+
     int SemaphoreChain::getWaitSemaphores(vk::Semaphore* arr, SemaphoreChain* const* chains, int count) {
         int j = 0;
         for(int i = 0; i < count; i++) {
@@ -48,7 +48,7 @@ namespace wg {
         for(int i = 0; i < count; i++) {
             if(!chains[i]->shouldBeWaitedUpon()) {
                 continue;
-            } 
+            }
             values[j++] = chains[i]->getCurrVal();
         }
 
@@ -92,7 +92,7 @@ namespace wg {
     void SemaphoreChain::resetModifiers() {
         // Something will come here...
     }
-  
+
     bool SemaphoreChain::isFirst() const {
         return this->curr_pos == SemaphoreChain::initial_value;
     }
@@ -103,7 +103,7 @@ namespace wg {
         vk::TimelineSemaphoreSubmitInfo tssi;
         tssi.setWaitSemaphoreValueCount(1)
             .setPWaitSemaphoreValues(&this->curr_pos);
-    
+
         vk::SubmitInfo inf;
         inf.setCommandBufferCount(0)
             .setWaitSemaphoreCount(1)
@@ -117,7 +117,7 @@ namespace wg {
         _wassert_result(wing->getDevice().waitForFences(1, &fence, true, UINT64_MAX),
                         "wait for command finish in SemaphoreChain::ensure_finished");
     }
-  
+
     bool SemaphoreChain::shouldBeWaitedUpon() const {
         return !this->isFirst();
     }
@@ -125,7 +125,7 @@ namespace wg {
     bool SemaphoreChain::shouldBeSignalled() const {
         return true; // Right now, there is no reason why we would not want it to be signalled
     }
-  
+
     int SemaphoreChain::getNextVal() {
         this->curr_pos++;
         return this->curr_pos;
@@ -154,7 +154,7 @@ namespace wg {
         vk::TimelineSemaphoreSubmitInfo tssi;
         tssi.setWaitSemaphoreValueCount(num_vals)
             .setPWaitSemaphoreValues(wait_values.data());
-    
+
         vk::SubmitInfo inf;
         inf.setCommandBufferCount(0)
             .setWaitSemaphoreCount(num_sems)
@@ -172,19 +172,19 @@ namespace wg {
     void SemaphoreChain::semaphoreToChains(Wingine* wing, vk::Semaphore semaphore, SemaphoreChain* const* chains, int num_chains) {
         std::vector<vk::Semaphore> semarr(num_chains);
         vk::PipelineStageFlags pflag = vk::PipelineStageFlagBits::eTopOfPipe;
-    
+
         std::vector<uint64_t> signal_values(num_chains);
 
         int num_sems = SemaphoreChain::getSignalSemaphores(semarr.data(), chains, num_chains);
         int num_vals = SemaphoreChain::getSemaphoreSignalValues(signal_values.data(), chains, num_chains);
 
         _wassert(num_sems == num_vals);
-      
+
         vk::TimelineSemaphoreSubmitInfo tssi;
         tssi
             .setSignalSemaphoreValueCount(num_vals)
             .setPSignalSemaphoreValues(signal_values.data());
-      
+
         vk::SubmitInfo inf;
         inf.setCommandBufferCount(0)
             .setWaitSemaphoreCount(1)
@@ -193,10 +193,10 @@ namespace wg {
             .setSignalSemaphoreCount(num_sems)
             .setPSignalSemaphores(semarr.data())
             .setPNext(&tssi);
-    
+
         // Present queue is hopefully not that busy
         _wassert_result(wing->present_queue.submit(1, &inf, nullptr),
                         "submit command in SemaphoreChain::semaphoreToChains");
     }
-  
+
 };

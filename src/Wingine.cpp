@@ -1,5 +1,6 @@
-#include "Wingine.hpp"
+#include "./Wingine.hpp"
 
+#include <exception>
 
 /*
  * Debug callback
@@ -884,6 +885,10 @@ namespace wg {
         }
     }
 
+    void Wingine::init_vulkan(int width, int height, const std::string& app_name) {
+        throw std::runtime_error("Not implemented yet");
+    }
+
     void Wingine::init_vulkan(int width, int height,
                               winval_type_0 arg0, winval_type_1 arg1, const char* str) {
         this->init_instance(width, height, str);
@@ -978,6 +983,10 @@ namespace wg {
                      winval_type_0 arg0, winval_type_1 arg1, const char* str) {
         this->init_vulkan(width, height,
                           arg0, arg1, str);
+    }
+
+    Wingine::Wingine(int width, int height, const std::string& app_title) {
+        this->init_vulkan(width, height, app_title);
     }
 
 

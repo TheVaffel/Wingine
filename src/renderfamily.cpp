@@ -1,6 +1,6 @@
-#include "renderfamily.hpp"
+#include "./renderfamily.hpp"
 
-#include "Wingine.hpp"
+#include "./Wingine.hpp"
 
 namespace wg {
     RenderFamily::RenderFamily(Wingine& wing,
@@ -12,7 +12,7 @@ namespace wg {
         if(num_framebuffers == 0) {
             num_framebuffers = wing.getNumFramebuffers();
         }
-    
+
         this->clears = clear;
         this->num_buffers = num_framebuffers;
 
@@ -27,10 +27,10 @@ namespace wg {
                                                                  clear);
             }
         }
-    
+
         vk::CommandPool pool = wing.getGraphicsCommandPool();
         vk::Device device = wing.getDevice();
-    
+
         vk::CommandBufferAllocateInfo cbi;
         cbi.setCommandPool(pool)
             .setLevel(vk::CommandBufferLevel::ePrimary)
@@ -38,7 +38,7 @@ namespace wg {
 
         this->commands = std::vector<Command>(this->num_buffers);
         for(int i = 0; i < this->num_buffers; i++) {
-      
+
             commands[i].buffer = device.allocateCommandBuffers(cbi)[0];
 
             commands[i].buffer
@@ -46,15 +46,15 @@ namespace wg {
 
             vk::FenceCreateInfo fci;
             fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
-    
+
             commands[i].fence =
                 device.createFence(fci);
         }
     }
-  
+
 
     void RenderFamily::startRecording(std::vector<Framebuffer*> framebuffers) {
-    
+
         if (framebuffers.size() == 0) {
             this->framebuffers = wing->getFramebuffers();
         } else {
@@ -67,18 +67,18 @@ namespace wg {
         for(int i = 0; i < this->num_buffers; i++) {
 
             vk::CommandBufferBeginInfo begin;
-    
+
             vk::Rect2D renderRect;
             renderRect.setOffset({0, 0})
                 .setExtent({this->framebuffers[i]->depthImage.width, this->framebuffers[i]->depthImage.height});
-    
+
             vk::RenderPassBeginInfo rpb;
             rpb.setRenderPass(this->render_passes[i])
                 .setClearValueCount(0)
                 .setPClearValues(nullptr)
                 .setFramebuffer(this->framebuffers[i]->framebuffer)
                 .setRenderArea(renderRect);
-    
+
             // Size is number of attachments
             std::vector<vk::ClearValue> clear_values;
 
@@ -100,7 +100,7 @@ namespace wg {
                 rpb.setClearValueCount(clear_values.size())
                     .setPClearValues(clear_values.data());
             }
-    
+
             vk::Device device = this->wing->getDevice();
 
             _wassert_result(device.waitForFences(1, &this->commands[i].fence, true, UINT64_MAX),
@@ -111,7 +111,7 @@ namespace wg {
             this->commands[i].buffer.begin(begin);
 
             this->commands[i].buffer.beginRenderPass(rpb, vk::SubpassContents::eInline);
-    
+
             this->commands[i].buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, this->pipeline->pipeline);
         }
     }
@@ -120,12 +120,12 @@ namespace wg {
                                   const std::vector<ResourceSet*>& sets, int instanceCount){
 
         for(int j = 0; j < this->num_buffers; j++) {
-      
+
             std::vector<vk::DescriptorSet> d_sets(sets.size());
             for(unsigned int i = 0; i < sets.size(); i++) {
                 d_sets[i] = sets[i]->descriptor_set;
             }
-	  
+
             if (sets.size()) {
                 this->commands[j].buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                                             this->pipeline->layout,
@@ -166,7 +166,7 @@ namespace wg {
         }
 
         _wassert(index <= this->num_buffers, "[RenderFamily::submit(int index)] Index too high. This could be because the RenderFamily instance is created with fewer buffers than there are frame buffers, and no index was explicitly set.");
-    
+
         this->submit_command(wait_semaphores, index);
     }
 
@@ -193,13 +193,13 @@ namespace wg {
         SemaphoreChain::getSemaphoreWaitValues(wait_vals.data(), std::begin(semaphores), semaphores.size());
         SemaphoreChain::getSemaphoreSignalValues(signal_vals.data(), std::begin(semaphores), semaphores.size());
         SemaphoreChain::getWaitStages(flags.data(), std::begin(semaphores), semaphores.size());
-    
+
         vk::TimelineSemaphoreSubmitInfo tssi;
         tssi.setSignalSemaphoreValueCount(num_signal_sems)
             .setPSignalSemaphoreValues(signal_vals.data())
             .setWaitSemaphoreValueCount(num_wait_sems)
             .setPWaitSemaphoreValues(wait_vals.data());
-    
+
         vk::SubmitInfo si;
         si.setCommandBufferCount(1)
             .setPCommandBuffers(&this->commands[index].buffer)
@@ -209,13 +209,13 @@ namespace wg {
             .setWaitSemaphoreCount(num_wait_sems)
             .setPWaitSemaphores(wait_sems.data())
             .setPNext(&tssi);
-      
+
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
         // Ensure finished last submission
         _wassert_result(device.waitForFences(1, &this->commands[index].fence, true, (uint64_t)1e9),
                         "wait for last submission in render family");
-    
+
         _wassert_result(device.resetFences(1, &this->commands[index].fence),
                         "reset fence in render family");
 

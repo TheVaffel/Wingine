@@ -5,6 +5,8 @@
 #include "declarations.hpp"
 #include "buffer.hpp"
 
+#include "./CompatibleRenderPassRegistry.hpp"
+
 namespace wg {
 
     struct Command {

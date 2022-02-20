@@ -6,6 +6,8 @@
 #include "pipeline.hpp"
 #include "resource.hpp"
 
+#include "./CompatibleRenderPassRegistry.hpp"
+
 namespace wg {
 
     class RenderFamily {
@@ -20,6 +22,7 @@ namespace wg {
         RenderPassType render_pass_type;
     
         RenderFamily(Wingine& wing,
+                     const CompatibleRenderPassRegistry* renderPassRegistry,
                      const Pipeline* pipeline,
                      bool clear,
                      int num_buffers = 0);

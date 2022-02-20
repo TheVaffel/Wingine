@@ -12,6 +12,8 @@
 
 #include "declarations.hpp"
 
+#include "./CompatibleRenderPassRegistry.hpp"
+
 #include "buffer.hpp"
 #include "image.hpp"
 #include "framebuffer.hpp"
@@ -72,7 +74,8 @@ namespace wg {
         uint32_t window_width, window_height;
 
         std::map<std::vector<uint64_t>, ResourceSetLayout> resourceSetLayoutMap;
-        std::map<RenderPassType, vk::RenderPass> compatibleRenderPassMap;
+
+        std::shared_ptr<CompatibleRenderPassRegistry> compatibleRenderPassRegistry;
 
         void init_vulkan(int width, int height,
                          winval_type_0 arg0,

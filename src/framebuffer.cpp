@@ -1,6 +1,7 @@
 #include "./framebuffer.hpp"
 
 #include "./Wingine.hpp"
+#include "./CompatibleRenderPassRegistry.hpp"
 
 namespace wg {
     Framebuffer::Framebuffer() { }
@@ -48,13 +49,12 @@ namespace wg {
             renDepth :
             renColorDepth;
 
-        if(wing.compatibleRenderPassMap.find(render_pass_type) ==
-           wing.compatibleRenderPassMap.end()) {
+        if (!wing.compatibleRenderPassRegistry->hasRenderPassType(render_pass_type)) {
             wing.register_compatible_render_pass(render_pass_type);
         }
 
         vk::FramebufferCreateInfo finf;
-        finf.setRenderPass(wing.compatibleRenderPassMap[render_pass_type])
+        finf.setRenderPass(wing.compatibleRenderPassRegistry->getRenderPass(render_pass_type))
             .setAttachmentCount(attachments.size())
             .setPAttachments(attachments.data())
             .setWidth(width)

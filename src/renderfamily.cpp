@@ -4,6 +4,7 @@
 
 namespace wg {
     RenderFamily::RenderFamily(Wingine& wing,
+                               const CompatibleRenderPassRegistry* renderPassRegistry,
                                const Pipeline* pipeline,
                                bool clear,
                                int num_framebuffers) :
@@ -21,7 +22,7 @@ namespace wg {
         this->render_passes = std::vector<vk::RenderPass>(num_framebuffers);
         for(int i = 0; i < num_framebuffers; i++) {
             if(!clear) {
-                this->render_passes[i] = wing.compatibleRenderPassMap[this->render_pass_type];
+                this->render_passes[i] = renderPassRegistry->getRenderPass(this->render_pass_type);
             } else {
                 this->render_passes[i] = wing.create_render_pass(this->render_pass_type,
                                                                  clear);

@@ -71,15 +71,10 @@ namespace wg {
     const ShaderType shaVertex = (int64_t)VK_SHADER_STAGE_VERTEX_BIT << 32;
     const ShaderType shaFragment = (int64_t)VK_SHADER_STAGE_FRAGMENT_BIT << 32;
     const ShaderType shaCompute = (int64_t)VK_SHADER_STAGE_COMPUTE_BIT << 32;
-  
+
     enum ImageViewType {
         wImageViewColor,
         wImageViewDepth
-    };
-
-    enum RenderPassType {
-        renColorDepth,
-        renDepth
     };
 
     class Wingine;

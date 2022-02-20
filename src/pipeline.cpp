@@ -290,7 +290,7 @@ namespace wg {
 
 
 
-        if(wing.compatibleRenderPassMap.find(rpt) == wing.compatibleRenderPassMap.end()) {
+        if (!wing.compatibleRenderPassRegistry->hasRenderPassType(rpt)) {
             wing.register_compatible_render_pass(rpt);
         }
 
@@ -309,7 +309,7 @@ namespace wg {
             .setPDepthStencilState(&ds)
             .setPStages(pssci.data())
             .setStageCount(pssci.size())
-            .setRenderPass(wing.compatibleRenderPassMap[rpt])
+            .setRenderPass(wing.compatibleRenderPassRegistry->getRenderPass(rpt))
             .setSubpass(0);
 
         this->render_pass_type = rpt;

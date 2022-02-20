@@ -313,8 +313,7 @@ namespace wg {
 
 
     void Wingine::register_compatible_render_pass(RenderPassType type) {
-        this->compatibleRenderPassMap[type] =
-            this->create_render_pass(type, false);
+        this->compatibleRenderPassRegistry->registerRenderPassType(type, this->create_render_pass(type, false));
     }
 
 
@@ -810,7 +809,7 @@ namespace wg {
             };
 
             vk::FramebufferCreateInfo finf;
-            finf.setRenderPass(this->compatibleRenderPassMap[renColorDepth])
+            finf.setRenderPass(this->compatibleRenderPassRegistry->getRenderPass(renColorDepth))
                 .setAttachmentCount(2)
                 .setPAttachments(attachments)
                 .setWidth(this->window_width)
@@ -896,6 +895,8 @@ namespace wg {
         this->init_surface(arg0, arg1);
 
         this->init_device();
+
+        this->compatibleRenderPassRegistry = std::make_shared<CompatibleRenderPassRegistry>(this->device);
 
         this->init_command_buffers();
 
@@ -1124,7 +1125,7 @@ namespace wg {
     }
 
     RenderFamily* Wingine::createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers) {
-        return new RenderFamily(*this,
+        return new RenderFamily(*this, this->compatibleRenderPassRegistry.get(),
                                 pipeline, clear, num_framebuffers);
     }
 
@@ -1242,7 +1243,7 @@ namespace wg {
             this->device.freeCommandBuffers(this->graphics_command_pool,
                                             1, &family->commands[i].buffer);
 
-            if(family->render_passes[i] != this->compatibleRenderPassMap[family->render_pass_type]) {
+            if(family->render_passes[i] != this->compatibleRenderPassRegistry->getRenderPass(family->render_pass_type)) {
                 this->device.destroy(family->render_passes[i], nullptr, this->dispatcher);
             }
         }
@@ -1319,6 +1320,8 @@ namespace wg {
 
     Wingine::~Wingine() {
 
+        this->compatibleRenderPassRegistry.reset();
+
         this->device.destroy(this->descriptor_pool, nullptr, this->dispatcher);
         this->device.destroy(this->pipeline_cache, nullptr, this->dispatcher);
 
@@ -1367,15 +1370,10 @@ namespace wg {
             this->device.destroy(it.second.layout, nullptr, this->dispatcher);
         }
 
-        for(auto it : this->compatibleRenderPassMap) {
-            this->device.destroy(it.second, nullptr, this->dispatcher);
-        }
-
         this->device.destroy(nullptr, this->dispatcher);
 
         this->vulkan_instance.destroyDebugReportCallbackEXT(this->debug_callback,
                                                             nullptr, this->dispatcher);
         this->vulkan_instance.destroy(nullptr, this->dispatcher);
     }
-
 };

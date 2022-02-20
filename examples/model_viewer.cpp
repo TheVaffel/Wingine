@@ -1,11 +1,12 @@
 #include <Winval.hpp>
 
-#include <Wingine.hpp>
-#include <WgUtils.hpp>
+#include "../include/Wingine.hpp"
+#include "../include/WgUtils.hpp"
 
 #include <spurv.hpp>
 
 #include <generelle/modelling.hpp>
+
 namespace gn = generelle;
 
 

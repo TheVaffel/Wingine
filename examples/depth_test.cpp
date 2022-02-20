@@ -1,7 +1,7 @@
 #include <Winval.hpp>
 
-#include <Wingine.hpp>
-#include <WgUtils.hpp>
+#include "../include/Wingine.hpp"
+#include "../include/WgUtils.hpp"
 
 #include <spurv.hpp>
 
@@ -14,10 +14,10 @@ int main() {
 
     win.setTitle("Wingine - Depth Example");
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
-  
+
     const int num_points = 7;
     const int num_triangles = 3;
-  
+
     float positions[num_points * 4] = {
         1.0f, -1.0f, -2.5f, 1.0f,
         -1.0f, -1.0f, -2.5f, 1.0f,
@@ -50,7 +50,7 @@ int main() {
     wg::VertexBuffer<float>* position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
     position_buffer->set(positions, num_points * 4);
-  
+
     wg::VertexBuffer<float>* color_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
     color_buffer->set(colors, num_points * 4);
@@ -61,17 +61,17 @@ int main() {
 
     wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
     wg::Uniform<falg::Mat4>* lightUniform = wing.createUniform<falg::Mat4>();
-  
+
     // Initialize resource set layout
-  
+
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-  
+
     wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
     resourceSet->set({cameraUniform});
 
     wg::ResourceSet* lightSet = wing.createResourceSet(resourceSetLayout);
     lightSet->set({lightUniform});
-  
+
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
                                             0, // Binding no.
@@ -79,7 +79,7 @@ int main() {
                                             4 * sizeof(float), // Stride (in bytes)
                                             0}, // Offset (bytes)
                                            {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
-  
+
     // Some random size
     const uint32_t shadow_buffer_width = 2000,
         shadow_buffer_height = 2000;
@@ -96,10 +96,10 @@ int main() {
 
     std::vector<uint64_t> lightTextureSetLayout = {wg::resTexture | wg::shaFragment,
                                                    wg::resUniform | wg::shaFragment};
-  
+
     wg::ResourceSet* lightTextureSet = wing.createResourceSet(lightTextureSetLayout);
     lightTextureSet->set({shadow_texture, lightUniform});
-  
+
     std::vector<uint32_t> depth_vertex_shader;
     {
         using namespace spurv;
@@ -109,7 +109,7 @@ int main() {
         mat4_v trans = trans_bind.member<0>().load();
 
         vec4_v pos = shader.input<0>();
-    
+
         vec4_v transformed_pos = trans * pos;
 
         shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
@@ -127,8 +127,8 @@ int main() {
                                                        {resourceSetLayout},
                                                        {depth_shader},
                                                        shadow_pipeline_setup);
-  
-  
+
+
     std::vector<uint32_t> vertex_spirv;
     {
         using namespace spurv;
@@ -143,7 +143,7 @@ int main() {
 
         vec4_v transformed_pos = trans * s_pos;
         vec4_v world_pos = s_pos; // Should be model transformed, but doesn't have one in this example
-    
+
         shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
         shader.compile(vertex_spirv, s_col, world_pos);
 
@@ -152,7 +152,7 @@ int main() {
 
     wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
 
-  
+
     std::vector<uint32_t> fragment_spirv;
     {
         using namespace spurv;
@@ -173,7 +173,7 @@ int main() {
 
         float_v lookupval = shadow_tex[light_pos2d][0];
 
-        float_v intensity = select(lookupval + ( 1e-5) >= light_pos[2] / light_pos[3], 
+        float_v intensity = select(lookupval + ( 1e-5) >= light_pos[2] / light_pos[3],
                                    1.f, 0.2f);
 
         // float_v intensity = lookupval;
@@ -197,7 +197,7 @@ int main() {
 
     // Create family with only one framebuffer
     wg::RenderFamily* depth_family = wing.createRenderFamily(depth_pipeline, true, 1);
-  
+
     // Supply framebuffer (only one, as specified above)
     depth_family->startRecording({depth_framebuffer});
     depth_family->recordDraw({position_buffer, color_buffer}, index_buffer, {lightSet});
@@ -206,7 +206,7 @@ int main() {
     family->startRecording();
     family->recordDraw({position_buffer, color_buffer}, index_buffer, {resourceSet, lightTextureSet});
     family->endRecording();
-  
+
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 16.0, 0.01f, 100.0f);
     camera.setLookAt(falg::Vec3(2.0f, 2.0f, 2.0f),
@@ -227,26 +227,26 @@ int main() {
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
     while (win.isOpen()) {
-    
+
         lightUniform->set(light_camera.getRenderMatrix());
-    
+
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
-    
+
         // depth_family is created with only one framebuffer, and that is the only one we will render to
         // Hence the 0
-    
+
         depth_family->submit({shadow_chain}, 0);
-    
+
         shadow_texture->set(depth_framebuffer, {shadow_chain});
 
         cameraUniform->set(renderMatrix);
 
         family->submit({main_chain, shadow_chain});
-    
+
         wing.present({main_chain});
 
         // win.sleepMilliseconds(30);
-    
+
         auto now = clock.now();
 
         double duration = std::chrono::duration<double>(now - start).count();
@@ -259,8 +259,8 @@ int main() {
 
         // Main reason for the wait here is to ensure that setting the uniforms
         // for the next frame does not interfere with unfinished drawing
-        wing.waitForLastPresent(); 
-    
+        wing.waitForLastPresent();
+
         win.flushEvents();
         if(win.isKeyPressed(WK_ESC)) {
             break;
@@ -279,12 +279,12 @@ int main() {
     wing.destroy(depth_pipeline);
 
     wing.destroy(shadow_texture);
-  
+
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);
 
     wing.destroy(pipeline);
-  
+
     wing.destroy(position_buffer);
     wing.destroy(color_buffer);
     wing.destroy(index_buffer);

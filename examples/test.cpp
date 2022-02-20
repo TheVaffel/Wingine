@@ -1,7 +1,7 @@
 #include <Winval.hpp>
 
-#include <Wingine.hpp>
-#include <WgUtils.hpp>
+#include "../include/Wingine.hpp"
+#include "../include/WgUtils.hpp"
 
 #include <spurv.hpp>
 
@@ -9,10 +9,10 @@ int main() {
     const int width = 800, height = 800;
     Winval win(width, height);
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
-  
+
     const int num_points = 3;
     const int num_triangles = 1;
-  
+
     float positions[num_points * 4] = {
         1.0f, -1.0f, -2.5f, 1.0f,
         -1.0f, -1.0f, -2.5f, 1.0f,
@@ -32,7 +32,7 @@ int main() {
     wg::VertexBuffer<float>* position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
     position_buffer->set(positions, num_points * 4);
-  
+
     wg::VertexBuffer<float>* color_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
     color_buffer->set(colors, num_points * 4);
@@ -45,7 +45,7 @@ int main() {
     wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-  
+
     wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
     resourceSet->set({cameraUniform});
 
@@ -69,7 +69,7 @@ int main() {
         mat4_v trans = shader.uniformBinding<mat4_s>(0, 0).member<0>().load();
 
         vec4_v transformed_pos = trans * s_pos;
-    
+
         shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
         shader.compile(vertex_spirv, s_col);
 
@@ -99,29 +99,29 @@ int main() {
        } */
 
     wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-  
+
     wg::Pipeline* pipeline = wing.
         createPipeline(vertAttrDesc,
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
     wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
-  
+
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
-  
+
     family->startRecording();
     family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
     family->endRecording();
 
     wg::SemaphoreChain* chain = wing.createSemaphoreChain();
-  
+
     while (win.isOpen()) {
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
-    
+
         cameraUniform->set(renderMatrix);
 
         family->submit({chain});
-    
+
         wing.present({chain});
 
         win.sleepMilliseconds(40);
@@ -140,7 +140,7 @@ int main() {
 
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);
-  
+
     wing.destroy(pipeline);
 
     wing.destroy(position_buffer);

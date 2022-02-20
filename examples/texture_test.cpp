@@ -1,7 +1,7 @@
 #include <Winval.hpp>
 
-#include <Wingine.hpp>
-#include <WgUtils.hpp>
+#include "../include/Wingine.hpp"
+#include "../include/WgUtils.hpp"
 
 #include <spurv.hpp>
 
@@ -9,10 +9,10 @@ int main() {
     const int width = 800, height = 800;
     Winval win(width, height);
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
-  
+
     const int num_points = 3;
     const int num_triangles = 1;
-  
+
     float positions[num_points * 4] = {
         -1.0f, -1.0f, 0.5f, 1.0f,
         1.0f, -1.0f, 0.5f, 1.0f,
@@ -38,7 +38,7 @@ int main() {
             }
         }
     }
-  
+
     wg::ResourceImage* tex_im = wing.createResourceImage(texture_width, texture_height);
 
     std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
@@ -58,19 +58,19 @@ int main() {
         image2D_v out_image = shader.uniformConstant<image2D_s>(0, 0).load();
 
         vec2_v coord = cast<vec2_s>(global_id) / vec2_s::cons(texture_width, texture_height);
-    
+
         out_image.store(global_id, vec4_s::cons(coord[0], 0.0f, coord[1], 1.0f));
 
         shader.compile(compute_spirv);
     }
-  
+
     wg::Shader* compute_shader = wing.createShader(wg::shaCompute, compute_spirv);
 
     wg::ComputePipeline* compute_pipeline = wing.createComputePipeline({computeSetLayout},
                                                                        {compute_shader});
 
     wg::SemaphoreChain* chain = wing.createSemaphoreChain();
-  
+
     wing.dispatchCompute(compute_pipeline,
                          {compute_set},
                          {chain}, texture_width, texture_height);
@@ -84,7 +84,7 @@ int main() {
     wg::VertexBuffer<float>* position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
     position_buffer->set(positions, num_points * 4);
-  
+
     wg::VertexBuffer<float>* tex_coord_buffer =
         wing.createVertexBuffer<float>(num_points * 2);
     tex_coord_buffer->set(tex_coords, num_points * 2);
@@ -94,10 +94,10 @@ int main() {
 
 
     std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
-  
+
     wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
     resourceSet->set({texture});
-  
+
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
                                             0, // Binding no.
@@ -113,7 +113,7 @@ int main() {
         VertexShader<vec4_s, vec2_s> shader;
         vec4_v s_pos = shader.input<0>();
         vec2_v s_coord = shader.input<1>();
-    
+
         shader.setBuiltin<BUILTIN_POSITION>(s_pos);
         shader.compile(vertex_spirv, s_coord);
     }
@@ -130,27 +130,27 @@ int main() {
         texture2D_v texture = shader.uniformConstant<texture2D_s>(0, 0).load();
 
         vec4_v color = texture[coord];
-    
+
         shader.compile(fragment_spirv, color);
     }
 
     wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-  
+
     wg::Pipeline* pipeline = wing.
         createPipeline(vertAttrDesc,
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
     wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
-    
+
     family->startRecording();
     family->recordDraw({position_buffer, tex_coord_buffer}, index_buffer, {resourceSet});
     family->endRecording();
-  
+
     while (win.isOpen()) {
 
         family->submit({chain});
-    
+
         wing.present({chain});
 
         win.sleepMilliseconds(40);
@@ -169,12 +169,12 @@ int main() {
     wing.destroy(compute_set);
     wing.destroy(compute_shader);
     wing.destroy(compute_pipeline);
-  
+
     wing.destroy(family);
 
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);
-  
+
     wing.destroy(pipeline);
 
     wing.destroy(position_buffer);

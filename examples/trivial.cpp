@@ -1,5 +1,5 @@
 #include <Winval.hpp>
-#include <Wingine.hpp>
+#include "../include/Wingine.hpp"
 
 int main() {
     const int width = 400;

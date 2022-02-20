@@ -1,7 +1,7 @@
 #include <Winval.hpp>
 
-#include <Wingine.hpp>
-#include <WgUtils.hpp>
+#include "../include/Wingine.hpp"
+#include "../include/WgUtils.hpp"
 
 #include <spurv.hpp>
 
@@ -9,12 +9,12 @@ int main() {
     const int width = 800, height = 800;
     Winval win(width, height);
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
-  
+
     win.setPointerVisible(false);
 
     const int num_points = 4;
     const int num_triangles = 2;
-  
+
     float positions[num_points * 4] = {
         -1.0f, -1.0f, 0.0f, 1.0f,
         1.0f, -1.0f, 0.0f, 1.0f,
@@ -49,7 +49,7 @@ int main() {
                                             0}, // Offset (bytes)
     };
 
-  
+
     float scale = 0.001f;
     float offx = -0.77568377f;
     float offy = 0.13646737f;
@@ -78,13 +78,13 @@ int main() {
 
     int mandelbrot_iterations = 1000;
     float max_rad = 4.f;
-  
+
     std::vector<uint32_t> fragment_spirv;
     {
         using namespace spurv;
 
         SShader<SShaderType::SHADER_FRAGMENT, vec2_s> shader;
-   
+
         vec2_v coord = shader.input<0>();
 
         local_v<vec2_s> z = shader.local<vec2_s>();
@@ -100,14 +100,14 @@ int main() {
             float_v b = zl[1];
 
             float_v r = a * a + b * b;
-      
+
             shader.ifThen(r > max_rad);
             {
                 num_its.store(i);
                 shader.breakLoop();
             }
             shader.endIf();
-      
+
             vec2_v new_z = vec2_s::cons(a * a - b * b, 2.f * a * b) + coord;
             z.store(new_z);
         }
@@ -120,10 +120,10 @@ int main() {
         float_v b = (sin(itnum * 0.352f) + 1.0f) / 2.0f;
 
         vec4_v black = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f);
-    
+
         vec4_v out_col = select(itnum < mandelbrot_iterations,
                                 vec4_s::cons(r, g, b, 1.0f), black);
-    
+
         shader.compile(fragment_spirv, out_col);
 
         // SUtils::binaryPrettyPrint(fragment_spirv);
@@ -144,12 +144,12 @@ int main() {
     family->startRecording();
     family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
     family->endRecording();
-  
+
     float f = 0.0;
     float inc = 0.05f;
 
     wg::SemaphoreChain* main_chain = wing.createSemaphoreChain();
-  
+
     while (win.isOpen()) {
         if(f > 1) {
             inc = -0.05f;
@@ -160,7 +160,7 @@ int main() {
         time_uniform->set(f);
 
         family->submit({main_chain});
-    
+
         wing.present({main_chain});
 
         win.sleepMilliseconds(16);
@@ -179,7 +179,7 @@ int main() {
 
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);
-  
+
     wing.destroy(pipeline);
 
     wing.destroy(position_buffer);

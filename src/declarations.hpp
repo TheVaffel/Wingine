@@ -28,7 +28,7 @@
 #define DEBUG
 
 namespace wg {
-  
+
     // For vertex buffers
     enum ComponentType
     {
@@ -37,7 +37,7 @@ namespace wg {
         tInt32,
         tInt64
     };
-  
+
     struct VertexAttribDesc {
         ComponentType component_type;
         uint32_t binding_num;
@@ -50,7 +50,7 @@ namespace wg {
     // Uniform template
     template<typename Type>
     class Uniform;
-  
+
     enum ResourceType {
         resUniform = (uint64_t)VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         resStorageBuffer = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -61,7 +61,7 @@ namespace wg {
     // These are shifted, because we want to combine them
     // with resource types as a bitmask
     /* enum ShaderStage {
-    // shaVertex = ((long long unsigned int)VK_SHADER_STAGE_VERTEX_BIT) << 32LL, 
+    // shaVertex = ((long long unsigned int)VK_SHADER_STAGE_VERTEX_BIT) << 32LL,
     // shaFragment = ((long long unsigned int)VK_SHADER_STAGE_FRAGMENT_BIT) << 32LL
     }; */
     // Also, turns out we can't really assume compilers support 64-bit
@@ -86,10 +86,10 @@ namespace wg {
     class Buffer;
     class SemaphoreChain;
     class ResourceImage;
-  
+
     template<typename tt>
     class VertexBuffer;
-  
+
     class IndexBuffer;
     class StorageBuffer;
 };

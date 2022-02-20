@@ -778,12 +778,11 @@ namespace wg {
         for(unsigned int i = 0; i < this->swapchain_images.size(); i++) {
             vk::Image sim = this->swapchain_images[i];
 
-            Framebuffer* framebuffer = new Framebuffer();;
+            Framebuffer* framebuffer = new Framebuffer();
 
             framebuffer->colorImage.image = sim;
             framebuffer->colorImage.width = this->window_width;
             framebuffer->colorImage.height = this->window_height;
-            vk::MemoryAllocateInfo mai;
 
             this->cons_image_view(framebuffer->colorImage,
                                   wImageViewColor,

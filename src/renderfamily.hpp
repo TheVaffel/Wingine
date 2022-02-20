@@ -20,7 +20,7 @@ namespace wg {
         int num_buffers;
         std::vector<Framebuffer*> framebuffers;
         RenderPassType render_pass_type;
-    
+
         RenderFamily(Wingine& wing,
                      const CompatibleRenderPassRegistry* renderPassRegistry,
                      const Pipeline* pipeline,
@@ -28,7 +28,7 @@ namespace wg {
                      int num_buffers = 0);
 
         void submit_command(const std::initializer_list<SemaphoreChain*>& wait_semaphores, int index);
-    
+
     public:
         void startRecording(std::vector<Framebuffer*> framebuffer = {});
 
@@ -37,7 +37,7 @@ namespace wg {
         void endRecording();
 
         void submit(const std::initializer_list<SemaphoreChain*>& wait_semaphores = {}, int index = -1);
-    
+
         friend class Wingine;
     };
 
@@ -46,7 +46,7 @@ namespace wg {
 
         ComputeFamily(Wingine& wing,
                       Pipeline* pipeline);
-    
+
     public:
 
         void startRecording();

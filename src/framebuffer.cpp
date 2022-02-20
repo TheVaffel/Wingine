@@ -63,8 +63,6 @@ namespace wg {
 
         vk::Device device = wing.getDevice();
 
-        vk::SemaphoreCreateInfo sci;
-
         this->framebuffer = device.createFramebuffer(finf);
     }
 

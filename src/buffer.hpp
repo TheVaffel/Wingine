@@ -6,19 +6,18 @@
 #include "WgUtils/declarations.hpp"
 
 namespace wg {
-  
-  
+
     class Buffer {
         Wingine* wing;
-    
+
         vk::Buffer buffer;
         vk::DeviceMemory memory;
 
         bool host_updatable;
-    
+
         vk::Buffer update_buffer;
         vk::DeviceMemory update_memory;
-    
+
     protected:
         Buffer(Wingine& wing,
                vk::BufferUsageFlags flags,
@@ -29,7 +28,7 @@ namespace wg {
 
         void* _mapMemory();
         void _unmapMemory();
-        
+
         template<typename Type>
         friend class Uniform;
         friend class StorageBuffer;
@@ -49,7 +48,7 @@ namespace wg {
         template<typename Type>
         friend class Uniform;
     };
-  
+
     template<typename Type>
     class VertexBuffer : public _VertexBuffer {
         VertexBuffer(Wingine& wing,
@@ -90,13 +89,13 @@ namespace wg {
         Wingine* wing;
         vk::DescriptorSetLayout layout;
 
-    
+
         ResourceSetLayout(Wingine& wing,
                           const std::vector<uint64_t>& ll);
 
     public:
         ResourceSetLayout();
-    
+
         friend class ResourceSet;
         friend class Wingine;
         friend class Pipeline;
@@ -104,7 +103,7 @@ namespace wg {
     };
 
     // Template declarations
-  
+
     template<typename Type>
     VertexBuffer<Type>::VertexBuffer(Wingine& wing,
                                      int num,

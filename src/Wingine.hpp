@@ -1,18 +1,16 @@
-#ifndef __WINGINE_HPP
-#define __WINGINE_HPP
+#pragma once
 
 #include <iostream>
 
 #include <vector>
 #include <map>
 
-#define DEBUG
-
 #include <Winval.hpp>
 
 #include "declarations.hpp"
 
 #include "./CompatibleRenderPassRegistry.hpp"
+#include "./VulkanInstanceManager.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
@@ -23,17 +21,12 @@
 #include "semaphore.hpp"
 #include "util.hpp"
 
-
 namespace wg {
 
     class Wingine {
 
-        vk::Instance vulkan_instance;
-        vk::DispatchLoaderDynamic dispatcher;
+        std::shared_ptr<internal::VulkanInstanceManager> vulkan_instance_manager;
 
-        vk::DebugReportCallbackEXT debug_callback;
-
-        vk::SurfaceKHR surface;
         vk::PhysicalDevice physical_device;
         vk::PhysicalDeviceMemoryProperties device_memory_props;
         vk::Device device;
@@ -80,7 +73,7 @@ namespace wg {
         void init_vulkan(int width, int height,
                          winval_type_0 arg0,
                          winval_type_1 arg1,
-                         const char* str);
+                         const std::string& application_name);
 
         void init_vulkan(int width, int height, const std::string& app_name);
 
@@ -254,5 +247,3 @@ namespace wg {
 
 
 };
-
-#endif // __WINGINE_HPP

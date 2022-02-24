@@ -4,7 +4,7 @@ project(Wingine)
 
 
 if (NOT WIN32)
-  add_definitions(-Wall -g -Wno-class-memaccess -Wno-init-list-lifetime -mavx -fPIC)
+  add_definitions(-Wall -g -Wno-class-memaccess -Wno-init-list-lifetime -mavx -fPIC -DDEBUG)
 endif()
 
 set(SPURV_ROOT "${CMAKE_HOME_DIRECTORY}/../spurv")
@@ -12,15 +12,30 @@ set(HCONLIB_ROOT "${CMAKE_HOME_DIRECTORY}/../HConLib")
 set(WINGINE_ROOT "${CMAKE_HOME_DIRECTORY}")
 set(WINGINE_SRC_DIR "${WINGINE_ROOT}/src")
 set(WINGINE_EXAMPLES_DIR "${WINGINE_ROOT}/examples")
-set(WINGINE_INCLUDE_DIR "${WINGINE_ROOT}/include")
 set(VULKAN_INCLUDE_DIR "$ENV{VULKAN_SDK}/include")
 set(GENERELLE_ROOT "${CMAKE_HOME_DIRECTORY}/../generelle")
 set(GENERELLE_INCLUDE_DIR "${GENERELLE_ROOT}/include")
 set(GENERELLE_LIB_DIR "${GENERELLE_ROOT}/lib")
+set(FLAWED_ROOT "${CMAKE_HOME_DIRECTORY}/../flawed")
+set(FLAWED_INCLUDE_DIR "${FLAWED_ROOT}/include")
+set(FLAWED_LIB_DIR "${FLAWED_ROOT}/lib")
 
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
-set(WINGINE_SOURCES buffer.cpp image.cpp renderfamily.cpp Wingine.cpp framebuffer.cpp pipeline.cpp resource.cpp util.cpp semaphore.cpp ${WGUTIL_SOURCES})
+set(WINGINE_SOURCES
+  buffer.cpp
+  image.cpp
+  renderfamily.cpp
+  Wingine.cpp
+  framebuffer.cpp
+  pipeline.cpp
+  resource.cpp
+  util.cpp
+  semaphore.cpp
+  CompatibleRenderPassRegistry.cpp
+  VulkanInstanceManager.cpp
+  log.cpp
+  ${WGUTIL_SOURCES})
 list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")
 
 if(WIN32)
@@ -29,7 +44,7 @@ if(WIN32)
   set(winval_libs Winval)
   set(VULKAN_LIB_NAME vulkan-1)
 else()
-  add_definitions(-std=c++2a -fconcepts -mavx)
+  add_definitions(-std=c++2a -mavx)
   set(lib_search_path "${HCONLIB_ROOT}/lib")
   set(x_libs X11)
   set(winval_libs Winval ${x_libs} dl)
@@ -37,11 +52,11 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-delete-non-virtual-dtor")
 endif()
 
-set(common_libs ${VULKAN_LIB_NAME} ${winval_libs} FlatAlg spurv)
+set(common_libs ${VULKAN_LIB_NAME} ${winval_libs} FlatAlg spurv flawed)
 set(all_libs ${common_libs} Wingine generelle)
 
-include_directories(${WINGINE_ROOT} ${HCONLIB_ROOT}/include
-	${SPURV_ROOT}/include ${VULKAN_INCLUDE_DIR}, ${GENERELLE_INCLUDE_DIR})
+include_directories(${HCONLIB_ROOT}/include
+	${SPURV_ROOT}/include ${VULKAN_INCLUDE_DIR} ${GENERELLE_INCLUDE_DIR} ${FLAWED_INCLUDE_DIR})
 
 
 if(WIN32)
@@ -51,7 +66,7 @@ endif()
 link_directories(${HCONLIB_ROOT}/lib)
 link_directories(${SPURV_ROOT}/lib)
 link_directories(${GENERELLE_LIB_DIR})
-include_directories(${WINGINE_INCLUDE_DIR})
+link_directories(${FLAWED_LIB_DIR})
 
 add_library(Wingine STATIC ${WINGINE_SOURCES})
 

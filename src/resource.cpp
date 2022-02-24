@@ -1,6 +1,7 @@
 #include "./resource.hpp"
-
 #include "./Wingine.hpp"
+
+#include "./log.hpp"
 
 namespace wg {
 

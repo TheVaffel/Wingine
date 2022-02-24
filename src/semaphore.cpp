@@ -1,6 +1,8 @@
 #include "./semaphore.hpp"
 #include "./Wingine.hpp"
 
+#include "./log.hpp"
+
 namespace wg {
 
     SemaphoreChain::SemaphoreChain(Wingine& wing) {

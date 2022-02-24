@@ -2,29 +2,13 @@
 
 #include <iostream>
 
+#include "./log.hpp"
+
 namespace wg {
 
     /*
      * Utility functions
      */
-
-    void _wlog_error(std::string str) {
-        std::cout << "[Wingine Error] " << str << std::endl;
-    }
-
-    void _wassert(bool test, std::string str) {
-        if(!test) {
-            _wlog_error(str);
-            exit(-1);
-        }
-    }
-
-    void _wassert_result(vk::Result res, std::string str) {
-        if( res != vk::Result::eSuccess ) {
-            _wlog_error(str);
-            exit(-1);
-        }
-    }
 
     uint32_t _get_memory_type_index(uint32_t type_bits,
                                     vk::MemoryPropertyFlags requirements_mask,

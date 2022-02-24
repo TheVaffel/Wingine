@@ -2,6 +2,8 @@
 
 #include "./Wingine.hpp"
 
+#include "./log.hpp"
+
 namespace wg {
     RenderFamily::RenderFamily(Wingine& wing,
                                const CompatibleRenderPassRegistry* renderPassRegistry,

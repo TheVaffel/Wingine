@@ -1,31 +1,6 @@
-
-#ifndef WG_DECLARATIONS_HPP
-#define WG_DECLARATIONS_HPP
-
-#include <Winval.hpp>
-
-#include <vulkan/vulkan.h>
-#ifdef WIN32
-
-#define VK_USE_PLATFORM_WIN32_KHR
-#include "vulkan/vulkan_win32.h"
-
-#include <algorithm>
-
-#undef min
-#undef max
-
-#else // WIN32
-#include <unistd.h>
-
-#define VK_USE_PLATFORM_XLIB_KHR
-#include "vulkan/vulkan_xlib.h"
-
-#endif // WIN32
+#pragma once
 
 #include <vulkan/vulkan.hpp>
-
-#define DEBUG
 
 namespace wg {
 
@@ -93,5 +68,3 @@ namespace wg {
     class IndexBuffer;
     class StorageBuffer;
 };
-
-#endif // WG_DECLARATIONS_HPP

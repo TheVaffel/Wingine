@@ -1,23 +1,8 @@
 #include "./Wingine.hpp"
+#include "./log.hpp"
 
 #include <exception>
 
-/*
- * Debug callback
- */
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL
-_debugCallbackFun(VkDebugReportFlagsEXT flags,
-                  VkDebugReportObjectTypeEXT objectType,
-                  uint64_t object,
-                  size_t location, int32_t messageCode,
-                  const char* pLayerPrefix, const char* pMessage,
-                  void* pUserData) {
-
-    std::cout << "[" << pLayerPrefix << "] Message: " << pMessage << std::endl;
-
-    return false;
-}
 
 /*
  * O boi here we go
@@ -348,122 +333,8 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     }
 
-    void Wingine::init_instance(int width, int height, const char* str) {
-        std::vector<const char*> instance_extension_names;
-        std::vector<const char*> instance_layer_names;
-
-        instance_extension_names.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-
-#ifdef WIN32
-        instance_extension_names.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#else // WIN32
-        instance_extension_names.push_back(VK_KHR_XLIB_SURFACE_EXTENSION_NAME);
-#endif // WIN32
-
-#ifdef DEBUG
-        instance_extension_names.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-        instance_extension_names.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-
-        instance_layer_names.push_back("VK_LAYER_LUNARG_standard_validation");
-
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_api_dump");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_device_simulation");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_monitor");
-        // instance_layer_names.push_back("VK_LAYER_RENDERDOC_Capture");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_api_dump");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_object_tracker");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_screenshot");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_standard_validation");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_starter_layer");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_parameter_validation");
-        // instance_layer_names.push_back("VK_LAYER_GOOGLE_unique_objects");
-        // instance_layer_names.push_back("VK_LAYER_LUNARG_vktrace");
-        instance_layer_names.push_back("VK_LAYER_KHRONOS_validation");
-        // instance_layer_names.push_back("VK_LAYER_GOOGLE_threading");
-#endif // DEBUG
-
-        uint32_t extension_count;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, nullptr);
-        std::vector<VkExtensionProperties> props(extension_count);
-        vkEnumerateInstanceExtensionProperties(nullptr, &extension_count, props.data() + 0);
-        /* for (unsigned int i = 0; i < extension_count; i++) {
-           std::cout << "Available extension: " << props[i].extensionName << std::endl;
-           }
-
-           for (unsigned int i = 0; i < instance_extension_names.size(); i++) {
-           std::cout << "Tried extension: " << instance_extension_names[i] << std::endl;
-           } */
-
-        uint32_t layer_count;
-        vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layer_count);
-        vkEnumerateInstanceLayerProperties(&layer_count, availableLayers.data());
-
-        /* for (VkLayerProperties& vv : availableLayers) {
-           std::cout << "Available layer: " << vv.layerName << std::endl;
-           }
-
-           for (unsigned int i = 0; i < instance_layer_names.size(); i++) {
-           std::cout << "Tried layer: " << instance_layer_names[i] << std::endl;
-           } */
-
-        vk::ApplicationInfo appInfo;
-        appInfo.setPApplicationName("Wingine").setApplicationVersion(1)
-            .setPEngineName("Wingine").setEngineVersion(1)
-            .setApiVersion(VK_API_VERSION_1_2);
-
-        vk::InstanceCreateInfo cInfo;
-        cInfo.setPApplicationInfo(&appInfo).setEnabledExtensionCount(instance_extension_names.size())
-            .setPpEnabledExtensionNames(instance_extension_names.data())
-            .setEnabledLayerCount(instance_layer_names.size())
-            .setPpEnabledLayerNames(instance_layer_names.size() ?
-                                    instance_layer_names.data() :
-                                    NULL);
-
-        this->vulkan_instance = vk::createInstance(cInfo);
-
-
-        vk::DynamicLoader dl;
-        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
-        this->dispatcher.init(vkGetInstanceProcAddr);
-        this->dispatcher.init(this->vulkan_instance);
-
-#ifdef DEBUG
-
-        vk::DebugReportCallbackCreateInfoEXT callbackInfo;
-        callbackInfo.setFlags(vk::DebugReportFlagBitsEXT::eError |
-                              vk::DebugReportFlagBitsEXT::eWarning |
-                              vk::DebugReportFlagBitsEXT::ePerformanceWarning)
-            .setPfnCallback(&_debugCallbackFun);
-
-        this->debug_callback = this->vulkan_instance
-            .createDebugReportCallbackEXT(callbackInfo, nullptr, this->dispatcher);
-
-#endif // DEBUG
-
-        this->window_width = width;
-        this->window_height = height;
-    }
-
-    void Wingine::init_surface(winval_type_0 arg0, winval_type_1 arg1) {
-#ifdef WIN32
-        vk::Win32SurfaceCreateInfoKHR info;
-        info.setHinstance(arg0).setHwnd(arg1);
-
-        this->surface = this->vulkan_instance
-            .createWin32SurfaceKHR(info, nullptr, this->dispatcher);
-#else // WIN32
-        vk::XlibSurfaceCreateInfoKHR info;
-        info.setWindow(arg0).setDpy(arg1);
-
-        this->surface = this->vulkan_instance
-            .createXlibSurfaceKHR(info, nullptr, this->dispatcher);
-#endif // WIN32
-    }
-
     void Wingine::init_device() {
-        std::vector<vk::PhysicalDevice> found_devices = this->vulkan_instance.enumeratePhysicalDevices();
+        std::vector<vk::PhysicalDevice> found_devices = this->vulkan_instance_manager->getInstance().enumeratePhysicalDevices();
 
         std::cout << "Number of devices: " << found_devices.size() << std::endl;
 
@@ -471,7 +342,7 @@ namespace wg {
 
         for(vk::PhysicalDevice dev : found_devices) {
             vk::StructureChain<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties> props =
-                dev.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties>(this->dispatcher);
+                dev.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties>();
 
             vk::PhysicalDeviceProperties2 props2 = props.get<vk::PhysicalDeviceProperties2>();
 
@@ -490,7 +361,7 @@ namespace wg {
                     this->graphics_queue_index = i;
                 }
 
-                vk::Bool32 supportsPresent = dev.getSurfaceSupportKHR(i, this->surface);
+                vk::Bool32 supportsPresent = dev.getSurfaceSupportKHR(i, this->vulkan_instance_manager->getSurface());
                 if(supportsPresent) {
                     this->present_queue_index = i;
                 }
@@ -568,9 +439,6 @@ namespace wg {
         this->physical_device.getProperties(&phprops);
 
         this->device = this->physical_device.createDevice(device_info);
-
-
-        this->dispatcher.init(this->device);
 
         this->graphics_queue =
             this->device.getQueue(this->graphics_queue_index, 0);
@@ -652,7 +520,7 @@ namespace wg {
 
     void Wingine::init_swapchain() {
         std::vector<vk::SurfaceFormatKHR> surfaceFormats =
-            this->physical_device.getSurfaceFormatsKHR(this->surface);
+            this->physical_device.getSurfaceFormatsKHR(this->vulkan_instance_manager->getSurface());
 
         vk::ColorSpaceKHR colorSpace = surfaceFormats[0].colorSpace;
 
@@ -668,7 +536,7 @@ namespace wg {
         }
 
         vk::SurfaceCapabilitiesKHR caps =
-            this->physical_device.getSurfaceCapabilitiesKHR(this->surface);
+            this->physical_device.getSurfaceCapabilitiesKHR(this->vulkan_instance_manager->getSurface());
 
         vk::Extent2D swapchainExtent;
 
@@ -707,7 +575,7 @@ namespace wg {
 
 
         std::vector<vk::PresentModeKHR> presentModes =
-            this->physical_device.getSurfacePresentModesKHR(this->surface);
+            this->physical_device.getSurfacePresentModesKHR(this->vulkan_instance_manager->getSurface());
 
         vk::PresentModeKHR swapchainPresentMode =
             vk::PresentModeKHR::eFifo;
@@ -736,7 +604,7 @@ namespace wg {
         }
 
         vk::SwapchainCreateInfoKHR sci;
-        sci.setSurface(this->surface)
+        sci.setSurface(this->vulkan_instance_manager->getSurface())
             .setMinImageCount(numSwaps)
             .setImageFormat(this->surface_format)
             .setImageExtent(swapchainExtent)
@@ -888,10 +756,13 @@ namespace wg {
     }
 
     void Wingine::init_vulkan(int width, int height,
-                              winval_type_0 arg0, winval_type_1 arg1, const char* str) {
-        this->init_instance(width, height, str);
+                              winval_type_0 arg0, winval_type_1 arg1, const std::string& application_name) {
 
-        this->init_surface(arg0, arg1);
+        this->window_width = width;
+        this->window_height = height;
+
+        this->vulkan_instance_manager =
+            std::make_shared<internal::VulkanInstanceManager>(arg0, arg1, application_name);
 
         this->init_device();
 
@@ -1196,21 +1067,21 @@ namespace wg {
     }
 
     void Wingine::destroySwapchainImage(Image& image) {
-        this->device.free(image.memory, nullptr, this->dispatcher);
-        this->device.destroy(image.view, nullptr, this->dispatcher);
+        this->device.free(image.memory, nullptr);
+        this->device.destroy(image.view, nullptr);
     }
 
     void Wingine::destroySwapchainFramebuffer(Framebuffer* framebuffer) {
         this->destroySwapchainImage(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
 
-        this->device.destroy(framebuffer->framebuffer, nullptr, this->dispatcher);
+        this->device.destroy(framebuffer->framebuffer, nullptr);
     }
 
     void Wingine::destroy(ResourceImage* resourceImage) {
-        this->device.free(resourceImage->memory, nullptr, this->dispatcher);
-        this->device.destroy(resourceImage->view, nullptr, this->dispatcher);
-        this->device.destroy(resourceImage->image, nullptr, this->dispatcher);
+        this->device.free(resourceImage->memory, nullptr);
+        this->device.destroy(resourceImage->view, nullptr);
+        this->device.destroy(resourceImage->image, nullptr);
 
         delete resourceImage->image_info;
         delete resourceImage;
@@ -1221,10 +1092,10 @@ namespace wg {
     }
 
     void Wingine::destroy(ComputePipeline* compute_pipeline) {
-        this->device.destroy(compute_pipeline->layout, nullptr, this->dispatcher);
-        this->device.destroy(compute_pipeline->pipeline, nullptr, this->dispatcher);
+        this->device.destroy(compute_pipeline->layout, nullptr);
+        this->device.destroy(compute_pipeline->pipeline, nullptr);
 
-        this->device.destroy(compute_pipeline->command.fence, nullptr, this->dispatcher);
+        this->device.destroy(compute_pipeline->command.fence, nullptr);
         this->device.freeCommandBuffers(this->graphics_command_pool,
                                         1, &compute_pipeline->command.buffer);
 
@@ -1237,13 +1108,13 @@ namespace wg {
         for(int i = 0; i < family->num_buffers; i++) {
             _wassert_result(this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX),
                             "wait for command finish");
-            this->device.destroy(family->commands[i].fence, nullptr, this->dispatcher);
+            this->device.destroy(family->commands[i].fence, nullptr);
 
             this->device.freeCommandBuffers(this->graphics_command_pool,
                                             1, &family->commands[i].buffer);
 
             if(family->render_passes[i] != this->compatibleRenderPassRegistry->getRenderPass(family->render_pass_type)) {
-                this->device.destroy(family->render_passes[i], nullptr, this->dispatcher);
+                this->device.destroy(family->render_passes[i], nullptr);
             }
         }
 
@@ -1251,18 +1122,18 @@ namespace wg {
     }
 
     void Wingine::destroy(Shader* shader) {
-        this->device.destroy(shader->shader_info.module, nullptr, this->dispatcher);
+        this->device.destroy(shader->shader_info.module, nullptr);
         delete shader;
     }
 
     void Wingine::destroy(Texture* texture) {
         delete texture->image_info;
 
-        this->device.destroy(texture->sampler, nullptr, this->dispatcher);
+        this->device.destroy(texture->sampler, nullptr);
         this->destroy(*(Image*)texture);
 
-        this->device.destroy(texture->staging_image, nullptr, this->dispatcher);
-        this->device.free(texture->staging_memory, nullptr, this->dispatcher);
+        this->device.destroy(texture->staging_image, nullptr);
+        this->device.free(texture->staging_memory, nullptr);
         delete texture;
     }
 
@@ -1273,40 +1144,40 @@ namespace wg {
                         "reset fence in destroying semaphore chain");
 
         semaphore_chain->ensure_finished(this, this->image_acquired_fence);
-        this->device.destroy(semaphore_chain->semaphore, nullptr, this->dispatcher);
+        this->device.destroy(semaphore_chain->semaphore, nullptr);
 
         delete semaphore_chain;
     }
 
     void Wingine::destroy(Pipeline* pipeline) {
-        this->device.destroy(pipeline->layout, nullptr, this->dispatcher);
-        this->device.destroy(pipeline->pipeline, nullptr, this->dispatcher);
+        this->device.destroy(pipeline->layout, nullptr);
+        this->device.destroy(pipeline->pipeline, nullptr);
         delete pipeline;
     }
 
     void Wingine::destroy(Buffer* buffer) {
-        this->device.destroy(buffer->buffer, nullptr, this->dispatcher);
-        this->device.free(buffer->memory, nullptr, this->dispatcher);
+        this->device.destroy(buffer->buffer, nullptr);
+        this->device.free(buffer->memory, nullptr);
 
         if( !buffer->host_updatable ) {
-            this->device.destroy(buffer->update_buffer, nullptr, this->dispatcher);
-            this->device.free(buffer->update_memory, nullptr, this->dispatcher);
+            this->device.destroy(buffer->update_buffer, nullptr);
+            this->device.free(buffer->update_memory, nullptr);
         }
 
         delete buffer;
     }
 
     void Wingine::destroy(Image& image) {
-        this->device.destroy(image.image, nullptr, this->dispatcher);
-        this->device.free(image.memory, nullptr, this->dispatcher);
-        this->device.destroy(image.view, nullptr, this->dispatcher);
+        this->device.destroy(image.image, nullptr);
+        this->device.free(image.memory, nullptr);
+        this->device.destroy(image.view, nullptr);
     }
 
     void Wingine::destroy(Framebuffer* framebuffer) {
         this->destroy(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
 
-        this->device.destroy(framebuffer->framebuffer, nullptr, this->dispatcher);
+        this->device.destroy(framebuffer->framebuffer, nullptr);
 
         delete framebuffer;
     }
@@ -1321,8 +1192,8 @@ namespace wg {
 
         this->compatibleRenderPassRegistry.reset();
 
-        this->device.destroy(this->descriptor_pool, nullptr, this->dispatcher);
-        this->device.destroy(this->pipeline_cache, nullptr, this->dispatcher);
+        this->device.destroy(this->descriptor_pool, nullptr);
+        this->device.destroy(this->pipeline_cache, nullptr);
 
         for(Framebuffer* fb : this->framebuffers) {
             this->destroySwapchainFramebuffer(fb);
@@ -1335,44 +1206,39 @@ namespace wg {
                                         1, &this->present_command.buffer);
 
 
-        this->device.destroyCommandPool(this->graphics_command_pool, nullptr, this->dispatcher);
+        this->device.destroyCommandPool(this->graphics_command_pool, nullptr);
 
-        this->device.destroyCommandPool(this->present_command_pool, nullptr, this->dispatcher);
+        this->device.destroyCommandPool(this->present_command_pool, nullptr);
         _wassert_result(this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
                         "wait for present command finish");
-        this->device.destroyFence(this->present_command.fence, nullptr, this->dispatcher);
+        this->device.destroyFence(this->present_command.fence, nullptr);
 
 
         if(this->compute_queue_index >= 0) {
             this->device.freeCommandBuffers(this->compute_command_pool,
                                             1, &this->compute_command.buffer);
 
-            this->device.destroyCommandPool(this->compute_command_pool, nullptr, this->dispatcher);
+            this->device.destroyCommandPool(this->compute_command_pool, nullptr);
             _wassert_result(this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX),
                             "wait for compute command finish");
-            this->device.destroyFence(this->compute_command.fence, nullptr, this->dispatcher);
+            this->device.destroyFence(this->compute_command.fence, nullptr);
         }
 
-        this->device.destroyFence(this->image_acquired_fence, nullptr, this->dispatcher);
-        this->device.destroy(this->image_acquire_semaphore, nullptr, this->dispatcher);
-        this->device.destroy(this->finished_drawing_semaphore, nullptr, this->dispatcher);
+        this->device.destroyFence(this->image_acquired_fence, nullptr);
+        this->device.destroy(this->image_acquire_semaphore, nullptr);
+        this->device.destroy(this->finished_drawing_semaphore, nullptr);
 
         _wassert_result(this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX),
                         "wait for general purpose command finish");
-        this->device.destroy(this->general_purpose_command.fence, nullptr, this->dispatcher);
+        this->device.destroy(this->general_purpose_command.fence, nullptr);
 
-        this->device.destroy(this->swapchain, nullptr, this->dispatcher);
-
-        this->vulkan_instance.destroy(this->surface, nullptr, this->dispatcher);
+        this->device.destroy(this->swapchain, nullptr);
 
         for (auto it : this->resourceSetLayoutMap) {
-            this->device.destroy(it.second.layout, nullptr, this->dispatcher);
+            this->device.destroy(it.second.layout, nullptr);
         }
 
-        this->device.destroy(nullptr, this->dispatcher);
+        this->device.destroy(nullptr);
 
-        this->vulkan_instance.destroyDebugReportCallbackEXT(this->debug_callback,
-                                                            nullptr, this->dispatcher);
-        this->vulkan_instance.destroy(nullptr, this->dispatcher);
     }
 };

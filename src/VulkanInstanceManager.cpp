@@ -140,8 +140,6 @@ namespace wg::internal {
 
 #ifdef DEBUG
 
-        std::cout << "Doing debug stuff" << std::endl;
-
         vk::DebugReportCallbackCreateInfoEXT callbackInfo;
         callbackInfo.setFlags(vk::DebugReportFlagBitsEXT::eError |
                               vk::DebugReportFlagBitsEXT::eWarning |
@@ -178,14 +176,13 @@ namespace wg::internal {
 
     VulkanInstanceManager::~VulkanInstanceManager() {
 
-        this->instance.destroy(this->surface, nullptr, this->dispatcher);
+        this->instance.destroy(this->surface);
 
 #ifdef DEBUG
-        this->instance.destroyDebugReportCallbackEXT(this->debug_callback,
-                                                     nullptr, this->dispatcher);
+        this->instance.destroyDebugReportCallbackEXT(this->debug_callback, nullptr, this->dispatcher);
 #endif // DEBUG
 
-        this->instance.destroy(nullptr);
+        this->instance.destroy();
     }
 
 };

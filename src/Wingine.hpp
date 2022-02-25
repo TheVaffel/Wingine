@@ -11,6 +11,7 @@
 
 #include "./CompatibleRenderPassRegistry.hpp"
 #include "./VulkanInstanceManager.hpp"
+#include "./DeviceManager.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
@@ -27,9 +28,12 @@ namespace wg {
 
         std::shared_ptr<internal::VulkanInstanceManager> vulkan_instance_manager;
 
-        vk::PhysicalDevice physical_device;
-        vk::PhysicalDeviceMemoryProperties device_memory_props;
+        std::shared_ptr<internal::DeviceManager> device_manager;
+
+        // This one will be used a lot (at least currently),
+        // so will cache from device_manager, if for no other reason to shorten code
         vk::Device device;
+
 
         vk::Format surface_format;
         vk::SwapchainKHR swapchain;
@@ -244,6 +248,4 @@ namespace wg {
         delete uniform->buffer_info;
         delete uniform;
     }
-
-
 };

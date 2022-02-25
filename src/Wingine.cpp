@@ -301,8 +301,6 @@ namespace wg {
         this->compatibleRenderPassRegistry->registerRenderPassType(type, this->create_render_pass(type, false));
     }
 
-
-
     void Wingine::present(const std::initializer_list<SemaphoreChain*>& semaphores) {
 
 #ifdef DEBUG
@@ -333,113 +331,7 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     }
 
-    void Wingine::init_device() {
-        std::vector<vk::PhysicalDevice> found_devices = this->vulkan_instance_manager->getInstance().enumeratePhysicalDevices();
-
-        std::cout << "Number of devices: " << found_devices.size() << std::endl;
-
-        bool found = false;
-
-        for(vk::PhysicalDevice dev : found_devices) {
-            vk::StructureChain<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties> props =
-                dev.getProperties2<vk::PhysicalDeviceProperties2, vk::PhysicalDeviceVulkan12Properties>();
-
-            vk::PhysicalDeviceProperties2 props2 = props.get<vk::PhysicalDeviceProperties2>();
-
-            std::cout << "Device name: " << props2.properties.deviceName << std::endl;
-
-            this->graphics_queue_index = -1;
-            this->present_queue_index = -1;
-            this->compute_queue_index = -1;
-
-            std::vector<vk::QueueFamilyProperties> qprops = dev.getQueueFamilyProperties();
-            for(unsigned int i = 0; i <  qprops.size(); i++) {
-
-                vk::Bool32 supportsGraphics =
-                    (qprops[i].queueFlags & vk::QueueFlagBits::eGraphics) != vk::QueueFlagBits {};
-                if(supportsGraphics) {
-                    this->graphics_queue_index = i;
-                }
-
-                vk::Bool32 supportsPresent = dev.getSurfaceSupportKHR(i, this->vulkan_instance_manager->getSurface());
-                if(supportsPresent) {
-                    this->present_queue_index = i;
-                }
-
-                bool supportsCompute =
-                    (qprops[i].queueFlags & vk::QueueFlagBits::eCompute) != vk::QueueFlagBits {};
-                if(supportsCompute) {
-                    this->compute_queue_index = i;
-                }
-            }
-
-            if(this->graphics_queue_index != -1 &&
-               this->present_queue_index != -1) {
-
-                if(this->compute_queue_index == -1) {
-                    _wlog_error("Chosen graphics device does not support compute kernels");
-                }
-
-                this->physical_device = dev;
-                this->device_memory_props = dev.getMemoryProperties();
-
-                found = true;
-                break;
-            }
-        }
-
-        if(!found) {
-            _wlog_error("Could not find device supporting both presenting and graphics");
-            std::exit(-1);
-        }
-
-
-        std::vector<const char*> device_extension_names;
-        device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
-        std::vector<vk::DeviceQueueCreateInfo> c_infos;
-        c_infos.reserve(3);
-
-        vk::DeviceQueueCreateInfo c_info;
-        float queue_priorities[1] = {1.0f};
-        c_info.setQueueCount(1).setPQueuePriorities(queue_priorities)
-            .setQueueFamilyIndex(this->present_queue_index);
-        c_infos.push_back(c_info);
-
-        if (this->present_queue_index != this->graphics_queue_index) {
-            c_info.setQueueFamilyIndex(this->graphics_queue_index);
-            c_infos.push_back(c_info);
-        }
-
-        if (this->compute_queue_index >= 0 &&
-            (this->compute_queue_index != this->present_queue_index &&
-             this->compute_queue_index != this->graphics_queue_index)) {
-            c_info.setQueueFamilyIndex(this->compute_queue_index);
-            c_infos.push_back(c_info);
-        }
-
-        vk::PhysicalDeviceFeatures feats = {};
-        feats.setShaderClipDistance(VK_TRUE)
-            .setFillModeNonSolid(VK_TRUE);
-
-        vk::PhysicalDeviceVulkan12Features feats12;
-        feats12.setTimelineSemaphore(VK_TRUE);
-
-        vk::DeviceCreateInfo device_info;
-        device_info.setQueueCreateInfoCount(c_infos.size())
-            .setPQueueCreateInfos(c_infos.data())
-            .setEnabledExtensionCount(device_extension_names.size())
-            .setPpEnabledExtensionNames(device_extension_names.data())
-            .setEnabledLayerCount(0)
-            .setPpEnabledLayerNames(nullptr)
-            .setPEnabledFeatures(&feats)
-            .setPNext(&feats12); // The documentation says this is okay
-
-        vk::PhysicalDeviceProperties phprops;
-        this->physical_device.getProperties(&phprops);
-
-        this->device = this->physical_device.createDevice(device_info);
-
+    void Wingine::init_queues() {
         this->graphics_queue =
             this->device.getQueue(this->graphics_queue_index, 0);
 
@@ -454,7 +346,7 @@ namespace wg {
         if(this->compute_queue_index >= 0) {
             this->compute_queue =
                 this->device.getQueue(this->compute_queue_index, 0);
-        }
+                }
     }
 
     void Wingine::init_command_buffers() {
@@ -520,7 +412,8 @@ namespace wg {
 
     void Wingine::init_swapchain() {
         std::vector<vk::SurfaceFormatKHR> surfaceFormats =
-            this->physical_device.getSurfaceFormatsKHR(this->vulkan_instance_manager->getSurface());
+            this->device_manager->getPhysicalDevice()
+            .getSurfaceFormatsKHR(this->vulkan_instance_manager->getSurface());
 
         vk::ColorSpaceKHR colorSpace = surfaceFormats[0].colorSpace;
 
@@ -536,7 +429,8 @@ namespace wg {
         }
 
         vk::SurfaceCapabilitiesKHR caps =
-            this->physical_device.getSurfaceCapabilitiesKHR(this->vulkan_instance_manager->getSurface());
+            this->device_manager->getPhysicalDevice()
+            .getSurfaceCapabilitiesKHR(this->vulkan_instance_manager->getSurface());
 
         vk::Extent2D swapchainExtent;
 
@@ -575,7 +469,8 @@ namespace wg {
 
 
         std::vector<vk::PresentModeKHR> presentModes =
-            this->physical_device.getSurfacePresentModesKHR(this->vulkan_instance_manager->getSurface());
+            this->device_manager->getPhysicalDevice()
+            .getSurfacePresentModesKHR(this->vulkan_instance_manager->getSurface());
 
         vk::PresentModeKHR swapchainPresentMode =
             vk::PresentModeKHR::eFifo;
@@ -764,7 +659,12 @@ namespace wg {
         this->vulkan_instance_manager =
             std::make_shared<internal::VulkanInstanceManager>(arg0, arg1, application_name);
 
-        this->init_device();
+        this->device_manager =
+            std::make_shared<internal::DeviceManager>(this->vulkan_instance_manager);
+
+        this->device = this->device_manager->getDevice();
+
+        this->init_queues();
 
         this->compatibleRenderPassRegistry = std::make_shared<CompatibleRenderPassRegistry>(this->device);
 
@@ -818,7 +718,7 @@ namespace wg {
         mai.allocationSize = mr.size;
         mai.memoryTypeIndex = _get_memory_type_index(mr.memoryTypeBits,
                                                      memProps,
-                                                     this->device_memory_props);
+                                                     this->device_manager->getDeviceMemoryProperties());
         image.memory = this->device.allocateMemory(mai);
         this->device.bindImageMemory(image.image, image.memory, 0); // 0 offset from memory start
     }
@@ -1238,7 +1138,6 @@ namespace wg {
             this->device.destroy(it.second.layout, nullptr);
         }
 
-        this->device.destroy(nullptr);
-
+        // this->device.destroy(nullptr);
     }
 };

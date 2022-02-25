@@ -34,13 +34,13 @@ namespace wg {
             mai.setMemoryTypeIndex(_get_memory_type_index(memReqs.memoryTypeBits,
                                                           vk::MemoryPropertyFlagBits::eHostCoherent |
                                                           vk::MemoryPropertyFlagBits::eHostVisible,
-                                                          wing.device_memory_props));
+                                                          wing.device_manager->getDeviceMemoryProperties()));
 
             this->memory = device.allocateMemory(mai);
         } else {
             mai.setMemoryTypeIndex(_get_memory_type_index(memReqs.memoryTypeBits,
                                                           vk::MemoryPropertyFlagBits::eDeviceLocal,
-                                                          wing.device_memory_props));
+                                                          wing.device_manager->getDeviceMemoryProperties()));
 
             this->memory = device.allocateMemory(mai);
 
@@ -53,7 +53,7 @@ namespace wg {
             mai.setMemoryTypeIndex(_get_memory_type_index(memReqs.memoryTypeBits,
                                                           vk::MemoryPropertyFlagBits::eHostCoherent |
                                                           vk::MemoryPropertyFlagBits::eHostVisible,
-                                                          wing.device_memory_props));
+                                                          wing.device_manager->getDeviceMemoryProperties()));
             this->update_memory = device.allocateMemory(mai);
 
             device.bindBufferMemory(this->update_buffer, this->update_memory, 0);

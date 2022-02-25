@@ -15,7 +15,7 @@ namespace wg {
 
     uint32_t _get_memory_type_index(uint32_t type_bits,
                                     vk::MemoryPropertyFlags requirements_mask,
-                                    vk::PhysicalDeviceMemoryProperties& mem_props);
+                                    const vk::PhysicalDeviceMemoryProperties& mem_props);
 
     vk::Format _get_format(wg::ComponentType type, int num_components);
 

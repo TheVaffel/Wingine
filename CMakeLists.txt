@@ -36,6 +36,7 @@ set(WINGINE_SOURCES
   VulkanInstanceManager.cpp
   DeviceManager.cpp
   QueueManager.cpp
+  CommandManager.cpp
   log.cpp
   queueUtils.cpp
   deviceEvaluation.cpp

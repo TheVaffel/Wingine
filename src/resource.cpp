@@ -92,24 +92,24 @@ namespace wg {
                               vk::MemoryPropertyFlagBits::eDeviceLocal);
 
         vk::CommandBufferBeginInfo bg;
-        _wassert_result(wing.device.waitForFences(1, &wing.general_purpose_command.fence,
+        _wassert_result(wing.device.waitForFences(1, &wing.getGeneralCommand().fence,
                                                   true, (uint64_t)1e9),
                         "wait for general purpose command in ResourceImage construction to finish");
 
-        _wassert_result(wing.device.resetFences(1, &wing.general_purpose_command.fence),
+        _wassert_result(wing.device.resetFences(1, &wing.getGeneralCommand().fence),
                         "reset fence in producing resource image");
 
-        wing.general_purpose_command.buffer.begin(bg);
+        wing.getGeneralCommand().buffer.begin(bg);
 
-        wing.cmd_set_layout(wing.general_purpose_command.buffer, this->image,
+        wing.cmd_set_layout(wing.getGeneralCommand().buffer, this->image,
                             vk::ImageAspectFlagBits::eColor, this->current_layout, vk::ImageLayout::eGeneral);
-        wing.general_purpose_command.buffer.end();
+        wing.getGeneralCommand().buffer.end();
 
         vk::SubmitInfo si;
         si.setCommandBufferCount(1)
-            .setPCommandBuffers(&wing.general_purpose_command.buffer);
+            .setPCommandBuffers(&wing.getGeneralCommand().buffer);
 
-        _wassert_result(wing.getGraphicsQueue().submit(1, &si, wing.general_purpose_command.fence),
+        _wassert_result(wing.getGraphicsQueue().submit(1, &si, wing.getGeneralCommand().fence),
                         "command submission in ResourceImage construction");
 
         this->current_layout = vk::ImageLayout::eGeneral;
@@ -117,7 +117,7 @@ namespace wg {
         this->image_info->setImageView(this->view)
             .setImageLayout(this->current_layout);
 
-        _wassert_result(wing.device.waitForFences(1, &wing.general_purpose_command.fence, true, (uint64_t)1e9),
+        _wassert_result(wing.device.waitForFences(1, &wing.getGeneralCommand().fence, true, (uint64_t)1e9),
                         "wait for operation finish in ResourceImage construction");
 
     }

@@ -39,7 +39,7 @@ namespace wg {
             .setLevel(vk::CommandBufferLevel::ePrimary)
             .setCommandBufferCount(1); // Premature optimization... etc.
 
-        this->commands = std::vector<Command>(this->num_buffers);
+        this->commands = std::vector<internal::Command>(this->num_buffers);
         for(int i = 0; i < this->num_buffers; i++) {
 
             commands[i].buffer = device.allocateCommandBuffers(cbi)[0];

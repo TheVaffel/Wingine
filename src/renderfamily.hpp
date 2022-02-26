@@ -13,7 +13,7 @@ namespace wg {
     class RenderFamily {
         Wingine* wing;
 
-        std::vector<Command> commands;
+        std::vector<internal::Command> commands;
         const Pipeline* pipeline;
         std::vector<vk::RenderPass> render_passes;
         bool clears;

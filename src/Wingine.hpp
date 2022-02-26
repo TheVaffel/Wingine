@@ -37,6 +37,7 @@ namespace wg {
 
         std::shared_ptr<internal::QueueManager> queue_manager;
 
+        std::shared_ptr<internal::CommandManager> command_manager;
 
         vk::Format surface_format;
         vk::SwapchainKHR swapchain;
@@ -54,14 +55,14 @@ namespace wg {
 
         vk::PipelineCache pipeline_cache;
 
-        vk::CommandPool present_command_pool,
+        /* vk::CommandPool present_command_pool,
             graphics_command_pool,
             compute_command_pool;
 
-        Command present_command,
+        internal::Command present_command,
             compute_command;
 
-        Command general_purpose_command;
+            internal::Command general_purpose_command; */
 
         uint32_t window_width, window_height;
 
@@ -76,7 +77,6 @@ namespace wg {
 
         void init_vulkan(int width, int height, const std::string& app_name);
 
-        void init_command_buffers();
         void init_swapchain();
         void init_generic_render_pass();
         void init_framebuffers();
@@ -104,7 +104,7 @@ namespace wg {
                         vk::ImageAspectFlagBits flag,
                         const std::initializer_list<SemaphoreChain*>& wait_semaphores);
 
-        void cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
+        void cmd_set_layout(const vk::CommandBuffer& commandBuffer, vk::Image image,
                             vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
                             vk::ImageLayout finalLayout);
 
@@ -117,7 +117,7 @@ namespace wg {
         vk::Queue getGraphicsQueue();
         vk::Queue getPresentQueue();
         vk::Device getDevice();
-        Command getCommand();
+        const internal::Command& getGeneralCommand();
         vk::DescriptorPool getDescriptorPool();
         vk::CommandPool getPresentCommandPool();
         vk::CommandPool getGraphicsCommandPool();

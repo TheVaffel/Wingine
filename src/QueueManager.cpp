@@ -63,8 +63,6 @@ namespace wg::internal {
 
     QueueManager::~QueueManager() { }
 
-
-
     const int QueueManager::getGraphicsQueueIndex() const {
         return this->queue_indices.graphics;
     }

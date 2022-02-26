@@ -5,14 +5,10 @@
 #include "declarations.hpp"
 #include "buffer.hpp"
 
+#include "./CommandManager.hpp"
 #include "./CompatibleRenderPassRegistry.hpp"
 
 namespace wg {
-
-    struct Command {
-        vk::CommandBuffer buffer;
-        vk::Fence fence;
-    };
 
     class Shader {
         vk::PipelineShaderStageCreateInfo shader_info;
@@ -67,7 +63,7 @@ namespace wg {
         vk::Pipeline pipeline;
         vk::PipelineLayout layout;
 
-        Command command;
+        internal::Command command;
 
         ComputePipeline(Wingine& wing,
                         const std::vector<ResourceSetLayout>& resourceSetLayout,

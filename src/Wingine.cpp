@@ -18,7 +18,7 @@ namespace wg {
         return this->window_height;
     }
 
-    void Wingine::cmd_set_layout(vk::CommandBuffer& commandBuffer, vk::Image image,
+    void Wingine::cmd_set_layout(const vk::CommandBuffer& commandBuffer, vk::Image image,
                                  vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
                                  vk::ImageLayout finalLayout) {
         vk::ImageMemoryBarrier image_memory_barrier;
@@ -99,20 +99,24 @@ namespace wg {
                              vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
                              vk::ImageAspectFlagBits aspect,
                              const std::initializer_list<SemaphoreChain*>& semaphores) {
+
+        const vk::CommandBuffer& command_buffer = this->command_manager->getGeneralCommand().buffer;
+        const vk::Fence& command_fence = this->command_manager->getGeneralCommand().fence;
+
         vk::CommandBufferBeginInfo bg;
-        _wassert_result(this->device.waitForFences(1, &general_purpose_command.fence,
+        _wassert_result(this->device.waitForFences(1, &command_fence,
                                                    true, (uint64_t)1e9),
                         "wait for general purpose command in copy_image to finish");
 
-        vk::Result res = this->device.resetFences(1, &general_purpose_command.fence);
+        vk::Result res = this->device.resetFences(1, &command_fence);
         _wassert_result(res, "reset fence in copy_image");
 
-        general_purpose_command.buffer.begin(bg);
+        command_buffer.begin(bg);
 
-        cmd_set_layout(general_purpose_command.buffer, src,
+        cmd_set_layout(command_buffer, src,
                        aspect, srcCurrentLayout, vk::ImageLayout::eTransferSrcOptimal);
 
-        cmd_set_layout(general_purpose_command.buffer, dst,
+        cmd_set_layout(command_buffer, dst,
                        aspect, dstCurrentLayout, vk::ImageLayout::eTransferDstOptimal);
 
         if (aspect == vk::ImageAspectFlagBits::eDepth) {
@@ -143,9 +147,9 @@ namespace wg {
                 .setDstOffset(offs)
                 .setExtent(ext);
 
-            general_purpose_command.buffer.copyImage(src, vk::ImageLayout::eTransferSrcOptimal,
-                                                     dst, vk::ImageLayout::eTransferDstOptimal,
-                                                     1, &copy);
+            command_buffer.copyImage(src, vk::ImageLayout::eTransferSrcOptimal,
+                                     dst, vk::ImageLayout::eTransferDstOptimal,
+                                     1, &copy);
         } else {
             vk::ImageBlit blit;
             blit.srcSubresource.setAspectMask(aspect)
@@ -164,19 +168,19 @@ namespace wg {
                                  aspect == vk::ImageAspectFlagBits::eStencil) ?
                 vk::Filter::eNearest : vk::Filter::eLinear;
 
-            general_purpose_command.buffer.blitImage(src, vk::ImageLayout::eTransferSrcOptimal,
+            command_buffer.blitImage(src, vk::ImageLayout::eTransferSrcOptimal,
                                                      dst, vk::ImageLayout::eTransferDstOptimal,
                                                      1, &blit, filter);
         }
 
         // Perhaps not necessary, but very convenient
-        cmd_set_layout(general_purpose_command.buffer, src,
+        cmd_set_layout(command_buffer, src,
                        aspect, vk::ImageLayout::eTransferSrcOptimal, srcFinalLayout);
 
-        cmd_set_layout(general_purpose_command.buffer, dst,
+        cmd_set_layout(command_buffer, dst,
                        aspect, vk::ImageLayout::eTransferDstOptimal, dstFinalLayout);
 
-        general_purpose_command.buffer.end();
+        command_buffer.end();
 
 
         std::vector<vk::Semaphore> wait_sems(semaphores.size());
@@ -200,7 +204,7 @@ namespace wg {
 
         vk::SubmitInfo si;
         si.setCommandBufferCount(1)
-            .setPCommandBuffers(&general_purpose_command.buffer)
+            .setPCommandBuffers(&command_buffer)
             .setPWaitDstStageMask(flags.data())
             .setWaitSemaphoreCount(num_wait_sems)
             .setPWaitSemaphores(wait_sems.data())
@@ -211,13 +215,13 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
 
-        _wassert_result(this->queue_manager->getGraphicsQueue().submit(1, &si, general_purpose_command.fence),
+        _wassert_result(this->queue_manager->getGraphicsQueue().submit(1, &si, command_fence),
                         "command submission to graphics queue in copy_image");
 
 
         if (semaphores.size() == 0) {
             // If we don't wait for it to finish, we cannot guarantee that it is actually ready for use
-            _wassert_result(this->device.waitForFences(1, &general_purpose_command.fence, true, (uint64_t)1e9),
+            _wassert_result(this->device.waitForFences(1, &command_fence, true, (uint64_t)1e9),
                             "wait for general purpose command in end of copy_image");
         }
 
@@ -331,67 +335,20 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     }
 
-    void Wingine::init_command_buffers() {
-        vk::CommandPoolCreateInfo cpi;
-        cpi.setQueueFamilyIndex(this->queue_manager->getGraphicsQueueIndex()).
-            setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+    void Wingine::init_swapchain() {
 
-        this->graphics_command_pool = this->device.createCommandPool(cpi);
-
-        cpi.setQueueFamilyIndex(this->queue_manager->getPresentQueueIndex());
-        this->present_command_pool = this->device.createCommandPool(cpi);
-
-        vk::CommandBufferAllocateInfo cbi;
-        cbi.setCommandPool(this->present_command_pool)
-            .setLevel(vk::CommandBufferLevel::ePrimary)
-            .setCommandBufferCount(1); // Premature optimization... etc.
-
-        this->present_command.buffer = this->device.allocateCommandBuffers(cbi)[0];
-
-        this->present_command.buffer
-            .reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-
-        vk::FenceCreateInfo fci;
-        fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
-
-        this->present_command.fence =
-            this->device.createFence(fci);
-
-
-        this->general_purpose_command.fence =
-            this->device.createFence(fci);
-
-        cbi.setCommandPool(this->graphics_command_pool);
-        this->general_purpose_command.buffer =
-            this->device.allocateCommandBuffers(cbi)[0];
-
-        if(this->queue_manager->hasComputeQueue()) {
-            // Reuse CreateInfo
-            cpi.setQueueFamilyIndex(this->queue_manager->getComputeQueueIndex());
-            this->compute_command_pool = this->device.createCommandPool(cpi);
-
-            // Reuse AllocateInfo
-            cbi.setCommandPool(this->compute_command_pool);
-            this->compute_command.buffer = this->device.allocateCommandBuffers(cbi)[0];
-
-            this->compute_command.buffer
-                .reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-
-            this->compute_command.fence =
-                this->device.createFence(fci);
-        }
+        vk::FenceCreateInfo fence_create_info;
+        fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
         this->image_acquired_fence =
-            this->device.createFence(fci);
+            this->device.createFence(fence_create_info);
 
-        vk::SemaphoreCreateInfo sci;
+        vk::SemaphoreCreateInfo semaphore_create_info;
         this->image_acquire_semaphore =
-            this->device.createSemaphore(sci);
+            this->device.createSemaphore(semaphore_create_info);
         this->finished_drawing_semaphore =
-            this->device.createSemaphore(sci);
-    }
+            this->device.createSemaphore(semaphore_create_info);
 
-    void Wingine::init_swapchain() {
         std::vector<vk::SurfaceFormatKHR> surfaceFormats =
             this->device_manager->getPhysicalDevice()
             .getSurfaceFormatsKHR(this->vulkan_instance_manager->getSurface());
@@ -656,9 +613,15 @@ namespace wg {
             std::make_shared<internal::QueueManager>(const_device_manager,
                                                      this->vulkan_instance_manager->getSurface());
 
+        std::shared_ptr<const internal::QueueManager> const_queue_manager =
+            const_pointer_cast<const internal::QueueManager>(this->queue_manager);
+
         this->compatibleRenderPassRegistry = std::make_shared<CompatibleRenderPassRegistry>(this->device);
 
-        this->init_command_buffers();
+        this->command_manager =
+            std::make_shared<internal::CommandManager>(const_device_manager,
+                                                       const_queue_manager);
+
 
         this->init_swapchain();
 
@@ -777,16 +740,12 @@ namespace wg {
         return this->queue_manager->getPresentQueue();
     }
 
-    Command Wingine::getCommand() {
-        return this->general_purpose_command;
-    }
-
-    vk::CommandPool Wingine::getPresentCommandPool() {
-        return this->present_command_pool;
+    const internal::Command& Wingine::getGeneralCommand() {
+        return this->command_manager->getGeneralCommand();
     }
 
     vk::CommandPool Wingine::getGraphicsCommandPool() {
-        return this->graphics_command_pool;
+        return this->command_manager->getGraphicsCommandPool();
     }
 
     vk::DescriptorPool Wingine::getDescriptorPool() {
@@ -990,7 +949,7 @@ namespace wg {
         this->device.destroy(compute_pipeline->pipeline, nullptr);
 
         this->device.destroy(compute_pipeline->command.fence, nullptr);
-        this->device.freeCommandBuffers(this->graphics_command_pool,
+        this->device.freeCommandBuffers(this->command_manager->getGraphicsCommandPool(),
                                         1, &compute_pipeline->command.buffer);
 
         delete compute_pipeline;
@@ -1004,7 +963,7 @@ namespace wg {
                             "wait for command finish");
             this->device.destroy(family->commands[i].fence, nullptr);
 
-            this->device.freeCommandBuffers(this->graphics_command_pool,
+            this->device.freeCommandBuffers(this->command_manager->getGraphicsCommandPool(),
                                             1, &family->commands[i].buffer);
 
             if(family->render_passes[i] != this->compatibleRenderPassRegistry->getRenderPass(family->render_pass_type)) {
@@ -1094,37 +1053,9 @@ namespace wg {
             delete fb;
         }
 
-        this->device.freeCommandBuffers(this->graphics_command_pool,
-                                        1, &this->general_purpose_command.buffer);
-        this->device.freeCommandBuffers(this->present_command_pool,
-                                        1, &this->present_command.buffer);
-
-
-        this->device.destroyCommandPool(this->graphics_command_pool, nullptr);
-
-        this->device.destroyCommandPool(this->present_command_pool, nullptr);
-        _wassert_result(this->device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
-                        "wait for present command finish");
-        this->device.destroyFence(this->present_command.fence, nullptr);
-
-
-        if(this->queue_manager->hasComputeQueue()) {
-            this->device.freeCommandBuffers(this->compute_command_pool,
-                                            1, &this->compute_command.buffer);
-
-            this->device.destroyCommandPool(this->compute_command_pool, nullptr);
-            _wassert_result(this->device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX),
-                            "wait for compute command finish");
-            this->device.destroyFence(this->compute_command.fence, nullptr);
-        }
-
         this->device.destroyFence(this->image_acquired_fence, nullptr);
         this->device.destroy(this->image_acquire_semaphore, nullptr);
         this->device.destroy(this->finished_drawing_semaphore, nullptr);
-
-        _wassert_result(this->device.waitForFences(1, &this->general_purpose_command.fence, true, UINT64_MAX),
-                        "wait for general purpose command finish");
-        this->device.destroy(this->general_purpose_command.fence, nullptr);
 
         this->device.destroy(this->swapchain, nullptr);
 

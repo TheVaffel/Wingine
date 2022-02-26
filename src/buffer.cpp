@@ -94,7 +94,7 @@ namespace wg {
         } else {
 
             vk::Device device = this->wing->getDevice();
-            Command command = this->wing->getCommand();
+            internal::Command command = this->wing->getGeneralCommand();
             vk::Queue queue = this->wing->getGraphicsQueue();
 
 

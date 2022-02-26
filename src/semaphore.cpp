@@ -113,7 +113,7 @@ namespace wg {
             .setPWaitDstStageMask(&flag)
             .setPNext(&tssi);
 
-        _wassert_result(wing->present_queue.submit(1, &inf, fence),
+        _wassert_result(wing->getPresentQueue().submit(1, &inf, fence),
                         "submit command in SemaphoreChain::ensure_finished");
 
         _wassert_result(wing->getDevice().waitForFences(1, &fence, true, UINT64_MAX),
@@ -166,7 +166,7 @@ namespace wg {
             .setPSignalSemaphores(&semaphore)
             .setPNext(&tssi);
 
-        _wassert_result(wing->present_queue.submit(1, &inf, nullptr),
+        _wassert_result(wing->getPresentQueue().submit(1, &inf, nullptr),
                         "submit command in SemaphoreChain::chainsToSemaphore");
     }
 
@@ -197,7 +197,7 @@ namespace wg {
             .setPNext(&tssi);
 
         // Present queue is hopefully not that busy
-        _wassert_result(wing->present_queue.submit(1, &inf, nullptr),
+        _wassert_result(wing->getPresentQueue().submit(1, &inf, nullptr),
                         "submit command in SemaphoreChain::semaphoreToChains");
     }
 

@@ -20,6 +20,8 @@ namespace wg::internal {
         DeviceManager(std::shared_ptr<VulkanInstanceManager> vulkan_instance_manager);
         ~DeviceManager();
 
+        DeviceManager(const DeviceManager& deviceManager) = delete;
+
         const vk::Device getDevice() const;
         const vk::PhysicalDevice getPhysicalDevice() const;
         const vk::PhysicalDeviceMemoryProperties getDeviceMemoryProperties() const;

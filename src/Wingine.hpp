@@ -12,6 +12,7 @@
 #include "./CompatibleRenderPassRegistry.hpp"
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
+#include "./QueueManager.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
@@ -34,6 +35,8 @@ namespace wg {
         // so will cache from device_manager, if for no other reason to shorten code
         vk::Device device;
 
+        std::shared_ptr<internal::QueueManager> queue_manager;
+
 
         vk::Format surface_format;
         vk::SwapchainKHR swapchain;
@@ -50,14 +53,6 @@ namespace wg {
         vk::DescriptorPool descriptor_pool;
 
         vk::PipelineCache pipeline_cache;
-
-        vk::Queue graphics_queue,
-            present_queue,
-            compute_queue;
-
-        int32_t present_queue_index,
-            graphics_queue_index,
-            compute_queue_index;
 
         vk::CommandPool present_command_pool,
             graphics_command_pool,
@@ -81,9 +76,6 @@ namespace wg {
 
         void init_vulkan(int width, int height, const std::string& app_name);
 
-        void init_instance(int width, int height, const char* str);
-        void init_surface(winval_type_0 arg0, winval_type_1 arg1);
-        void init_device();
         void init_command_buffers();
         void init_swapchain();
         void init_generic_render_pass();
@@ -123,6 +115,7 @@ namespace wg {
         void destroySwapchainImage(Image& image);
 
         vk::Queue getGraphicsQueue();
+        vk::Queue getPresentQueue();
         vk::Device getDevice();
         Command getCommand();
         vk::DescriptorPool getDescriptorPool();

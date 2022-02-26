@@ -211,7 +211,7 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
 
-        _wassert_result(this->graphics_queue.submit(1, &si, general_purpose_command.fence),
+        _wassert_result(this->queue_manager->getGraphicsQueue().submit(1, &si, general_purpose_command.fence),
                         "command submission to graphics queue in copy_image");
 
 
@@ -323,7 +323,7 @@ namespace wg {
             .setPWaitSemaphores(&this->finished_drawing_semaphore)
             .setPResults(nullptr);
 
-        _wassert_result(this->present_queue.presentKHR(presentInfo),
+        _wassert_result(this->queue_manager->getPresentQueue().presentKHR(presentInfo),
                         "submit present command");
 
         this->stage_next_image(semaphores);
@@ -331,32 +331,14 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     }
 
-    void Wingine::init_queues() {
-        this->graphics_queue =
-            this->device.getQueue(this->graphics_queue_index, 0);
-
-        // If graphics and present queue indices are equal, make queues equal
-        if(this->graphics_queue_index == this->present_queue_index) {
-            this->present_queue = this->graphics_queue;
-        } else {
-            this->present_queue =
-                this->device.getQueue(this->present_queue_index, 0);
-        }
-
-        if(this->compute_queue_index >= 0) {
-            this->compute_queue =
-                this->device.getQueue(this->compute_queue_index, 0);
-                }
-    }
-
     void Wingine::init_command_buffers() {
         vk::CommandPoolCreateInfo cpi;
-        cpi.setQueueFamilyIndex(this->graphics_queue_index).
+        cpi.setQueueFamilyIndex(this->queue_manager->getGraphicsQueueIndex()).
             setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
 
         this->graphics_command_pool = this->device.createCommandPool(cpi);
 
-        cpi.setQueueFamilyIndex(this->present_queue_index);
+        cpi.setQueueFamilyIndex(this->queue_manager->getPresentQueueIndex());
         this->present_command_pool = this->device.createCommandPool(cpi);
 
         vk::CommandBufferAllocateInfo cbi;
@@ -383,9 +365,9 @@ namespace wg {
         this->general_purpose_command.buffer =
             this->device.allocateCommandBuffers(cbi)[0];
 
-        if(this->compute_queue_index >= 0) {
+        if(this->queue_manager->hasComputeQueue()) {
             // Reuse CreateInfo
-            cpi.setQueueFamilyIndex(this->compute_queue_index);
+            cpi.setQueueFamilyIndex(this->queue_manager->getComputeQueueIndex());
             this->compute_command_pool = this->device.createCommandPool(cpi);
 
             // Reuse AllocateInfo
@@ -407,7 +389,6 @@ namespace wg {
             this->device.createSemaphore(sci);
         this->finished_drawing_semaphore =
             this->device.createSemaphore(sci);
-
     }
 
     void Wingine::init_swapchain() {
@@ -517,9 +498,10 @@ namespace wg {
             .setQueueFamilyIndexCount(0)
             .setPQueueFamilyIndices(nullptr);
 
-        uint32_t queue_indices[2] = {(uint32_t)this->graphics_queue_index,
-                                     (uint32_t)this->present_queue_index};
-        if(this->graphics_queue_index != this->present_queue_index) {
+        uint32_t queue_indices[2] = { (uint32_t)this->queue_manager->getGraphicsQueueIndex(),
+            (uint32_t)this->queue_manager->getPresentQueueIndex() };
+
+        if(this->queue_manager->getGraphicsQueueIndex() != this->queue_manager->getPresentQueueIndex()) {
 
             sci.setImageSharingMode(vk::SharingMode::eConcurrent)
                 .setQueueFamilyIndexCount(2)
@@ -623,9 +605,12 @@ namespace wg {
     }
 
     void Wingine::waitIdle() {
-	this->graphics_queue.waitIdle();
-	this->compute_queue.waitIdle();
-	this->present_queue.waitIdle();
+	this->queue_manager->getGraphicsQueue().waitIdle();
+	this->queue_manager->getPresentQueue().waitIdle();
+
+        if (this->queue_manager->hasComputeQueue()) {
+            this->queue_manager->getComputeQueue().waitIdle();
+        }
     }
 
     void Wingine::stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphores) {
@@ -664,7 +649,12 @@ namespace wg {
 
         this->device = this->device_manager->getDevice();
 
-        this->init_queues();
+        std::shared_ptr<const internal::DeviceManager> const_device_manager =
+            const_pointer_cast<const internal::DeviceManager>(this->device_manager);
+
+        this->queue_manager =
+            std::make_shared<internal::QueueManager>(const_device_manager,
+                                                     this->vulkan_instance_manager->getSurface());
 
         this->compatibleRenderPassRegistry = std::make_shared<CompatibleRenderPassRegistry>(this->device);
 
@@ -780,7 +770,11 @@ namespace wg {
     }
 
     vk::Queue Wingine::getGraphicsQueue() {
-        return this->graphics_queue;
+        return this->queue_manager->getGraphicsQueue();
+    }
+
+    vk::Queue Wingine::getPresentQueue() {
+        return this->queue_manager->getPresentQueue();
     }
 
     Command Wingine::getCommand() {
@@ -962,7 +956,7 @@ namespace wg {
         _wassert_result(this->device.resetFences(1, &compute->command.fence),
                         "reset fence at end of compute submit");
 
-        _wassert_result(this->compute_queue.submit(1, &si, compute->command.fence),
+        _wassert_result(this->queue_manager->getComputeQueue().submit(1, &si, compute->command.fence),
                         "submitting compute command");
     }
 
@@ -1114,7 +1108,7 @@ namespace wg {
         this->device.destroyFence(this->present_command.fence, nullptr);
 
 
-        if(this->compute_queue_index >= 0) {
+        if(this->queue_manager->hasComputeQueue()) {
             this->device.freeCommandBuffers(this->compute_command_pool,
                                             1, &this->compute_command.buffer);
 
@@ -1137,7 +1131,5 @@ namespace wg {
         for (auto it : this->resourceSetLayoutMap) {
             this->device.destroy(it.second.layout, nullptr);
         }
-
-        // this->device.destroy(nullptr);
     }
 };

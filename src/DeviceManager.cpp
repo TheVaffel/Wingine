@@ -51,27 +51,6 @@ namespace wg::internal {
         this->physical_device = best_device;
         this->device_memory_props = best_device.getMemoryProperties();
 
-        /* std::vector<vk::DeviceQueueCreateInfo> c_infos;
-        c_infos.reserve(3);
-
-        vk::DeviceQueueCreateInfo c_info;
-        float queue_priorities[1] = { 1.0f };
-        c_info.setQueueCount(1).setPQueuePriorities(queue_priorities)
-            .setQueueFamilyIndex(this->present_queue_index);
-        c_infos.push_back(c_info);
-
-        if (this->present_queue_index != this->graphics_queue_index) {
-            c_info.setQueueFamilyIndex(this->graphics_queue_index);
-            c_infos.push_back(c_info);
-        }
-
-        if (this->compute_queue_index >= 0 &&
-            (this->compute_queue_index != this->present_queue_index &&
-             this->compute_queue_index != this->graphics_queue_index)) {
-            c_info.setQueueFamilyIndex(this->compute_queue_index);
-            c_infos.push_back(c_info);
-            } */
-
         QueueIndices queueIndices = getQueueIndicesForDevice(best_device, surface);
 
         std::vector<vk::DeviceQueueCreateInfo> queue_create_infos =

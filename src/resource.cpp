@@ -109,7 +109,7 @@ namespace wg {
         si.setCommandBufferCount(1)
             .setPCommandBuffers(&wing.general_purpose_command.buffer);
 
-        _wassert_result(wing.graphics_queue.submit(1, &si, wing.general_purpose_command.fence),
+        _wassert_result(wing.getGraphicsQueue().submit(1, &si, wing.general_purpose_command.fence),
                         "command submission in ResourceImage construction");
 
         this->current_layout = vk::ImageLayout::eGeneral;

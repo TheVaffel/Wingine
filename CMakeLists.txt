@@ -34,7 +34,11 @@ set(WINGINE_SOURCES
   semaphore.cpp
   CompatibleRenderPassRegistry.cpp
   VulkanInstanceManager.cpp
+  DeviceManager.cpp
+  QueueManager.cpp
   log.cpp
+  queueUtils.cpp
+  deviceEvaluation.cpp
   ${WGUTIL_SOURCES})
 list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")
 

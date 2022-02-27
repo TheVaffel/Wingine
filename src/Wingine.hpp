@@ -42,11 +42,6 @@ namespace wg {
 
         std::shared_ptr<internal::SwapchainManager> swapchain_manager;
 
-        /* vk::Format surface_format;
-        vk::SwapchainKHR swapchain;
-
-        std::vector<vk::Image> swapchain_images; */
-
         vk::Fence image_acquired_fence;
         vk::Semaphore image_acquire_semaphore;
         vk::Semaphore finished_drawing_semaphore;

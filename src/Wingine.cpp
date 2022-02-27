@@ -321,7 +321,7 @@ namespace wg {
         // Present, but wait for finished_drawing_semaphore, which waits on the rest of the semaphores
 
         presentInfo.setSwapchainCount(1)
-            .setPSwapchains(&this->swapchain)
+            .setPSwapchains(&this->swapchain_manager->getSwapchain())
             .setPImageIndices(&this->current_swapchain_image)
             .setWaitSemaphoreCount(1)
             .setPWaitSemaphores(&this->finished_drawing_semaphore)
@@ -335,7 +335,7 @@ namespace wg {
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
     }
 
-    void Wingine::init_swapchain() {
+    void Wingine::init_present_sync() {
 
         vk::FenceCreateInfo fence_create_info;
         fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
@@ -349,127 +349,6 @@ namespace wg {
         this->finished_drawing_semaphore =
             this->device.createSemaphore(semaphore_create_info);
 
-        std::vector<vk::SurfaceFormatKHR> surfaceFormats =
-            this->device_manager->getPhysicalDevice()
-            .getSurfaceFormatsKHR(this->vulkan_instance_manager->getSurface());
-
-        vk::ColorSpaceKHR colorSpace = surfaceFormats[0].colorSpace;
-
-        if(surfaceFormats.size() == 1 &&
-           surfaceFormats[0].format == vk::Format::eUndefined) {
-
-            this->surface_format = vk::Format::eB8G8R8A8Unorm;
-
-        } else {
-
-            this->surface_format = surfaceFormats[0].format;
-
-        }
-
-        vk::SurfaceCapabilitiesKHR caps =
-            this->device_manager->getPhysicalDevice()
-            .getSurfaceCapabilitiesKHR(this->vulkan_instance_manager->getSurface());
-
-        vk::Extent2D swapchainExtent;
-
-        if(caps.currentExtent.width == 0xFFFFFFFF) {
-            swapchainExtent.width =
-                std::min(caps.maxImageExtent.width,
-                         std::max(caps.minImageExtent.width,
-                                  this->window_width));
-            swapchainExtent.height =
-                std::min(caps.maxImageExtent.height,
-                         std::max(caps.minImageExtent.height,
-                                  this->window_height));
-
-        } else {
-            swapchainExtent = caps.currentExtent;
-            this->window_width = caps.currentExtent.width;
-            this->window_height = caps.currentExtent.height;
-        }
-
-        uint32_t numSwaps =
-            std::max(caps.minImageCount, (uint32_t)2);
-
-        if(caps.maxImageCount != 0) {
-            numSwaps =
-                std::min(caps.maxImageCount, numSwaps);
-        }
-
-
-        vk::SurfaceTransformFlagBitsKHR preTransform;
-        if((caps.supportedTransforms & vk::SurfaceTransformFlagBitsKHR::eIdentity) ==
-           vk::SurfaceTransformFlagBitsKHR::eIdentity) {
-            preTransform = vk::SurfaceTransformFlagBitsKHR::eIdentity;
-        } else {
-            preTransform = caps.currentTransform;
-        }
-
-
-        std::vector<vk::PresentModeKHR> presentModes =
-            this->device_manager->getPhysicalDevice()
-            .getSurfacePresentModesKHR(this->vulkan_instance_manager->getSurface());
-
-        vk::PresentModeKHR swapchainPresentMode =
-            vk::PresentModeKHR::eFifo;
-
-        for(vk::PresentModeKHR mode : presentModes) {
-            if(mode == vk::PresentModeKHR::eMailbox) {
-                swapchainPresentMode = vk::PresentModeKHR::eMailbox;
-            }
-        }
-
-        vk::CompositeAlphaFlagBitsKHR compositeAlpha =
-            vk::CompositeAlphaFlagBitsKHR::eOpaque;
-
-        vk::CompositeAlphaFlagBitsKHR alphaFlags[4] = {
-            vk::CompositeAlphaFlagBitsKHR::eOpaque,
-            vk::CompositeAlphaFlagBitsKHR::ePreMultiplied,
-            vk::CompositeAlphaFlagBitsKHR::ePostMultiplied,
-            vk::CompositeAlphaFlagBitsKHR::eInherit
-        };
-
-        for(vk::CompositeAlphaFlagBitsKHR bit : alphaFlags) {
-            if((caps.supportedCompositeAlpha & bit) == bit) {
-                compositeAlpha = bit;
-                break;
-            }
-        }
-
-        vk::SwapchainCreateInfoKHR sci;
-        sci.setSurface(this->vulkan_instance_manager->getSurface())
-            .setMinImageCount(numSwaps)
-            .setImageFormat(this->surface_format)
-            .setImageExtent(swapchainExtent)
-            .setPreTransform(preTransform)
-            .setCompositeAlpha(compositeAlpha)
-            .setImageArrayLayers(1)
-            .setPresentMode(swapchainPresentMode)
-            .setOldSwapchain(nullptr)
-            .setClipped(true)
-            .setImageColorSpace(colorSpace)
-            // .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
-            //      vk::ImageUsageFlagBits::eTransferSrc)
-            .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
-            .setImageSharingMode(vk::SharingMode::eExclusive)
-            .setQueueFamilyIndexCount(0)
-            .setPQueueFamilyIndices(nullptr);
-
-        uint32_t queue_indices[2] = { (uint32_t)this->queue_manager->getGraphicsQueueIndex(),
-            (uint32_t)this->queue_manager->getPresentQueueIndex() };
-
-        if(this->queue_manager->getGraphicsQueueIndex() != this->queue_manager->getPresentQueueIndex()) {
-
-            sci.setImageSharingMode(vk::SharingMode::eConcurrent)
-                .setQueueFamilyIndexCount(2)
-                .setPQueueFamilyIndices(queue_indices);
-
-        }
-
-        this->swapchain = this->device.createSwapchainKHR(sci);
-
-        this->swapchain_images = this->device.getSwapchainImagesKHR(swapchain);
-
     }
 
     void Wingine::init_generic_render_pass() {
@@ -477,8 +356,8 @@ namespace wg {
     }
 
     void Wingine::init_framebuffers() {
-        for(unsigned int i = 0; i < this->swapchain_images.size(); i++) {
-            vk::Image sim = this->swapchain_images[i];
+        for(unsigned int i = 0; i < this->swapchain_manager->getImages().size(); i++) {
+            const vk::Image& sim = this->swapchain_manager->getImages()[i];
 
             Framebuffer* framebuffer = new Framebuffer();
 
@@ -577,7 +456,7 @@ namespace wg {
         _wassert_result(this->device.resetFences(1, &this->image_acquired_fence),
                         "reset fence in stage_next_image");
 
-        _wassert_result(this->device.acquireNextImageKHR(this->swapchain, UINT64_MAX,
+        _wassert_result(this->device.acquireNextImageKHR(this->swapchain_manager->getSwapchain(), UINT64_MAX,
                                                          num_semaphores ? this->image_acquire_semaphore : vk::Semaphore((VkSemaphore)(VK_NULL_HANDLE)),
                                                          image_acquired_fence,
                                                          &(this->current_swapchain_image)),
@@ -622,8 +501,14 @@ namespace wg {
             std::make_shared<internal::CommandManager>(const_device_manager,
                                                        const_queue_manager);
 
+        this->swapchain_manager =
+            std::make_shared<internal::SwapchainManager>(const_device_manager,
+                                                         *const_queue_manager,
+                                                         vk::Extent2D(this->window_width,
+                                                                      this->window_height),
+                                                         vulkan_instance_manager->getSurface());
 
-        this->init_swapchain();
+        this->init_present_sync();
 
         this->init_generic_render_pass();
 
@@ -1053,11 +938,9 @@ namespace wg {
             delete fb;
         }
 
-        this->device.destroyFence(this->image_acquired_fence, nullptr);
-        this->device.destroy(this->image_acquire_semaphore, nullptr);
-        this->device.destroy(this->finished_drawing_semaphore, nullptr);
-
-        this->device.destroy(this->swapchain, nullptr);
+        this->device.destroyFence(this->image_acquired_fence);
+        this->device.destroy(this->image_acquire_semaphore);
+        this->device.destroy(this->finished_drawing_semaphore);
 
         for (auto it : this->resourceSetLayoutMap) {
             this->device.destroy(it.second.layout, nullptr);

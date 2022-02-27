@@ -13,6 +13,7 @@
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
+#include "./SwapchainManager.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
@@ -39,10 +40,12 @@ namespace wg {
 
         std::shared_ptr<internal::CommandManager> command_manager;
 
-        vk::Format surface_format;
+        std::shared_ptr<internal::SwapchainManager> swapchain_manager;
+
+        /* vk::Format surface_format;
         vk::SwapchainKHR swapchain;
 
-        std::vector<vk::Image> swapchain_images;
+        std::vector<vk::Image> swapchain_images; */
 
         vk::Fence image_acquired_fence;
         vk::Semaphore image_acquire_semaphore;
@@ -77,7 +80,7 @@ namespace wg {
 
         void init_vulkan(int width, int height, const std::string& app_name);
 
-        void init_swapchain();
+        void init_present_sync();
         void init_generic_render_pass();
         void init_framebuffers();
         void init_descriptor_pool();

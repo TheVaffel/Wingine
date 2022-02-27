@@ -11,14 +11,14 @@ namespace wg {
         Image colorImage;
         Image depthImage;
         vk::Framebuffer framebuffer;
-    
+
         Framebuffer(Wingine& wing,
                     int width, int height,
                     bool depthOnly);
         Framebuffer();
-    
+
     public:
-    
+
         void destroy();
 
         const Image& getColorImage() const;
@@ -28,7 +28,6 @@ namespace wg {
         friend class RenderFamily;
         friend class Wingine;
         friend class Texture;
-        friend class RenderFamily;
     };
 };
 

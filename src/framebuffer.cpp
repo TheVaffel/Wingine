@@ -44,10 +44,10 @@ namespace wg {
 
         attachments.push_back(this->depthImage.view);
 
-        RenderPassType render_pass_type =
+        internal::RenderPassType render_pass_type =
             depthOnly ?
-            renDepth :
-            renColorDepth;
+            internal::RenderPassType::renDepth :
+            internal::RenderPassType::renColorDepth;
 
         if (!wing.compatibleRenderPassRegistry->hasRenderPassType(render_pass_type)) {
             wing.register_compatible_render_pass(render_pass_type);

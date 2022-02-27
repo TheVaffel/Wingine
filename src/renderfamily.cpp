@@ -6,7 +6,7 @@
 
 namespace wg {
     RenderFamily::RenderFamily(Wingine& wing,
-                               const CompatibleRenderPassRegistry* renderPassRegistry,
+                               const internal::CompatibleRenderPassRegistry& renderPassRegistry,
                                const Pipeline* pipeline,
                                bool clear,
                                int num_framebuffers) :
@@ -24,7 +24,7 @@ namespace wg {
         this->render_passes = std::vector<vk::RenderPass>(num_framebuffers);
         for(int i = 0; i < num_framebuffers; i++) {
             if(!clear) {
-                this->render_passes[i] = renderPassRegistry->getRenderPass(this->render_pass_type);
+                this->render_passes[i] = renderPassRegistry.getRenderPass(this->render_pass_type);
             } else {
                 this->render_passes[i] = wing.create_render_pass(this->render_pass_type,
                                                                  clear);
@@ -87,12 +87,12 @@ namespace wg {
 
             if(this->clears) {
                 switch (this->render_pass_type) {
-                case renDepth:
+                case internal::RenderPassType::renDepth:
                     clear_values.resize(1);
                     clear_values[0].depthStencil.depth = 1.0f;
                     clear_values[0].depthStencil.stencil = 0.0f;
                     break;
-                case renColorDepth:
+                case internal::RenderPassType::renColorDepth:
                     clear_values.resize(2);
                     clear_values[0].color.setFloat32({0.3f, 0.3f,
                                                       0.3f, 1.0f});

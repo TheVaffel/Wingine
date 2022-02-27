@@ -1,12 +1,12 @@
 #include "./CompatibleRenderPassRegistry.hpp"
 
-namespace wg {
+namespace wg::internal {
 
-    CompatibleRenderPassRegistry::CompatibleRenderPassRegistry(vk::Device device) : device(device) {}
+    CompatibleRenderPassRegistry::CompatibleRenderPassRegistry(std::shared_ptr<const DeviceManager> device_manager) : device_manager(device_manager) {}
 
     CompatibleRenderPassRegistry::~CompatibleRenderPassRegistry() {
         for (auto it : this->compatibleRenderPassMap) {
-            this->device.destroy(it.second, nullptr);
+            this->device_manager->getDevice().destroy(it.second);
         }
     }
 
@@ -14,7 +14,8 @@ namespace wg {
         return this->compatibleRenderPassMap.find(type) != this->compatibleRenderPassMap.end();
     }
 
-    void CompatibleRenderPassRegistry::registerRenderPassType(RenderPassType type, vk::RenderPass render_pass) {
+    void CompatibleRenderPassRegistry::registerRenderPassType(RenderPassType type,
+                                                              vk::RenderPass render_pass) {
         if (hasRenderPassType(type)) {
             throw std::runtime_error("[CompatibleRenderPassRegistry] Render pass already exists in registry!");
         }

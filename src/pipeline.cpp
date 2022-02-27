@@ -280,12 +280,12 @@ namespace wg {
         }
 
 
-        RenderPassType rpt;
+        internal::RenderPassType rpt;
 
         if (setup.depthOnly) {
-            rpt = renDepth;
+            rpt = internal::RenderPassType::renDepth;
         } else {
-            rpt = renColorDepth;
+            rpt = internal::RenderPassType::renColorDepth;
         }
 
 

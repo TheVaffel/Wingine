@@ -47,7 +47,7 @@ namespace wg {
     class Pipeline {
         vk::Pipeline pipeline;
         vk::PipelineLayout layout;
-        RenderPassType render_pass_type;
+        internal::RenderPassType render_pass_type;
 
         Pipeline(Wingine& wing,
                  const std::vector<VertexAttribDesc>& descriptions,

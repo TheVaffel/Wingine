@@ -4,8 +4,10 @@
 
 #include <map>
 
-namespace wg {
-    enum RenderPassType {
+#include "./DeviceManager.hpp"
+
+namespace wg::internal {
+    enum class RenderPassType {
         renColorDepth,
         renDepth
     };
@@ -17,11 +19,11 @@ namespace wg {
      */
     class CompatibleRenderPassRegistry {
         std::map<RenderPassType, vk::RenderPass> compatibleRenderPassMap;
-        vk::Device device;
+        std::shared_ptr<const DeviceManager> device_manager;
 
     public:
 
-        CompatibleRenderPassRegistry(vk::Device device);
+        CompatibleRenderPassRegistry(std::shared_ptr<const DeviceManager> device_manager);
         ~CompatibleRenderPassRegistry();
 
         bool hasRenderPassType(RenderPassType type) const;

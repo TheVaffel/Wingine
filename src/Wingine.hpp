@@ -58,20 +58,11 @@ namespace wg {
 
         vk::PipelineCache pipeline_cache;
 
-        /* vk::CommandPool present_command_pool,
-            graphics_command_pool,
-            compute_command_pool;
-
-        internal::Command present_command,
-            compute_command;
-
-            internal::Command general_purpose_command; */
-
         uint32_t window_width, window_height;
 
         std::map<std::vector<uint64_t>, ResourceSetLayout> resourceSetLayoutMap;
 
-        std::shared_ptr<CompatibleRenderPassRegistry> compatibleRenderPassRegistry;
+        std::shared_ptr<internal::CompatibleRenderPassRegistry> compatibleRenderPassRegistry;
 
         void init_vulkan(int width, int height,
                          winval_type_0 arg0,
@@ -127,8 +118,8 @@ namespace wg {
 
         std::vector<Framebuffer*>& getFramebuffers();
 
-        void register_compatible_render_pass(RenderPassType type);
-        vk::RenderPass create_render_pass(RenderPassType type,
+        void register_compatible_render_pass(internal::RenderPassType type);
+        vk::RenderPass create_render_pass(internal::RenderPassType type,
                                           bool clear);
 
         void destroy(Image& image);

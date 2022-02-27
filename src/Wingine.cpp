@@ -227,14 +227,14 @@ namespace wg {
 
     }
 
-    vk::RenderPass Wingine::create_render_pass(RenderPassType type,
+    vk::RenderPass Wingine::create_render_pass(internal::RenderPassType type,
                                                bool clear) {
 
         std::vector<vk::AttachmentDescription> descriptions;
         std::vector<vk::AttachmentReference> references;
 
         switch(type) {
-        case renColorDepth:
+        case internal::RenderPassType::renColorDepth:
             descriptions.resize(2);
             descriptions[0].setLoadOp(vk::AttachmentLoadOp::eLoad)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -256,7 +256,7 @@ namespace wg {
             references[1].setAttachment(1)
                 .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
             break;
-        case renDepth:
+        case internal::RenderPassType::renDepth:
             descriptions.resize(1);
             descriptions[0].setLoadOp(vk::AttachmentLoadOp::eLoad)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -281,12 +281,12 @@ namespace wg {
 
         vk::SubpassDescription spd;
         spd.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
-        if(type == renColorDepth) {
+        if(type == internal::RenderPassType::renColorDepth) {
 
             spd.setColorAttachmentCount(1)
                 .setPColorAttachments(references.data())
                 .setPDepthStencilAttachment(references.data() + 1);
-        } else if (type == renDepth) {
+        } else if (type == internal::RenderPassType::renDepth) {
             spd.setColorAttachmentCount(0)
                 .setPDepthStencilAttachment(references.data());
         }
@@ -301,7 +301,7 @@ namespace wg {
     }
 
 
-    void Wingine::register_compatible_render_pass(RenderPassType type) {
+    void Wingine::register_compatible_render_pass(internal::RenderPassType type) {
         this->compatibleRenderPassRegistry->registerRenderPassType(type, this->create_render_pass(type, false));
     }
 
@@ -352,7 +352,7 @@ namespace wg {
     }
 
     void Wingine::init_generic_render_pass() {
-        this->register_compatible_render_pass(renColorDepth);
+        this->register_compatible_render_pass(internal::RenderPassType::renColorDepth);
     }
 
     void Wingine::init_framebuffers() {
@@ -389,7 +389,7 @@ namespace wg {
             };
 
             vk::FramebufferCreateInfo finf;
-            finf.setRenderPass(this->compatibleRenderPassRegistry->getRenderPass(renColorDepth))
+            finf.setRenderPass(this->compatibleRenderPassRegistry->getRenderPass(internal::RenderPassType::renColorDepth))
                 .setAttachmentCount(2)
                 .setPAttachments(attachments)
                 .setWidth(this->window_width)
@@ -495,7 +495,8 @@ namespace wg {
         std::shared_ptr<const internal::QueueManager> const_queue_manager =
             const_pointer_cast<const internal::QueueManager>(this->queue_manager);
 
-        this->compatibleRenderPassRegistry = std::make_shared<CompatibleRenderPassRegistry>(this->device);
+        this->compatibleRenderPassRegistry =
+            std::make_shared<internal::CompatibleRenderPassRegistry>(const_device_manager);
 
         this->command_manager =
             std::make_shared<internal::CommandManager>(const_device_manager,
@@ -733,7 +734,7 @@ namespace wg {
     }
 
     RenderFamily* Wingine::createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers) {
-        return new RenderFamily(*this, this->compatibleRenderPassRegistry.get(),
+        return new RenderFamily(*this, *this->compatibleRenderPassRegistry,
                                 pipeline, clear, num_framebuffers);
     }
 
@@ -927,8 +928,6 @@ namespace wg {
     }
 
     Wingine::~Wingine() {
-
-        this->compatibleRenderPassRegistry.reset();
 
         this->device.destroy(this->descriptor_pool, nullptr);
         this->device.destroy(this->pipeline_cache, nullptr);

@@ -37,6 +37,7 @@ set(WINGINE_SOURCES
   DeviceManager.cpp
   QueueManager.cpp
   CommandManager.cpp
+  SwapchainManager.cpp
   log.cpp
   queueUtils.cpp
   deviceEvaluation.cpp

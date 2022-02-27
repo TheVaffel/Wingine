@@ -106,11 +106,17 @@ namespace wg::internal {
 
 
         device.destroyCommandPool(this->graphics_command_pool);
-
         device.destroyCommandPool(this->present_command_pool);
+
+
         _wassert_result(device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
                         "wait for present command finish");
         device.destroyFence(this->present_command.fence);
+
+
+        _wassert_result(device.waitForFences(1, &this->general_command.fence, true, UINT64_MAX),
+                        "wait for general purpose command finish");
+        device.destroy(this->general_command.fence, nullptr);
 
 
         if(this->queue_manager->hasComputeQueue()) {
@@ -121,10 +127,6 @@ namespace wg::internal {
             _wassert_result(device.waitForFences(1, &this->compute_command.fence, true, UINT64_MAX),
                             "wait for compute command finish");
             device.destroyFence(this->compute_command.fence);
-
-            _wassert_result(device.waitForFences(1, &this->general_command.fence, true, UINT64_MAX),
-                            "wait for general purpose command finish");
-            device.destroy(this->general_command.fence, nullptr);
         }
     }
 };

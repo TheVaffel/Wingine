@@ -10,19 +10,20 @@ namespace wg::internal {
         }
     }
 
-    bool CompatibleRenderPassRegistry::hasRenderPassType(RenderPassType type) const {
+    bool CompatibleRenderPassRegistry::hasRenderPassType(renderPassUtil::RenderPassType type) const {
         return this->compatibleRenderPassMap.find(type) != this->compatibleRenderPassMap.end();
     }
 
-    void CompatibleRenderPassRegistry::registerRenderPassType(RenderPassType type,
-                                                              vk::RenderPass render_pass) {
-        if (hasRenderPassType(type)) {
-            throw std::runtime_error("[CompatibleRenderPassRegistry] Render pass already exists in registry!");
+    vk::RenderPass CompatibleRenderPassRegistry::ensureAndGetRenderPass(renderPassUtil::RenderPassType type) {
+        if (!hasRenderPassType(type)) {
+            this->compatibleRenderPassMap[type] =
+                renderPassUtil::createDefaultRenderPass(type, this->device_manager->getDevice());
         }
-        this->compatibleRenderPassMap[type] = render_pass;
+
+        return this->compatibleRenderPassMap[type];
     }
 
-    const vk::RenderPass CompatibleRenderPassRegistry::getRenderPass(RenderPassType type) const {
+    const vk::RenderPass CompatibleRenderPassRegistry::getRenderPass(renderPassUtil::RenderPassType type) const {
         if (!this->hasRenderPassType(type)) {
             throw std::runtime_error("[CompatibleRenderPassRegistry] Render pass not found for this type");
         }

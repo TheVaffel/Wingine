@@ -6,7 +6,8 @@
 #include "pipeline.hpp"
 #include "resource.hpp"
 
-#include "./CompatibleRenderPassRegistry.hpp"
+#include "./framebuffer/IFramebuffer.hpp"
+#include "./render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg {
 
@@ -18,8 +19,8 @@ namespace wg {
         std::vector<vk::RenderPass> render_passes;
         bool clears;
         int num_buffers;
-        std::vector<Framebuffer*> framebuffers;
-        internal::RenderPassType render_pass_type;
+        const std::vector<std::unique_ptr<internal::IFramebuffer>>* framebuffers;
+        internal::renderPassUtil::RenderPassType render_pass_type;
 
         RenderFamily(Wingine& wing,
                      const internal::CompatibleRenderPassRegistry& renderPassRegistry,
@@ -30,7 +31,7 @@ namespace wg {
         void submit_command(const std::initializer_list<SemaphoreChain*>& wait_semaphores, int index);
 
     public:
-        void startRecording(std::vector<Framebuffer*> framebuffer = {});
+        void startRecording(const std::vector<std::unique_ptr<internal::IFramebuffer>>& framebuffer = {});
 
         void recordDraw(const std::vector<const Buffer*>& buffers, const IndexBuffer* ind_buf,
                         const std::vector<ResourceSet*>& sets, int instanceCount = 1);

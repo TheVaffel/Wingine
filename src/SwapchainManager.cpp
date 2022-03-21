@@ -1,5 +1,7 @@
 #include "./SwapchainManager.hpp"
 
+#include "./image/imageUtil.hpp"
+
 namespace wg::internal {
 
     namespace {
@@ -9,7 +11,8 @@ namespace wg::internal {
 
             if(surfaceFormats.size() == 1 &&
                surfaceFormats[0].format == vk::Format::eUndefined) {
-                return vk::Format::eB8G8R8A8Unorm;
+                // return vk::Format::eB8G8R8A8Unorm;
+                return imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT;
             } else {
                 return surfaceFormats[0];
             }
@@ -144,10 +147,10 @@ namespace wg::internal {
         }
     };
 
-    SwapchainManager::SwapchainManager(std::shared_ptr<const DeviceManager> device_manager,
-                                       const QueueManager& queue_manager,
-                                       const vk::Extent2D& preferred_dimensions,
-                                       vk::SurfaceKHR surface)
+    SwapchainManager::SwapchainManager(const vk::Extent2D& preferred_dimensions,
+                                       const vk::SurfaceKHR& surface,
+                                       std::shared_ptr<const DeviceManager> device_manager,
+                                       const QueueManager& queue_manager)
         : device_manager(device_manager) {
 
         const vk::PhysicalDevice& physical_device = device_manager->getPhysicalDevice();
@@ -166,6 +169,7 @@ namespace wg::internal {
                                           caps);
 
         this->swapchain_images = device.getSwapchainImagesKHR(swapchain);
+
     }
 
     const vk::SwapchainKHR& SwapchainManager::getSwapchain() const {
@@ -180,9 +184,10 @@ namespace wg::internal {
         return this->swapchain_images;
     }
 
-    const uint32_t SwapchainManager::getNumImages() const {
+    uint32_t SwapchainManager::getNumImages() const {
         return this->swapchain_images.size();
     }
+
 
     SwapchainManager::~SwapchainManager() {
         const vk::Device& device = this->device_manager->getDevice();

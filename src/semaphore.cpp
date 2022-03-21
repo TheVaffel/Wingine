@@ -142,7 +142,7 @@ namespace wg {
     }
 
     // Make empty command, causing signalling of multiple semaphore chains signal a single normal semaphore
-    void SemaphoreChain::chainsToSemaphore(Wingine* wing, SemaphoreChain* const* chains, int num_chains, vk::Semaphore semaphore) {
+    void SemaphoreChain::chainsToSemaphore(const vk::Queue& queue, SemaphoreChain* const* chains, int num_chains, vk::Semaphore semaphore) {
         std::vector<vk::PipelineStageFlags> pflags(num_chains);
         std::vector<vk::Semaphore> semarr(num_chains);
         std::vector<uint64_t> wait_values(num_chains);
@@ -166,12 +166,12 @@ namespace wg {
             .setPSignalSemaphores(&semaphore)
             .setPNext(&tssi);
 
-        _wassert_result(wing->getPresentQueue().submit(1, &inf, nullptr),
+        _wassert_result(queue.submit(1, &inf, nullptr),
                         "submit command in SemaphoreChain::chainsToSemaphore");
     }
 
     // Make empty command, causing signalling a single semaphore to signal multiple semaphore chains
-    void SemaphoreChain::semaphoreToChains(Wingine* wing, vk::Semaphore semaphore, SemaphoreChain* const* chains, int num_chains) {
+    void SemaphoreChain::semaphoreToChains(const vk::Queue& queue, vk::Semaphore semaphore, SemaphoreChain* const* chains, int num_chains) {
         std::vector<vk::Semaphore> semarr(num_chains);
         vk::PipelineStageFlags pflag = vk::PipelineStageFlagBits::eTopOfPipe;
 
@@ -197,7 +197,7 @@ namespace wg {
             .setPNext(&tssi);
 
         // Present queue is hopefully not that busy
-        _wassert_result(wing->getPresentQueue().submit(1, &inf, nullptr),
+        _wassert_result(queue.submit(1, &inf, nullptr),
                         "submit command in SemaphoreChain::semaphoreToChains");
     }
 

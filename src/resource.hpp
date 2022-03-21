@@ -5,6 +5,8 @@
 #include "image.hpp"
 #include "buffer.hpp"
 
+#include "./framebuffer/IFramebuffer.hpp"
+
 namespace wg {
     class ResourceSet {
         vk::Device device;
@@ -18,7 +20,7 @@ namespace wg {
         friend class RenderFamily;
         friend class Wingine;
     };
-  
+
     class Resource {
     protected:
         vk::DescriptorType type;
@@ -28,10 +30,10 @@ namespace wg {
         Resource(vk::DescriptorType type);
 
         friend class ResourceSet;
-    
+
         friend class Wingine;
     };
-  
+
 
     class ResourceImage : public Image, public Resource {
         ResourceImage(Wingine& wing,
@@ -49,7 +51,7 @@ namespace wg {
         REPEAT = (int)vk::SamplerAddressMode::eRepeat,
         MIRROR = (int)vk::SamplerAddressMode::eMirroredRepeat
     };
-    
+
     struct TextureSetup {
         TextureAddressMode address_mode_x = TextureAddressMode::CLAMP_TO_EDGE;
         TextureAddressMode address_mode_y = TextureAddressMode::CLAMP_TO_EDGE;
@@ -67,10 +69,10 @@ namespace wg {
     /*
      * Texture resource
      */
-    
+
     class Texture : public Image, public Resource {
         Wingine* wing;
-    
+
         vk::Sampler sampler;
 
         vk::Image staging_image;
@@ -79,7 +81,7 @@ namespace wg {
 
         vk::ImageLayout current_staging_layout;
         vk::ImageAspectFlagBits aspect;
-    
+
         uint32_t stride_in_bytes;
 
         Texture(Wingine& wing,
@@ -89,11 +91,11 @@ namespace wg {
 
         // Returns stride in bytes
         uint32_t getStride();
-    
+
         void set(const unsigned char* pixels,
                  const std::initializer_list<SemaphoreChain*>& wait_semaphores,
                  bool fixed_stride = false);
-        void set(Framebuffer* framebuffer,
+        void set(internal::IFramebuffer& framebuffer,
                  const std::initializer_list<SemaphoreChain*>& wait_semaphores);
         void set(ResourceImage* image,
                  const std::initializer_list<SemaphoreChain*>& wait_semaphores);
@@ -101,7 +103,7 @@ namespace wg {
         friend class Wingine;
     };
 
-  
+
     class StorageBuffer : public Resource {
 
         int num_bytes;
@@ -117,13 +119,13 @@ namespace wg {
     };
 
     // Template declarations
-  
+
     template<typename Type>
     class Uniform : public Resource {
         Buffer* buffer;
-    
+
         Uniform(Wingine& wing);
-    
+
     public:
         void set(Type t);
 
@@ -142,7 +144,7 @@ namespace wg {
                                                               sizeof(Type),
                                                               true))
     {
-    
+
         this->buffer_info = new vk::DescriptorBufferInfo();
         this->buffer_info->buffer = this->buffer->buffer;
         this->buffer_info->offset = 0;

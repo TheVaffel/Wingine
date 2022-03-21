@@ -1,6 +1,8 @@
 #include "./Wingine.hpp"
 #include "./log.hpp"
 
+#include "./framebuffer/BasicFramebuffer.hpp"
+
 #include <exception>
 
 
@@ -227,14 +229,14 @@ namespace wg {
 
     }
 
-    vk::RenderPass Wingine::create_render_pass(internal::RenderPassType type,
+    vk::RenderPass Wingine::create_render_pass(internal::renderPassUtil::RenderPassType type,
                                                bool clear) {
 
         std::vector<vk::AttachmentDescription> descriptions;
         std::vector<vk::AttachmentReference> references;
 
         switch(type) {
-        case internal::RenderPassType::renColorDepth:
+        case internal::renderPassUtil::RenderPassType::colorDepth:
             descriptions.resize(2);
             descriptions[0].setLoadOp(vk::AttachmentLoadOp::eLoad)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -256,7 +258,7 @@ namespace wg {
             references[1].setAttachment(1)
                 .setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
             break;
-        case internal::RenderPassType::renDepth:
+        case internal::renderPassUtil::RenderPassType::depthOnly:
             descriptions.resize(1);
             descriptions[0].setLoadOp(vk::AttachmentLoadOp::eLoad)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
@@ -281,12 +283,12 @@ namespace wg {
 
         vk::SubpassDescription spd;
         spd.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
-        if(type == internal::RenderPassType::renColorDepth) {
+        if(type == internal::renderPassUtil::RenderPassType::colorDepth) {
 
             spd.setColorAttachmentCount(1)
                 .setPColorAttachments(references.data())
                 .setPDepthStencilAttachment(references.data() + 1);
-        } else if (type == internal::RenderPassType::renDepth) {
+        } else if (type == internal::renderPassUtil::RenderPassType::depthOnly) {
             spd.setColorAttachmentCount(0)
                 .setPDepthStencilAttachment(references.data());
         }
@@ -301,11 +303,16 @@ namespace wg {
     }
 
 
-    void Wingine::register_compatible_render_pass(internal::RenderPassType type) {
-        this->compatibleRenderPassRegistry->registerRenderPassType(type, this->create_render_pass(type, false));
+    void Wingine::register_compatible_render_pass(internal::renderPassUtil::RenderPassType type) {
+        this->compatibleRenderPassRegistry->ensureAndGetRenderPass(type);
     }
 
     void Wingine::present(const std::initializer_list<SemaphoreChain*>& semaphores) {
+        this->default_framebuffer_manager->present(this->queue_manager->getPresentQueue(),
+                                                   semaphores);
+    }
+
+    /* void Wingine::present(const std::initializer_list<SemaphoreChain*>& semaphores) {
 
 #ifdef DEBUG
         if(!semaphores.size()) {
@@ -320,9 +327,11 @@ namespace wg {
 
         // Present, but wait for finished_drawing_semaphore, which waits on the rest of the semaphores
 
+        uint32_t swapchain_image_index = this->swapchain_manager->getCurrentSwapchainImageIndex();
+
         presentInfo.setSwapchainCount(1)
             .setPSwapchains(&this->swapchain_manager->getSwapchain())
-            .setPImageIndices(&this->current_swapchain_image)
+            .setPImageIndices(&swapchain_image_index)
             .setWaitSemaphoreCount(1)
             .setPWaitSemaphores(&this->finished_drawing_semaphore)
             .setPResults(nullptr);
@@ -333,7 +342,7 @@ namespace wg {
         this->stage_next_image(semaphores);
 
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
-    }
+        }
 
     void Wingine::init_present_sync() {
 
@@ -347,16 +356,16 @@ namespace wg {
         this->image_acquire_semaphore =
             this->device.createSemaphore(semaphore_create_info);
         this->finished_drawing_semaphore =
-            this->device.createSemaphore(semaphore_create_info);
+        this->device.createSemaphore(semaphore_create_info);
 
-    }
+    } */
 
     void Wingine::init_generic_render_pass() {
-        this->register_compatible_render_pass(internal::RenderPassType::renColorDepth);
+        this->register_compatible_render_pass(internal::renderPassUtil::RenderPassType::colorDepth);
     }
 
     void Wingine::init_framebuffers() {
-        for(unsigned int i = 0; i < this->swapchain_manager->getImages().size(); i++) {
+        /* for(unsigned int i = 0; i < this->swapchain_manager->getImages().size(); i++) {
             const vk::Image& sim = this->swapchain_manager->getImages()[i];
 
             Framebuffer* framebuffer = new Framebuffer();
@@ -389,7 +398,7 @@ namespace wg {
             };
 
             vk::FramebufferCreateInfo finf;
-            finf.setRenderPass(this->compatibleRenderPassRegistry->getRenderPass(internal::RenderPassType::renColorDepth))
+            finf.setRenderPass(this->compatibleRenderPassRegistry->getRenderPass(internal::renderPassUtil::RenderPassType::colorDepth))
                 .setAttachmentCount(2)
                 .setPAttachments(attachments)
                 .setWidth(this->window_width)
@@ -399,7 +408,7 @@ namespace wg {
             framebuffer->framebuffer = this->device.createFramebuffer(finf);
 
             this->framebuffers.push_back(framebuffer);
-        }
+            } */
     }
 
     void Wingine::init_descriptor_pool() {
@@ -436,8 +445,9 @@ namespace wg {
     }
 
     void Wingine::waitForLastPresent() {
-        _wassert_result(this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX),
-                        "wait for last present");
+        // _wassert_result(this->device.waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX),
+        //                 "wait for last present");
+        this->default_framebuffer_manager->waitForLastPresent();
     }
 
     void Wingine::waitIdle() {
@@ -449,7 +459,7 @@ namespace wg {
         }
     }
 
-    void Wingine::stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphores) {
+    /* void Wingine::stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphores) {
         int num_semaphores = semaphores.size();
 
         this->waitForLastPresent();
@@ -465,7 +475,7 @@ namespace wg {
         if(num_semaphores) {
             SemaphoreChain::semaphoreToChains(this, this->image_acquire_semaphore, std::begin(semaphores), num_semaphores);
         }
-    }
+        } */
 
     void Wingine::init_vulkan(int width, int height, const std::string& app_name) {
         throw std::runtime_error("Not implemented yet");
@@ -502,14 +512,31 @@ namespace wg {
             std::make_shared<internal::CommandManager>(const_device_manager,
                                                        const_queue_manager);
 
-        this->swapchain_manager =
+        /* this->swapchain_manager =
             std::make_shared<internal::SwapchainManager>(const_device_manager,
                                                          *const_queue_manager,
                                                          vk::Extent2D(this->window_width,
                                                                       this->window_height),
-                                                         vulkan_instance_manager->getSurface());
+                                                                      vulkan_instance_manager->getSurface()); */
 
-        this->init_present_sync();
+        this->default_framebuffer_manager =
+            std::make_shared<internal::DefaultFramebufferManager>(vk::Extent2D(width, height),
+                                                                  this->vulkan_instance_manager->getSurface(),
+                                                                  const_device_manager,
+                                                                  *const_queue_manager,
+                                                                  *this->compatibleRenderPassRegistry);
+
+        this->default_framebuffer_manager->stageNextImage(this->queue_manager->getPresentQueue(), {});
+
+
+        // this->init_present_sync();
+
+        // General purpose fence for the moving stage
+        vk::FenceCreateInfo fence_create_info;
+        fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+        this->general_purpose_fence =
+            this->device.createFence(fence_create_info);
 
         this->init_generic_render_pass();
 
@@ -519,7 +546,7 @@ namespace wg {
 
         this->init_pipeline_cache();
 
-        this->stage_next_image({});
+        // this->stage_next_image({});
         this->waitForLastPresent(); // Ensure image is already acquired
     }
 
@@ -638,20 +665,21 @@ namespace wg {
         return this->descriptor_pool;
     }
 
-    std::vector<Framebuffer*>&  Wingine::getFramebuffers() {
-        return framebuffers;
+    const std::vector<std::unique_ptr<internal::IFramebuffer>>&  Wingine::getFramebuffers() {
+        return this->default_framebuffer_manager->getFramebuffers();
     }
 
     int Wingine::getNumFramebuffers() {
-        return framebuffers.size();
+        return this->default_framebuffer_manager->getFramebuffers().size();
     }
 
-    Framebuffer* Wingine::getCurrentFramebuffer() {
-        return this->framebuffers[this->current_swapchain_image];
+    const internal::IFramebuffer& Wingine::getCurrentFramebuffer() {
+        return this->default_framebuffer_manager->getCurrentFramebuffer();
     }
 
     int Wingine::getCurrentFramebufferIndex() {
-        return this->current_swapchain_image;
+        // return this->current_swapchain_image;
+        return this->default_framebuffer_manager->getCurrentImageIndex();
     }
 
     IndexBuffer* Wingine::createIndexBuffer(uint32_t numIndices) {
@@ -702,13 +730,21 @@ namespace wg {
                                    shader);
     }
 
-    Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
+    /* Framebuffer* Wingine::createFramebuffer(uint32_t width, uint32_t height,
                                             bool depthOnly) {
         Framebuffer* framebuffer = new Framebuffer(*this,
                                                    width, height,
                                                    depthOnly);
+
+        IFramebuffer* framebuffer =
         return framebuffer;
 
+        } */
+    std::unique_ptr<internal::IFramebuffer> Wingine::createFramebuffer(uint32_t width, uint32_t height,
+                                                                       bool depthOnly) {
+        return internal::BasicFramebuffer::createFramebuffer({ width, height },
+                                                             this->device_manager,
+                                                             *this->compatibleRenderPassRegistry);
     }
 
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {
@@ -810,12 +846,12 @@ namespace wg {
         this->device.destroy(image.view, nullptr);
     }
 
-    void Wingine::destroySwapchainFramebuffer(Framebuffer* framebuffer) {
+    /* void Wingine::destroySwapchainFramebuffer(Framebuffer* framebuffer) {
         this->destroySwapchainImage(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
 
         this->device.destroy(framebuffer->framebuffer, nullptr);
-    }
+        } */
 
     void Wingine::destroy(ResourceImage* resourceImage) {
         this->device.free(resourceImage->memory, nullptr);
@@ -879,10 +915,10 @@ namespace wg {
     void Wingine::destroy(SemaphoreChain* semaphore_chain) {
         // Using image_acquired fence...
         this->waitForLastPresent();
-        _wassert_result(this->device.resetFences(1, &this->image_acquired_fence),
+        _wassert_result(this->device.resetFences(1, &this->general_purpose_fence),
                         "reset fence in destroying semaphore chain");
 
-        semaphore_chain->ensure_finished(this, this->image_acquired_fence);
+                        semaphore_chain->ensure_finished(this, this->general_purpose_fence);
         this->device.destroy(semaphore_chain->semaphore, nullptr);
 
         delete semaphore_chain;
@@ -912,14 +948,14 @@ namespace wg {
         this->device.destroy(image.view, nullptr);
     }
 
-    void Wingine::destroy(Framebuffer* framebuffer) {
+    /* void Wingine::destroy(Framebuffer* framebuffer) {
         this->destroy(framebuffer->colorImage);
         this->destroy(framebuffer->depthImage);
 
         this->device.destroy(framebuffer->framebuffer, nullptr);
 
         delete framebuffer;
-    }
+        } */
 
     void Wingine::destroy(StorageBuffer* storagebuffer) {
         this->destroy(storagebuffer->buffer);
@@ -932,14 +968,16 @@ namespace wg {
         this->device.destroy(this->descriptor_pool, nullptr);
         this->device.destroy(this->pipeline_cache, nullptr);
 
-        for(Framebuffer* fb : this->framebuffers) {
+        /* for(Framebuffer* fb : this->framebuffers) {
             this->destroySwapchainFramebuffer(fb);
             delete fb;
         }
 
         this->device.destroyFence(this->image_acquired_fence);
         this->device.destroy(this->image_acquire_semaphore);
-        this->device.destroy(this->finished_drawing_semaphore);
+        this->device.destroy(this->finished_drawing_semaphore); */
+
+        this->device.destroyFence(this->general_purpose_fence);
 
         for (auto it : this->resourceSetLayoutMap) {
             this->device.destroy(it.second.layout, nullptr);

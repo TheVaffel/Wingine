@@ -67,6 +67,15 @@ namespace wg {
     }
 
 
+    const Image& Framebuffer::getColorImage() const {
+        return this->colorImage;
+    }
+
+    const Image& Framebuffer::getDepthImage() const {
+        return this->depthImage;
+    }
+
+
     const vk::Framebuffer& Framebuffer::getFramebuffer() const {
         return this->framebuffer;
     }

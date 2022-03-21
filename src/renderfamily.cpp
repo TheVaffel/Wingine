@@ -2,6 +2,7 @@
 
 #include "./Wingine.hpp"
 
+#include "./framebuffer/IFramebuffer.hpp"
 #include "./log.hpp"
 
 namespace wg {
@@ -56,15 +57,15 @@ namespace wg {
     }
 
 
-    void RenderFamily::startRecording(std::vector<Framebuffer*> framebuffers) {
+    void RenderFamily::startRecording(const std::vector<std::unique_ptr<internal::IFramebuffer>>& framebuffers) {
 
         if (framebuffers.size() == 0) {
-            this->framebuffers = wing->getFramebuffers();
+            this->framebuffers = &wing->getFramebuffers();
         } else {
-            this->framebuffers = framebuffers;
+            this->framebuffers = &framebuffers;
         }
 
-        _wassert((int)this->framebuffers.size() == this->num_buffers,
+        _wassert((int)this->framebuffers->size() == this->num_buffers,
                  "[RenderFamily::startRecording] Number of provided framebuffers and originally declared framebuffers differ");
 
         for(int i = 0; i < this->num_buffers; i++) {
@@ -73,13 +74,13 @@ namespace wg {
 
             vk::Rect2D renderRect;
             renderRect.setOffset({0, 0})
-                .setExtent({this->framebuffers[i]->depthImage.width, this->framebuffers[i]->depthImage.height});
+                .setExtent((*this->framebuffers)[i]->getDepthImage().getDimensions());
 
             vk::RenderPassBeginInfo rpb;
             rpb.setRenderPass(this->render_passes[i])
                 .setClearValueCount(0)
                 .setPClearValues(nullptr)
-                .setFramebuffer(this->framebuffers[i]->framebuffer)
+                .setFramebuffer((*this->framebuffers)[i]->getFramebuffer())
                 .setRenderArea(renderRect);
 
             // Size is number of attachments
@@ -87,12 +88,12 @@ namespace wg {
 
             if(this->clears) {
                 switch (this->render_pass_type) {
-                case internal::RenderPassType::renDepth:
+                case internal::renderPassUtil::RenderPassType::depthOnly:
                     clear_values.resize(1);
                     clear_values[0].depthStencil.depth = 1.0f;
                     clear_values[0].depthStencil.stencil = 0.0f;
                     break;
-                case internal::RenderPassType::renColorDepth:
+                case internal::renderPassUtil::RenderPassType::colorDepth:
                     clear_values.resize(2);
                     clear_values[0].color.setFloat32({0.3f, 0.3f,
                                                       0.3f, 1.0f});

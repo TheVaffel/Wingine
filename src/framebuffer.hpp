@@ -3,6 +3,8 @@
 
 #include "declarations.hpp"
 
+#include "./SwapchainManager.hpp"
+
 #include "image.hpp"
 
 namespace wg {
@@ -15,8 +17,8 @@ namespace wg {
         Framebuffer(Wingine& wing,
                     int width, int height,
                     bool depthOnly);
-        Framebuffer();
 
+        Framebuffer();
     public:
 
         void destroy();

@@ -20,28 +20,43 @@ set(FLAWED_ROOT "${CMAKE_HOME_DIRECTORY}/../flawed")
 set(FLAWED_INCLUDE_DIR "${FLAWED_ROOT}/include")
 set(FLAWED_LIB_DIR "${FLAWED_ROOT}/lib")
 
+set(FRAMEBUFFER_SOURCES framebufferUtil.cpp IFramebuffer.cpp BasicFramebuffer.cpp SwapchainFramebuffer.cpp)
+set(IMAGE_SOURCES imageUtil.cpp IImage.cpp BasicImage.cpp SwapchainColorImage.cpp)
+set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
+set(MEMORY_SOURCES memoryUtil.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)
+
+list(TRANSFORM FRAMEBUFFER_SOURCES PREPEND "framebuffer/")
+list(TRANSFORM IMAGE_SOURCES PREPEND "image/")
+list(TRANSFORM RENDER_PASS_SOURCES PREPEND "render_pass/")
+list(TRANSFORM MEMORY_SOURCES PREPEND "memory/")
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
+
 set(WINGINE_SOURCES
   buffer.cpp
   image.cpp
   renderfamily.cpp
   Wingine.cpp
-  framebuffer.cpp
+  # framebuffer.cpp
   pipeline.cpp
   resource.cpp
   util.cpp
   semaphore.cpp
-  CompatibleRenderPassRegistry.cpp
   VulkanInstanceManager.cpp
   DeviceManager.cpp
   QueueManager.cpp
   CommandManager.cpp
   SwapchainManager.cpp
+  DefaultFramebufferManager.cpp
   log.cpp
   queueUtils.cpp
   deviceEvaluation.cpp
+  ${FRAMEBUFFER_SOURCES}
+  ${IMAGE_SOURCES}
+  ${RENDER_PASS_SOURCES}
+  ${MEMORY_SOURCES}
   ${WGUTIL_SOURCES})
+
 list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")
 
 if(WIN32)

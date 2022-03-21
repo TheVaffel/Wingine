@@ -4,6 +4,7 @@
 
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
+#include "./semaphore.hpp"
 
 namespace wg::internal {
     class SwapchainManager {
@@ -16,10 +17,10 @@ namespace wg::internal {
 
     public:
 
-        SwapchainManager(std::shared_ptr<const DeviceManager> device_manager,
-                         const QueueManager& queue_manager,
-                         const vk::Extent2D& extent,
-                         vk::SurfaceKHR surface);
+        SwapchainManager(const vk::Extent2D& preferred_dimensions,
+                         const vk::SurfaceKHR& surface,
+                         std::shared_ptr<const DeviceManager> device_manager,
+                         const QueueManager& queue_manager);
         ~SwapchainManager();
 
         SwapchainManager(const SwapchainManager& swapchain_manager) = delete;
@@ -28,6 +29,6 @@ namespace wg::internal {
         const vk::Extent2D& getDimensions() const;
 
         const std::vector<vk::Image>& getImages() const;
-        const uint32_t getNumImages() const;
+        uint32_t getNumImages() const;
     };
 };

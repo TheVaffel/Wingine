@@ -55,7 +55,7 @@ namespace wg {
     class Wingine;
     class Resource;
     class RenderFamily;
-    class Framebuffer;
+    // class Framebuffer;
     class Texture;
     class Image;
     class Buffer;

@@ -2,6 +2,8 @@
 
 #include "./Wingine.hpp"
 
+#include "./render_pass/renderPassUtil.hpp"
+
 namespace wg {
 
 
@@ -20,6 +22,7 @@ namespace wg {
             break;
         default:
             std::cout << "[Wingine::Shader] Shader stage not yet supported" << std::endl;
+            throw std::runtime_error("Unrecognized shader stage");
         }
 
         this->shader_info.setStage(stage_bit)
@@ -280,12 +283,12 @@ namespace wg {
         }
 
 
-        internal::RenderPassType rpt;
+        internal::renderPassUtil::RenderPassType rpt;
 
         if (setup.depthOnly) {
-            rpt = internal::RenderPassType::renDepth;
+            rpt = internal::renderPassUtil::RenderPassType::depthOnly;
         } else {
-            rpt = internal::RenderPassType::renColorDepth;
+            rpt = internal::renderPassUtil::RenderPassType::colorDepth;
         }
 
 

@@ -18,14 +18,6 @@ namespace wg {
         return this->view;
     }
 
-    const Image& Framebuffer::getColorImage() const {
-        return this->colorImage;
-    }
-
-    const Image& Framebuffer::getDepthImage() const {
-        return this->depthImage;
-    }
-
     void Image::constructImage(Wingine& wing,
                                Image& image,
                                int width, int height,

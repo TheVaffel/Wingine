@@ -6,7 +6,7 @@
 #include "buffer.hpp"
 
 #include "./CommandManager.hpp"
-#include "./CompatibleRenderPassRegistry.hpp"
+#include "./render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg {
 
@@ -47,7 +47,7 @@ namespace wg {
     class Pipeline {
         vk::Pipeline pipeline;
         vk::PipelineLayout layout;
-        internal::RenderPassType render_pass_type;
+        internal::renderPassUtil::RenderPassType render_pass_type;
 
         Pipeline(Wingine& wing,
                  const std::vector<VertexAttribDesc>& descriptions,

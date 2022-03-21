@@ -299,13 +299,15 @@ namespace wg {
         image->current_layout = image_final;
     }
 
-    void Texture::set(Framebuffer* framebuffer, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {
+    void Texture::set(internal::IFramebuffer& framebuffer, const std::initializer_list<SemaphoreChain*>& wait_semaphores) {
         bool depth = this->aspect == vk::ImageAspectFlagBits::eDepth;
 
-        this->wing->copy_image(depth ? framebuffer->depthImage.width : framebuffer->colorImage.width,
-                               depth ? framebuffer->depthImage.height : framebuffer->colorImage.height,
-                               depth ? framebuffer->depthImage.image : framebuffer->colorImage.image,
-                               depth ? framebuffer->depthImage.current_layout : framebuffer->colorImage.current_layout,
+        internal::IImage& image = depth ? framebuffer.getDepthImage() : framebuffer.getColorImage();
+
+        this->wing->copy_image(image.getDimensions().width,
+                               image.getDimensions().height,
+                               image.getImage(),
+                               image.getCurrentLayout(),
                                depth ? vk::ImageLayout::eDepthStencilAttachmentOptimal : vk::ImageLayout::eColorAttachmentOptimal,
                                this->width, this->height,
                                this->image, this->current_layout,
@@ -316,9 +318,9 @@ namespace wg {
         this->current_layout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
         if (depth) {
-            framebuffer->depthImage.current_layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+            image.setCurrentLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
         } else {
-            framebuffer->colorImage.current_layout = vk::ImageLayout::eColorAttachmentOptimal;
+            image.setCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
         }
     }
 

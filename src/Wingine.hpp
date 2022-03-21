@@ -9,15 +9,17 @@
 
 #include "declarations.hpp"
 
-#include "./CompatibleRenderPassRegistry.hpp"
+#include "./render_pass/CompatibleRenderPassRegistry.hpp"
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
-#include "./SwapchainManager.hpp"
+// #include "./SwapchainManager.hpp"
+#include "./DefaultFramebufferManager.hpp"
+#include "./framebuffer/IFramebuffer.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
-#include "framebuffer.hpp"
+// #include "framebuffer.hpp"
 #include "resource.hpp"
 #include "pipeline.hpp"
 #include "renderfamily.hpp"
@@ -37,17 +39,18 @@ namespace wg {
         vk::Device device;
 
         std::shared_ptr<internal::QueueManager> queue_manager;
-
         std::shared_ptr<internal::CommandManager> command_manager;
+        std::shared_ptr<internal::DefaultFramebufferManager> default_framebuffer_manager;
 
-        std::shared_ptr<internal::SwapchainManager> swapchain_manager;
-
-        vk::Fence image_acquired_fence;
+        /* vk::Fence image_acquired_fence;
         vk::Semaphore image_acquire_semaphore;
         vk::Semaphore finished_drawing_semaphore;
 
         uint32_t current_swapchain_image;
-        std::vector<Framebuffer*> framebuffers;
+        std::vector<Framebuffer*> framebuffers; */
+
+        // General purpose fence for the moving phase
+        vk::Fence general_purpose_fence;
 
         vk::DescriptorPool descriptor_pool;
 
@@ -66,12 +69,12 @@ namespace wg {
 
         void init_vulkan(int width, int height, const std::string& app_name);
 
-        void init_present_sync();
+        // void init_present_sync();
         void init_generic_render_pass();
         void init_framebuffers();
         void init_descriptor_pool();
         void init_pipeline_cache();
-        void stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphore_chains);
+        // void stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphore_chains);
 
         void cons_image_image(Image& image,
                               uint32_t width, uint32_t height,
@@ -100,7 +103,7 @@ namespace wg {
         void ensure_resource_set_layout_exists(const std::vector<uint64_t>& resourceSetLayout);
 
         // Don't delete color images, those are handled by swapchain
-        void destroySwapchainFramebuffer(Framebuffer* framebuffer);
+        // void destroySwapchainFramebuffer(Framebuffer* framebuffer);
         void destroySwapchainImage(Image& image);
 
         vk::Queue getGraphicsQueue();
@@ -111,10 +114,10 @@ namespace wg {
         vk::CommandPool getPresentCommandPool();
         vk::CommandPool getGraphicsCommandPool();
 
-        std::vector<Framebuffer*>& getFramebuffers();
+        const std::vector<std::unique_ptr<internal::IFramebuffer>>& getFramebuffers();
 
-        void register_compatible_render_pass(internal::RenderPassType type);
-        vk::RenderPass create_render_pass(internal::RenderPassType type,
+        void register_compatible_render_pass(internal::renderPassUtil::RenderPassType type);
+        vk::RenderPass create_render_pass(internal::renderPassUtil::RenderPassType type,
                                           bool clear);
 
         void destroy(Image& image);
@@ -124,7 +127,7 @@ namespace wg {
         void waitForLastPresent();
         void waitIdle();
 
-        Framebuffer* getCurrentFramebuffer();
+        const internal::IFramebuffer& getCurrentFramebuffer();
         int getCurrentFramebufferIndex();
         int getNumFramebuffers();
 
@@ -155,8 +158,8 @@ namespace wg {
         ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                                Shader* shaders);
 
-        Framebuffer* createFramebuffer(uint32_t width, uint32_t height,
-                                       bool depthOnly = false);
+        std::unique_ptr<internal::IFramebuffer> createFramebuffer(uint32_t width, uint32_t height,
+                                                                  bool depthOnly = false);
 
         ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
@@ -184,7 +187,7 @@ namespace wg {
         template<typename Type>
         void destroy(Uniform<Type>* uniform);
 
-        void destroy(Framebuffer* framebuffer);
+        // void destroy(Framebuffer* framebuffer);
 
         Wingine(Winval& win);
 
@@ -230,4 +233,6 @@ namespace wg {
         delete uniform->buffer_info;
         delete uniform;
     }
+
+    typedef std::unique_ptr<internal::IFramebuffer> FramebufferPtr;
 };

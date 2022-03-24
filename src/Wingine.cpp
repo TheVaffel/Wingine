@@ -2,6 +2,7 @@
 #include "./log.hpp"
 
 #include "./framebuffer/BasicFramebuffer.hpp"
+#include "./framebuffer/DepthOnlyFramebuffer.hpp"
 
 #include <exception>
 
@@ -742,9 +743,15 @@ namespace wg {
         } */
     std::unique_ptr<internal::IFramebuffer> Wingine::createFramebuffer(uint32_t width, uint32_t height,
                                                                        bool depthOnly) {
-        return internal::BasicFramebuffer::createFramebuffer({ width, height },
-                                                             this->device_manager,
-                                                             *this->compatibleRenderPassRegistry);
+        if (depthOnly) {
+            return std::make_unique<internal::DepthOnlyFramebuffer>(vk::Extent2D(width, height),
+                                                                    this->device_manager,
+                                                                    *this->compatibleRenderPassRegistry);
+        } else {
+            return internal::BasicFramebuffer::createFramebuffer({ width, height },
+                                                                 this->device_manager,
+                                                                 *this->compatibleRenderPassRegistry);
+        }
     }
 
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {

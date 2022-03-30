@@ -6,7 +6,7 @@
 #include "pipeline.hpp"
 #include "resource.hpp"
 
-#include "./framebuffer/IFramebuffer.hpp"
+#include "./framebuffer/IFramebufferChain.hpp"
 #include "./render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg {
@@ -18,20 +18,28 @@ namespace wg {
         const Pipeline* pipeline;
         std::vector<vk::RenderPass> render_passes;
         bool clears;
-        int num_buffers;
-        const std::vector<std::unique_ptr<internal::IFramebuffer>>* framebuffers;
+
+        uint32_t num_buffers;
+
+        std::shared_ptr<internal::IFramebufferChain> framebuffer_chain;
+        std::shared_ptr<internal::CompatibleRenderPassRegistry> render_pass_registry;
         internal::renderPassUtil::RenderPassType render_pass_type;
 
+        uint32_t current_framebuffer_index = 0;
+
         RenderFamily(Wingine& wing,
-                     const internal::CompatibleRenderPassRegistry& renderPassRegistry,
+                     std::shared_ptr<internal::CompatibleRenderPassRegistry> renderPassRegistry,
                      const Pipeline* pipeline,
                      bool clear,
                      int num_buffers = 0);
 
         void submit_command(const std::initializer_list<SemaphoreChain*>& wait_semaphores, int index);
 
+        void setFramebufferCount(uint32_t new_count);
+
     public:
-        void startRecording(const std::vector<std::unique_ptr<internal::IFramebuffer>>& framebuffer = {});
+
+        void startRecording(std::shared_ptr<internal::IFramebufferChain> framebuffer_chain);
 
         void recordDraw(const std::vector<const Buffer*>& buffers, const IndexBuffer* ind_buf,
                         const std::vector<ResourceSet*>& sets, int instanceCount = 1);

@@ -7,10 +7,11 @@
 
 // #include "./framebuffer.hpp"
 #include "./framebuffer/IFramebuffer.hpp"
+#include "./framebuffer/IFramebufferChain.hpp"
 #include "./render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg::internal {
-    class DefaultFramebufferManager {
+    class DefaultFramebufferManager : public IFramebufferChain {
 
         std::shared_ptr<const DeviceManager> device_manager;
         std::shared_ptr<const SwapchainManager> swapchain_manager;
@@ -40,8 +41,19 @@ namespace wg::internal {
                      const std::initializer_list<SemaphoreChain*>& semaphores);
         void waitForLastPresent();
 
+
+
         const std::vector<std::unique_ptr<IFramebuffer>>& getFramebuffers();
-        const IFramebuffer& getCurrentFramebuffer() const;
         uint32_t getCurrentImageIndex() const;
+
+
+        virtual void swapFramebuffer();
+        virtual const IFramebuffer& getCurrentFramebuffer() const;
+        virtual IFramebuffer& getCurrentFramebuffer();
+
+        virtual uint32_t getNumFramebuffers() const;
+
+        virtual const IFramebuffer& getFramebuffer(uint32_t index) const;
+        virtual IFramebuffer& getFramebuffer(uint32_t index);
     };
 };

@@ -26,6 +26,8 @@
 #include "semaphore.hpp"
 #include "util.hpp"
 
+#include "./types.hpp"
+
 namespace wg {
 
     class Wingine {
@@ -158,8 +160,15 @@ namespace wg {
         ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                                Shader* shaders);
 
-        std::unique_ptr<internal::IFramebuffer> createFramebuffer(uint32_t width, uint32_t height,
-                                                                  bool depthOnly = false);
+        Framebuffer createFramebuffer(uint32_t width, uint32_t height,
+                                      bool depthOnly = false);
+
+        FramebufferChain createFramebufferSet(uint32_t width,
+                                            uint32_t height,
+                                            bool depthOnly = false,
+                                            uint32_t count = 3);
+
+        FramebufferChain getDefaultFramebufferChain();
 
         ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
@@ -202,7 +211,7 @@ namespace wg {
 
         friend class Buffer;
         friend class Pipeline;
-        friend class Framebuffer;
+        // friend class Framebuffer;
         friend class RenderFamily;
         friend class ResourceSetLayout;
         friend class ResourceSet;
@@ -233,6 +242,4 @@ namespace wg {
         delete uniform->buffer_info;
         delete uniform;
     }
-
-    typedef std::unique_ptr<internal::IFramebuffer> FramebufferPtr;
 };

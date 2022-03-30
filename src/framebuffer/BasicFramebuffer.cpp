@@ -4,7 +4,6 @@
 #include "./framebufferUtil.hpp"
 
 namespace wg::internal {
-    BasicFramebuffer::BasicFramebuffer() { };
 
     BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
                                        std::shared_ptr<const DeviceManager> device_manager,
@@ -21,16 +20,6 @@ namespace wg::internal {
                                                                     *this->depth_image,
                                                                     render_pass_registry,
                                                                     device_manager->getDevice());
-    }
-
-
-    std::unique_ptr<IFramebuffer> BasicFramebuffer::createFramebuffer(
-        const vk::Extent2D dimensions,
-        std::shared_ptr<const DeviceManager> device_manager,
-        CompatibleRenderPassRegistry& render_pass_registry) {
-        return std::unique_ptr<IFramebuffer>(new BasicFramebuffer(dimensions,
-                                                                  device_manager,
-                                                                  render_pass_registry));
     }
 
     bool BasicFramebuffer::hasColorImage() const {

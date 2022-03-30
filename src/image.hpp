@@ -30,7 +30,7 @@ namespace wg {
         const vk::DeviceMemory& getMemory() const;
         const vk::ImageView& getView() const;
 
-        friend class Framebuffer;
+        // friend class Framebuffer;
         friend class Texture;
         friend class Wingine;
         friend class RenderFamily;

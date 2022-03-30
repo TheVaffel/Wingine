@@ -20,64 +20,15 @@ namespace wg::internal {
                                                                      queue_manager);
 
 
-            this->initSyncStructs(device_manager->getDevice());
+        this->initSyncStructs(device_manager->getDevice());
 
-      for (uint32_t i = 0; i < swapchain_manager->getNumImages(); i++) {
-          this->framebuffers.push_back(SwapchainFramebuffer::createSwapchainFramebuffer(
-                                           swapchain_manager->getImages()[i],
-                                           swapchain_manager,
-                                           device_manager,
-                                           render_pass_registry));
-      }
-
-      /* for(unsigned int i = 0; i < this->swapchain_manager->getNumImages(); i++) {
-
-          SwapchainFramebuffer swapchainFramebuffer = SwapchainFramebuffer(swapchain_manager,
-                                                                           device_manager,
-                                                                           render_pass_registry);
-          const vk::Image& sim = this->swapchain_manager->getImages()[i];
-
-          Framebuffer* framebuffer = new Framebuffer();
-
-          framebuffer->colorImage.image = sim;
-          framebuffer->colorImage.width = this->window_width;
-          framebuffer->colorImage.height = this->window_height;
-
-          this->cons_image_view(framebuffer->colorImage,
-                                wImageViewColor,
-                                vk::Format::eB8G8R8A8Unorm);
-
-
-          this->cons_image_image(framebuffer->depthImage,
-                                 this->window_width,
-                                 this->window_height,
-                                 vk::Format::eD32Sfloat,
-                                 vk::ImageUsageFlagBits::eDepthStencilAttachment |
-                                 vk::ImageUsageFlagBits::eTransferSrc,
-                                 vk::ImageTiling::eOptimal);
-          this->cons_image_memory(framebuffer->depthImage,
-                                  vk::MemoryPropertyFlagBits::eDeviceLocal);
-          this->cons_image_view(framebuffer->depthImage,
-                                wImageViewDepth,
-                                vk::Format::eD32Sfloat);
-
-          vk::ImageView attachments[] = {
-              framebuffer->colorImage.view,
-              framebuffer->depthImage.view
-          };
-
-          vk::FramebufferCreateInfo finf;
-          finf.setRenderPass(this->compatibleRenderPassRegistry->getRenderPass(internal::RenderPassType::renColorDepth))
-              .setAttachmentCount(2)
-              .setPAttachments(attachments)
-              .setWidth(this->window_width)
-              .setHeight(this->window_height)
-              .setLayers(1);
-
-          framebuffer->framebuffer = this->device.createFramebuffer(finf);
-
-          this->framebuffers.push_back(framebuffer);
-          } */
+        for (uint32_t i = 0; i < swapchain_manager->getNumImages(); i++) {
+            this->framebuffers.push_back(SwapchainFramebuffer::createSwapchainFramebuffer(
+                                             swapchain_manager->getImages()[i],
+                                             swapchain_manager,
+                                             device_manager,
+                                             render_pass_registry));
+        }
     }
 
 
@@ -113,7 +64,6 @@ namespace wg::internal {
 
         uint32_t swapchain_image_index = this->current_swapchain_image;
 
-
         presentInfo.setSwapchainCount(1)
             .setPSwapchains(&this->swapchain_manager->getSwapchain())
             .setPImageIndices(&swapchain_image_index)
@@ -121,8 +71,10 @@ namespace wg::internal {
             .setPWaitSemaphores(&this->finished_drawing_semaphore)
             .setPResults(nullptr);
 
+        std::cout << "[DefaultFramebufferManager.cpp] Presenting KHR" << std::endl;
         _wassert_result(present_queue.presentKHR(presentInfo),
                         "submit present command");
+        std::cout << "[DefaultFramebufferManager.cpp] Done presenting" << std::endl;
 
         this->stageNextImage(present_queue, semaphores);
 
@@ -134,18 +86,17 @@ namespace wg::internal {
         return this->framebuffers;
     }
 
-    const IFramebuffer& DefaultFramebufferManager::getCurrentFramebuffer() const {
-        return *this->framebuffers[this->current_swapchain_image];
-    }
-
     uint32_t DefaultFramebufferManager::getCurrentImageIndex() const {
         return this->current_swapchain_image;
     }
 
     void DefaultFramebufferManager::waitForLastPresent() {
+        std::cout << "waiting for fence in waitForLastPresent" << std::endl;
         _wassert_result(this->device_manager->getDevice()
                         .waitForFences(1, &this->image_acquired_fence, true, UINT64_MAX),
                         "wait for last present");
+
+        std::cout << "Finished waiting" << std::endl;
 
     }
 
@@ -178,13 +129,34 @@ namespace wg::internal {
     DefaultFramebufferManager::~DefaultFramebufferManager() {
         const vk::Device& device = this->device_manager->getDevice();
 
-        /* for(Framebuffer* fb : this->framebuffers) {
-            destroySwapchainFramebuffer(*fb, device);
-            delete fb;
-            } */
-
         device.destroyFence(this->image_acquired_fence);
         device.destroy(this->image_acquire_semaphore);
         device.destroy(this->finished_drawing_semaphore);
+    }
+
+
+
+    void DefaultFramebufferManager::swapFramebuffer() {
+        // Do nothing
+    }
+
+    const IFramebuffer& DefaultFramebufferManager::getCurrentFramebuffer() const {
+        return *this->framebuffers[this->current_swapchain_image];
+    }
+
+    IFramebuffer& DefaultFramebufferManager::getCurrentFramebuffer() {
+        return *this->framebuffers[this->current_swapchain_image];
+    }
+
+    uint32_t DefaultFramebufferManager::getNumFramebuffers() const {
+        return this->framebuffers.size();
+    }
+
+    const IFramebuffer& DefaultFramebufferManager::getFramebuffer(uint32_t index) const {
+        return *this->framebuffers[index];
+    }
+
+    IFramebuffer& DefaultFramebufferManager::getFramebuffer(uint32_t index) {
+        return *this->framebuffers[index];
     }
 };

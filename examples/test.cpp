@@ -109,7 +109,7 @@ int main() {
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
-    family->startRecording();
+    family->startRecording(wing.getDefaultFramebufferChain());
     family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
     family->endRecording();
 

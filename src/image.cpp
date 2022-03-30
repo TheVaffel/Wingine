@@ -1,6 +1,6 @@
 #include "./image.hpp"
 
-#include "./framebuffer.hpp"
+// #include "./framebuffer.hpp"
 
 #include "./Wingine.hpp"
 

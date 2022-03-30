@@ -3,6 +3,7 @@
 
 #include "./framebuffer/BasicFramebuffer.hpp"
 #include "./framebuffer/DepthOnlyFramebuffer.hpp"
+#include "./framebuffer/BasicFramebufferChain.hpp"
 
 #include <exception>
 
@@ -741,17 +742,40 @@ namespace wg {
         return framebuffer;
 
         } */
-    std::unique_ptr<internal::IFramebuffer> Wingine::createFramebuffer(uint32_t width, uint32_t height,
-                                                                       bool depthOnly) {
+    Framebuffer Wingine::createFramebuffer(uint32_t width, uint32_t height,
+                                           bool depthOnly) {
         if (depthOnly) {
             return std::make_unique<internal::DepthOnlyFramebuffer>(vk::Extent2D(width, height),
                                                                     this->device_manager,
                                                                     *this->compatibleRenderPassRegistry);
         } else {
-            return internal::BasicFramebuffer::createFramebuffer({ width, height },
-                                                                 this->device_manager,
-                                                                 *this->compatibleRenderPassRegistry);
+            return std::make_unique<internal::BasicFramebuffer>(vk::Extent2D(width, height),
+                                                                this->device_manager,
+                                                                *this->compatibleRenderPassRegistry);
         }
+    }
+
+    FramebufferChain Wingine::createFramebufferSet(uint32_t width, uint32_t height,
+                                                 bool depthOnly, uint32_t num_framebuffers) {
+        if (depthOnly) {
+            return std::make_shared<
+                internal::BasicFramebufferChain<
+                    internal::DepthOnlyFramebuffer>>(num_framebuffers,
+                                                     vk::Extent2D(width, height),
+                                                     this->device_manager,
+                                                     *this->compatibleRenderPassRegistry);
+        } else {
+            return std::make_shared<
+                internal::BasicFramebufferChain<
+                    internal::BasicFramebuffer>>(num_framebuffers,
+                                                 vk::Extent2D(width, height),
+                                                 this->device_manager,
+                                                 *this->compatibleRenderPassRegistry);
+        }
+    }
+
+    FramebufferChain Wingine::getDefaultFramebufferChain() {
+        return this->default_framebuffer_manager;
     }
 
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {
@@ -777,7 +801,7 @@ namespace wg {
     }
 
     RenderFamily* Wingine::createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers) {
-        return new RenderFamily(*this, *this->compatibleRenderPassRegistry,
+        return new RenderFamily(*this, this->compatibleRenderPassRegistry,
                                 pipeline, clear, num_framebuffers);
     }
 
@@ -887,7 +911,7 @@ namespace wg {
 
 
     void Wingine::destroy(RenderFamily* family) {
-        for(int i = 0; i < family->num_buffers; i++) {
+        for(uint32_t i = 0; i < family->num_buffers; i++) {
             _wassert_result(this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX),
                             "wait for command finish");
             this->device.destroy(family->commands[i].fence, nullptr);

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "./IFramebuffer.hpp"
 
@@ -14,16 +15,10 @@ namespace wg::internal {
 
         std::shared_ptr<const DeviceManager> device_manager;
 
-        BasicFramebuffer();
+    public:
         BasicFramebuffer(const vk::Extent2D& dimensions,
                          std::shared_ptr<const DeviceManager> device_manager,
                          CompatibleRenderPassRegistry& render_pass_registry);
-    public:
-
-        static std::unique_ptr<IFramebuffer> createFramebuffer(
-            const vk::Extent2D dimensions,
-            std::shared_ptr<const DeviceManager> device_manager,
-            CompatibleRenderPassRegistry& render_pass_registry);
 
         virtual const vk::Framebuffer& getFramebuffer() const;
 

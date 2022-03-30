@@ -122,6 +122,7 @@ namespace wg::internal::renderPassUtil {
                                            const vk::Device& device) {
 
         RenderPassSetup setup(type);
+        setup.setClear(true);
         return createRenderPassRaw(setup, device);
     }
 };

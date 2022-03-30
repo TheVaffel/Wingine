@@ -84,8 +84,8 @@ int main() {
     const uint32_t shadow_buffer_width = 2000,
         shadow_buffer_height = 2000;
 
-    wg::Framebuffer* depth_framebuffer = wing.createFramebuffer(shadow_buffer_width,
-                                                                shadow_buffer_height, true);
+    wg::FramebufferChain depth_framebuffer_chain = wing.createFramebufferSet(shadow_buffer_width,
+                                                                             shadow_buffer_height, true);
 
     wg::TextureSetup tex_setup;
     tex_setup.setDepth(true);
@@ -199,11 +199,11 @@ int main() {
     wg::RenderFamily* depth_family = wing.createRenderFamily(depth_pipeline, true, 1);
 
     // Supply framebuffer (only one, as specified above)
-    depth_family->startRecording({depth_framebuffer});
+    depth_family->startRecording(depth_framebuffer_chain);
     depth_family->recordDraw({position_buffer, color_buffer}, index_buffer, {lightSet});
     depth_family->endRecording();
 
-    family->startRecording();
+    family->startRecording(wing.getDefaultFramebufferChain());
     family->recordDraw({position_buffer, color_buffer}, index_buffer, {resourceSet, lightTextureSet});
     family->endRecording();
 
@@ -237,7 +237,7 @@ int main() {
 
         depth_family->submit({shadow_chain}, 0);
 
-        shadow_texture->set(depth_framebuffer, {shadow_chain});
+        shadow_texture->set(depth_framebuffer_chain->getCurrentFramebuffer(), {shadow_chain});
 
         cameraUniform->set(renderMatrix);
 
@@ -274,7 +274,6 @@ int main() {
     wing.destroy(family);
     wing.destroy(depth_family);
 
-    wing.destroy(depth_framebuffer);
     wing.destroy(depth_shader);
     wing.destroy(depth_pipeline);
 

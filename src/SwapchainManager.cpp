@@ -11,7 +11,6 @@ namespace wg::internal {
 
             if(surfaceFormats.size() == 1 &&
                surfaceFormats[0].format == vk::Format::eUndefined) {
-                // return vk::Format::eB8G8R8A8Unorm;
                 return imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT;
             } else {
                 return surfaceFormats[0];

@@ -8,111 +8,83 @@
 namespace wg::internal::renderPassUtil {
 
     namespace {
-        struct RenderPassSetup {
-            RenderPassType type;
-            bool clear_color_on_load = false;
-            bool clear_depth_on_load = false;
-
-            RenderPassSetup& setClear(bool enable_clear) {
-                this->clear_color_on_load = enable_clear;
-                this->clear_depth_on_load = enable_clear;
-                return *this;
-            }
-
-            RenderPassSetup(RenderPassType type) : type(type) { }
-        };
-
-        vk::AttachmentDescription getColorAttachmentDescription(const RenderPassSetup& renderPassSetup) {
+        vk::AttachmentDescription getAttachmentDescription(bool clear_on_load,
+                                                           vk::ImageLayout layout,
+                                                           vk::Format format) {
             vk::AttachmentDescription desc;
-            desc.setLoadOp(renderPassSetup.clear_color_on_load ?
-                           vk::AttachmentLoadOp::eClear :
-                           vk::AttachmentLoadOp::eLoad)
-                .setStoreOp(vk::AttachmentStoreOp::eStore)
-                .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-                .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-                .setInitialLayout(renderPassSetup.clear_color_on_load ?
-                                  vk::ImageLayout::eUndefined :
-                                  vk::ImageLayout::ePresentSrcKHR)
-                .setFinalLayout(vk::ImageLayout::ePresentSrcKHR)
-                .setFormat(imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT);
-
-            return desc;
-        }
-
-        vk::AttachmentDescription getDepthAttachmentDescription(const RenderPassSetup& render_pass_setup) {
-            vk::AttachmentDescription desc;
-            desc.setLoadOp(render_pass_setup.clear_depth_on_load ?
+            desc.setLoadOp(clear_on_load ?
                            vk::AttachmentLoadOp::eClear :
                            vk::AttachmentLoadOp::eLoad)
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
                 .setStencilLoadOp(vk::AttachmentLoadOp::eLoad)
                 .setStencilStoreOp(vk::AttachmentStoreOp::eStore)
-                .setInitialLayout(render_pass_setup.clear_depth_on_load ?
+                .setInitialLayout(clear_on_load ?
                                   vk::ImageLayout::eUndefined :
-                                  vk::ImageLayout::eDepthStencilAttachmentOptimal)
-                .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
-                .setFormat(imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT);
+                                  layout)
+                .setFinalLayout(layout)
+                .setFormat(format);
 
             return desc;
         }
 
-        std::tuple<std::vector<vk::AttachmentDescription>,
-                   std::vector<vk::AttachmentReference>,
-                   std::optional<vk::AttachmentReference>>
-        getColorAndDepthAttachmentDescriptionsAndReferences(const RenderPassSetup& render_pass_setup) {
-            return std::make_tuple<std::vector<vk::AttachmentDescription>,
-                                   std::vector<vk::AttachmentReference>,
-                                   std::optional<vk::AttachmentReference>>
-                ({ getColorAttachmentDescription(render_pass_setup),
-                     getDepthAttachmentDescription(render_pass_setup) },
-                    { vk::AttachmentReference(0, vk::ImageLayout::eColorAttachmentOptimal) },
-                    { vk::AttachmentReference(1, vk::ImageLayout::eDepthStencilAttachmentOptimal) });
+        vk::AttachmentDescription getColorAttachmentDescription(bool clear_on_load) {
+            return getAttachmentDescription(clear_on_load,
+                                            vk::ImageLayout::ePresentSrcKHR,
+                                            imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT);
         }
 
-        vk::SubpassDescription createSimpleSubpassDescription(const std::vector<vk::AttachmentDescription>& descriptions,
-                                                              const std::vector<vk::AttachmentReference>& color_references,
-                                                              const std::optional<vk::AttachmentReference>& depth_stencil_reference) {
+        vk::AttachmentDescription getDepthAttachmentDescription(bool clear_on_load) {
+            return getAttachmentDescription(clear_on_load,
+                                            vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                            imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT);
+        }
+
+        std::vector<vk::AttachmentDescription> getColorAttachmentDescriptions(const std::vector<bool>& clears) {
+            std::vector<vk::AttachmentDescription> descriptions(clears.size());
+
+            for (uint32_t i = 0; i < descriptions.size(); i++) {
+                descriptions[i] = getColorAttachmentDescription(clears[i]);
+            }
+
+            return descriptions;
+        }
+
+        std::vector<vk::AttachmentReference> getColorAttachmentReferences(uint32_t num_references,
+                                                                          uint32_t binding_offset = 0) {
+            std::vector<vk::AttachmentReference> references(num_references);
+
+            for (uint32_t i = 0; i < num_references; i++) {
+                references[i] = vk::AttachmentReference(binding_offset + i,
+                                                        vk::ImageLayout::eColorAttachmentOptimal);
+            }
+
+            return references;
+        }
+
+        vk::AttachmentReference getDepthAttachmentReference(uint32_t binding_offset) {
+            return vk::AttachmentReference(binding_offset, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+        }
+
+        vk::SubpassDescription createSubpassDescription(const std::vector<vk::AttachmentReference>& color_references,
+                                                        const std::optional<vk::AttachmentReference>& depth_stencil_reference) {
             vk::SubpassDescription spd;
             spd.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
                 .setColorAttachments(color_references)
-                .setPDepthStencilAttachment(depth_stencil_reference ?
+                .setPDepthStencilAttachment(depth_stencil_reference.has_value() ?
                                             &depth_stencil_reference.value() :
                                             nullptr);
             return spd;
         }
 
-
-        vk::RenderPass createRenderPassRaw(const RenderPassSetup& renderPassSetup,
-                                           const vk::Device& device) {
-
-            std::vector<vk::AttachmentDescription> descriptions;
-            std::vector<vk::AttachmentReference> color_references;
-            std::optional<vk::AttachmentReference> depth_stencil_reference;
-
-            switch (renderPassSetup.type) {
-
-            case RenderPassType::colorDepth:
-
-                std::tie(descriptions, color_references, depth_stencil_reference) =
-                    getColorAndDepthAttachmentDescriptionsAndReferences(renderPassSetup);
-                break;
-
-            case RenderPassType::depthOnly:
-
-                descriptions = { getDepthAttachmentDescription(renderPassSetup) };
-                depth_stencil_reference = { vk::AttachmentReference(0, vk::ImageLayout::eDepthStencilAttachmentOptimal) };
-                break;
-            }
-
-            vk::SubpassDescription spd = createSimpleSubpassDescription(descriptions,
-                                                                        color_references,
-                                                                        depth_stencil_reference);
+        vk::RenderPass createRenderPass(const std::vector<vk::AttachmentDescription>& descriptions,
+                                        const vk::SubpassDescription& subpass_description,
+                                        const vk::Device& device) {
 
             vk::RenderPassCreateInfo rpci;
             rpci.setAttachmentCount(descriptions.size())
                 .setPAttachments(descriptions.data())
                 .setSubpassCount(1)
-                .setPSubpasses(&spd);
+                .setPSubpasses(&subpass_description);
 
             return device.createRenderPass(rpci);
         }
@@ -120,9 +92,91 @@ namespace wg::internal::renderPassUtil {
 
     vk::RenderPass createDefaultRenderPass(RenderPassType type,
                                            const vk::Device& device) {
+        RenderPassSetup setup;
 
-        RenderPassSetup setup(type);
-        setup.setClear(true);
-        return createRenderPassRaw(setup, device);
+        switch (type) {
+        case RenderPassType::colorDepth:
+            setup.setColorClears({true});
+            setup.setDepthClear(true);
+            break;
+        case RenderPassType::depthOnly:
+            setup.setColorClears({});
+            setup.setDepthClear(true);
+            break;
+        };
+
+        return createRenderPass(setup, device);
+    }
+
+
+    /*
+     * RenderPassSetup
+     */
+
+    uint32_t RenderPassSetup::getNumColorAttachments() const {
+        return this->color_clears.size();
+    }
+
+    const std::vector<bool>& RenderPassSetup::getColorClears() const {
+        return this->color_clears;
+    }
+
+    bool RenderPassSetup::hasDepthAttachment() const {
+        return this->depth_clear.has_value();
+    }
+
+    bool RenderPassSetup::getDepthClear() const {
+        if (!this->depth_clear.has_value()) {
+            throw std::runtime_error("[RenderPassSetup] Tried to get depth clear on render pass setup without depth");
+        }
+        return *this->depth_clear;
+    }
+
+    RenderPassSetup& RenderPassSetup::setNumColorAttachments(uint32_t num_color_attachments) {
+        this->color_clears = std::vector<bool>(num_color_attachments, true);
+        return *this;
+    }
+
+    RenderPassSetup& RenderPassSetup::setColorClears(const std::vector<bool>& color_clears) {
+        this->color_clears = color_clears;
+        return *this;
+    }
+
+    RenderPassSetup& RenderPassSetup::setEnableDepthAttachment(bool enable) {
+        if (enable) {
+            this->depth_clear = true;
+        } else {
+            this->depth_clear.reset();
+        }
+
+        return *this;
+    }
+
+    RenderPassSetup& RenderPassSetup::setDepthClear(bool enable) {
+        this->depth_clear = enable;
+        return *this;
+    }
+
+    /*
+     * Generic create function
+     */
+
+    vk::RenderPass createRenderPass(const RenderPassSetup& setup, const vk::Device& device) {
+        std::vector<vk::AttachmentDescription> attachment_descriptions =
+            getColorAttachmentDescriptions(setup.getColorClears());
+
+        std::vector<vk::AttachmentReference> color_references =
+            getColorAttachmentReferences(setup.getNumColorAttachments());
+
+        std::optional<vk::AttachmentReference> depth_reference;
+
+        if (setup.hasDepthAttachment()) {
+            attachment_descriptions.push_back(getDepthAttachmentDescription(setup.getDepthClear()));
+            depth_reference = getDepthAttachmentReference(color_references.size());
+        }
+
+        vk::SubpassDescription subpass_description = createSubpassDescription(color_references, depth_reference);
+
+        return createRenderPass(attachment_descriptions, subpass_description, device);
     }
 };

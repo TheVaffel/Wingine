@@ -324,6 +324,10 @@ namespace wg {
         return this->default_framebuffer_manager->addSignalImageAcquiredSemaphore();
     }
 
+    void Wingine::setImageReadySemaphores(const internal::SemaphoreSet& semaphores) {
+        return this->default_framebuffer_manager->setSignalImageAcquiredSemaphores(semaphores);
+    }
+
     void Wingine::init_generic_render_pass() {
         this->register_compatible_render_pass(internal::renderPassUtil::RenderPassType::colorDepth);
     }
@@ -541,12 +545,8 @@ namespace wg {
         return this->descriptor_pool;
     }
 
-    const std::vector<std::unique_ptr<internal::IFramebuffer>>&  Wingine::getFramebuffers() {
-        return this->default_framebuffer_manager->getFramebuffers();
-    }
-
     int Wingine::getNumFramebuffers() {
-        return this->default_framebuffer_manager->getFramebuffers().size();
+        return this->default_framebuffer_manager->getNumFramebuffers();
     }
 
     const internal::IFramebuffer& Wingine::getCurrentFramebuffer() {
@@ -620,6 +620,8 @@ namespace wg {
             return std::make_shared<
                 internal::BasicFramebufferChain<
                     internal::DepthOnlyFramebuffer>>(num_framebuffers,
+                                                     this->device_manager,
+                                                     this->queue_manager,
                                                      vk::Extent2D(width, height),
                                                      this->device_manager,
                                                      *this->compatibleRenderPassRegistry);
@@ -627,6 +629,8 @@ namespace wg {
             return std::make_shared<
                 internal::BasicFramebufferChain<
                     internal::BasicFramebuffer>>(num_framebuffers,
+                                                 this->device_manager,
+                                                 this->queue_manager,
                                                  vk::Extent2D(width, height),
                                                  this->device_manager,
                                                  *this->compatibleRenderPassRegistry);

@@ -20,9 +20,11 @@ set(FLAWED_ROOT "${CMAKE_HOME_DIRECTORY}/../flawed")
 set(FLAWED_INCLUDE_DIR "${FLAWED_ROOT}/include")
 set(FLAWED_LIB_DIR "${FLAWED_ROOT}/lib")
 
-set(FRAMEBUFFER_SOURCES framebufferUtil.cpp IFramebuffer.cpp BasicFramebuffer.cpp SwapchainFramebuffer.cpp)
+set(FRAMEBUFFER_SOURCES framebufferUtil.cpp IFramebuffer.cpp BasicFramebuffer.cpp SwapchainFramebuffer.cpp IFramebufferChain.cpp DepthOnlyFramebuffer.cpp)
 set(IMAGE_SOURCES imageUtil.cpp IImage.cpp BasicImage.cpp SwapchainColorImage.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
+set(SEMAPHORE_SOURCES semaphoreUtil.cpp SemaphoreSet.cpp ManagedSemaphoreChain.cpp fenceUtil.cpp)
+set(DRAW_PASS_SOURCES IDrawPass.cpp BasicDrawPass.cpp BasicDrawPassSettings.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 
@@ -30,6 +32,8 @@ list(TRANSFORM FRAMEBUFFER_SOURCES PREPEND "framebuffer/")
 list(TRANSFORM IMAGE_SOURCES PREPEND "image/")
 list(TRANSFORM RENDER_PASS_SOURCES PREPEND "render_pass/")
 list(TRANSFORM MEMORY_SOURCES PREPEND "memory/")
+list(TRANSFORM SEMAPHORE_SOURCES PREPEND "sync/")
+list(TRANSFORM DRAW_PASS_SOURCES PREPEND "draw_pass/")
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
 
 set(WINGINE_SOURCES
@@ -55,6 +59,8 @@ set(WINGINE_SOURCES
   ${IMAGE_SOURCES}
   ${RENDER_PASS_SOURCES}
   ${MEMORY_SOURCES}
+  ${SEMAPHORE_SOURCES}
+  ${DRAW_PASS_SOURCES}
   ${WGUTIL_SOURCES})
 
 list(TRANSFORM WINGINE_SOURCES PREPEND "${WINGINE_SRC_DIR}/")
@@ -98,6 +104,7 @@ add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
 add_executable(model_viewer ${WINGINE_EXAMPLES_DIR}/model_viewer.cpp)
 add_executable(instance_test ${WINGINE_EXAMPLES_DIR}/instance_test.cpp)
 add_executable(frag ${WINGINE_EXAMPLES_DIR}/frag.cpp)
+add_executable(test2 ${WINGINE_EXAMPLES_DIR}/test2.cpp)
 
 target_link_libraries(Wingine ${common_libs})
 
@@ -108,3 +115,4 @@ target_link_libraries(texture_test ${all_libs})
 target_link_libraries(model_viewer ${all_libs})
 target_link_libraries(instance_test ${all_libs})
 target_link_libraries(frag ${all_libs})
+target_link_libraries(test2 ${all_libs})

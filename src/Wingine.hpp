@@ -104,8 +104,6 @@ namespace wg {
         vk::CommandPool getPresentCommandPool();
         vk::CommandPool getGraphicsCommandPool();
 
-        const std::vector<std::unique_ptr<internal::IFramebuffer>>& getFramebuffers();
-
         void register_compatible_render_pass(internal::renderPassUtil::RenderPassType type);
         vk::RenderPass create_render_pass(internal::renderPassUtil::RenderPassType type,
                                           bool clear);
@@ -169,6 +167,7 @@ namespace wg {
 
         void setPresentWaitForSemaphores(const internal::SemaphoreSet& semaphores);
         Semaphore createAndAddImageReadySemaphore();
+        void setImageReadySemaphores(const internal::SemaphoreSet& semaphores);
 
         void present();
 

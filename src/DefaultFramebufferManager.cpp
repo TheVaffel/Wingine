@@ -79,7 +79,8 @@ namespace wg::internal {
     void DefaultFramebufferManager::present() {
         #ifdef DEBUG
         if(!this->wait_before_present_semaphore_set.getNumSemaphores()) {
-            std::cerr << "[Wingine::present] Warning: No semaphore submitted to present(), presentation may not happen correctly"
+            std::cerr << "[Wingine::present] Warning: No semaphore submitted to present(), "
+                      << "presentation may not happen correctly"
                       << std::endl;
         }
 #endif // DEBUG
@@ -102,11 +103,6 @@ namespace wg::internal {
                         "submit present command");
 
         this->stageNextImage();
-    }
-
-
-    const std::vector<std::unique_ptr<IFramebuffer>>& DefaultFramebufferManager::getFramebuffers() {
-        return this->framebuffers;
     }
 
     bool DefaultFramebufferManager::hasSemaphoresToSignal() const {

@@ -46,13 +46,6 @@ namespace wg::internal {
                                   CompatibleRenderPassRegistry& render_pass_registry);
         ~DefaultFramebufferManager();
 
-        void setPresentWaitSemaphores(const SemaphoreSet& semaphores);
-        std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore();
-        void setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores);
-
-        const std::vector<std::unique_ptr<IFramebuffer>>& getFramebuffers();
-
-
         virtual void swapFramebuffer();
         virtual const IFramebuffer& getCurrentFramebuffer() const;
         virtual IFramebuffer& getCurrentFramebuffer();
@@ -61,5 +54,9 @@ namespace wg::internal {
 
         virtual const IFramebuffer& getFramebuffer(uint32_t index) const;
         virtual IFramebuffer& getFramebuffer(uint32_t index);
+
+        virtual void setPresentWaitSemaphores(const SemaphoreSet& semaphores);
+        virtual std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore();
+        virtual void setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores);
     };
 };

@@ -20,7 +20,6 @@ namespace wg {
                 .setLevel(vk::CommandBufferLevel::ePrimary)
                 .setCommandBufferCount(1); // Premature optimization... etc.
             for(uint32_t i = 0; i < num_commands; i++) {
-                std::cout << "Num commands = " << num_commands << std::endl;
                 std::vector<vk::CommandBuffer> command_buffers = device.allocateCommandBuffers(cbi);
                 commands[i].buffer = command_buffers[0];
 
@@ -58,8 +57,6 @@ namespace wg {
                                bool clear,
                                int num_framebuffers) :
         wing(&wing), pipeline(pipeline), render_pass_registry(renderPassRegistry) {
-        std::cout << "Creating render family" << std::endl;
-        std::cout << "Num framebuffers = " << num_framebuffers << std::endl;
 
         if(num_framebuffers == 0) {
             num_framebuffers = wing.getNumFramebuffers();
@@ -74,10 +71,12 @@ namespace wg {
     }
 
     void RenderFamily::setFramebufferCount(uint32_t new_count) {
-        std::cout << "Changing framebuffer count" << std::endl;
         /*
          * TODO, NB! Release old resources before resizing!
          */
+
+        this->destroyCommandsAndRenderPasses();
+
         this->num_buffers = new_count;
         this->commands = initializeCommands(this->num_buffers,
                                             this->wing->getGraphicsCommandPool(),
@@ -86,6 +85,14 @@ namespace wg {
                                                      this->render_pass_type,
                                                      *this->render_pass_registry);
 
+    }
+
+    void RenderFamily::destroyCommandsAndRenderPasses() {
+        for (const internal::Command& command : this->commands) {
+            this->wing->getDevice().destroy(command.fence);
+        }
+
+        // Render passes are allocated from CompatibleRenderPassRegistry
     }
 
     void RenderFamily::startRecording(std::shared_ptr<internal::IFramebufferChain> framebuffer_chain) {
@@ -136,7 +143,6 @@ namespace wg {
 
             vk::Device device = this->wing->getDevice();
 
-            std::cout << "Going into startRecording waitForfence" << std::endl;
             _wassert_result(device.waitForFences(1, &this->commands[i].fence, true, UINT64_MAX),
                             "wait for render family command finish");
 
@@ -227,7 +233,6 @@ namespace wg {
         std::vector<uint64_t> wait_vals(semaphores.size());
         std::vector<uint64_t> signal_vals(semaphores.size());
 
-
         int num_wait_sems = SemaphoreChain::getWaitSemaphores(wait_sems.data(), std::begin(semaphores), semaphores.size());
         int num_signal_sems = SemaphoreChain::getSignalSemaphores(signal_sems.data(), std::begin(semaphores), semaphores.size());
         SemaphoreChain::getSemaphoreWaitValues(wait_vals.data(), std::begin(semaphores), semaphores.size());
@@ -259,11 +264,8 @@ namespace wg {
         _wassert_result(device.resetFences(1, &this->commands[index].fence),
                         "reset fence in render family");
 
-        std::cout << "[renderfamily.cpp] Submitting to queue " << std::endl;
-
         _wassert_result(queue.submit(1, &si, this->commands[index].fence),
                         "submitting render family command to queue");
 
-        std::cout << "[renderfamily.cpp] Submitted to queue" << std::endl;
     }
 };

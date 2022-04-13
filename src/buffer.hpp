@@ -26,8 +26,12 @@ namespace wg {
 
         void set(const void* data, uint32_t sizeInBytes, uint32_t offsetInBytes = 0);
 
+
         void* _mapMemory();
         void _unmapMemory();
+
+    public:
+        vk::Buffer getBuffer() const;
 
         template<typename Type>
         friend class Uniform;

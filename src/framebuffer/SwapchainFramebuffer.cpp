@@ -42,6 +42,10 @@ namespace wg::internal {
                 render_pass_registry));
     }
 
+    vk::Extent2D SwapchainFramebuffer::getDimensions() const {
+        return this->color_image->getDimensions();
+    }
+
     const vk::Framebuffer& SwapchainFramebuffer::getFramebuffer() const {
         return this->framebuffer;
     }

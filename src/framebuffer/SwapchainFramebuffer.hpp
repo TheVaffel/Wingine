@@ -5,7 +5,7 @@
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg::internal {
-    class SwapchainFramebuffer : IFramebuffer {
+    class SwapchainFramebuffer : public IFramebuffer {
 
         std::unique_ptr<IImage> color_image;
         std::unique_ptr<IImage> depth_image;
@@ -28,6 +28,8 @@ namespace wg::internal {
                                    std::shared_ptr<const SwapchainManager> swapchain_manager,
                                    std::shared_ptr<const DeviceManager> device_manager,
                                    CompatibleRenderPassRegistry& render_pass_registry);
+
+        virtual vk::Extent2D getDimensions() const;
 
         virtual const vk::Framebuffer& getFramebuffer() const;
 

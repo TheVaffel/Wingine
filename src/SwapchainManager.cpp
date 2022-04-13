@@ -122,8 +122,7 @@ namespace wg::internal {
                 .setOldSwapchain(nullptr)
                 .setClipped(true)
                 .setImageColorSpace(colorSpace)
-                // .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment |
-                //      vk::ImageUsageFlagBits::eTransferSrc)
+                //      | vk::ImageUsageFlagBits::eTransferSrc)
                 .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
                 .setImageSharingMode(vk::SharingMode::eExclusive)
                 .setQueueFamilyIndexCount(0)
@@ -192,6 +191,5 @@ namespace wg::internal {
         const vk::Device& device = this->device_manager->getDevice();
 
         device.destroy(this->swapchain);
-
     }
 };

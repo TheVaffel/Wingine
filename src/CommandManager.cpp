@@ -95,6 +95,36 @@ namespace wg::internal {
     }
 
 
+    std::vector<Command> CommandManager::createGraphicsCommands(uint32_t num_commands) const {
+        std::vector<Command> commands(num_commands);
+        vk::CommandBufferAllocateInfo cbi;
+        cbi.setLevel(vk::CommandBufferLevel::ePrimary)
+            .setCommandBufferCount(1)
+            .setCommandPool(this->graphics_command_pool);
+
+        vk::FenceCreateInfo fci;
+        fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
+
+        for (uint32_t i = 0; i < num_commands; i++) {
+            commands[i].buffer = this->device_manager->getDevice().allocateCommandBuffers(cbi)[0];
+            commands[i].fence = this->device_manager->getDevice().createFence(fci);
+        }
+
+        return commands;
+    }
+
+    void CommandManager::destroyGraphicsCommands(const std::vector<Command>& commands) const {
+        const vk::Device& device = this->device_manager->getDevice();
+        for (uint32_t i = 0; i < commands.size(); i++) {
+            device.freeCommandBuffers(this->graphics_command_pool,
+                                      1, &commands[i].buffer);
+
+            _wassert_result(device.waitForFences(1, &commands[i].fence, true, UINT64_MAX),
+                            "wait for deleting graphics command fence finish");
+            device.destroyFence(commands[i].fence);
+        }
+    }
+
 
     CommandManager::~CommandManager() {
         const vk::Device& device = this->device_manager->getDevice();

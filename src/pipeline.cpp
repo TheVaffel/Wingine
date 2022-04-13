@@ -321,5 +321,11 @@ namespace wg {
                                                         {createInfo}).value[0];
     }
 
+    vk::Pipeline Pipeline::getPipeline() const {
+        return this->pipeline;
+    }
 
+    vk::PipelineLayout Pipeline::getLayout() const {
+        return this->layout;
+    }
 };

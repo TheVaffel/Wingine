@@ -36,7 +36,7 @@ namespace wg {
         void submit_command(const std::initializer_list<SemaphoreChain*>& wait_semaphores, int index);
 
         void setFramebufferCount(uint32_t new_count);
-
+        void destroyCommandsAndRenderPasses();
     public:
 
         void startRecording(std::shared_ptr<internal::IFramebufferChain> framebuffer_chain);

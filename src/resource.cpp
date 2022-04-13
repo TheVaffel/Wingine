@@ -66,6 +66,10 @@ namespace wg {
         this->device.updateDescriptorSets(writes, {});
     }
 
+    vk::DescriptorSet ResourceSet::getDescriptorSet() const {
+        return this->descriptor_set;
+    }
+
     Resource::Resource(vk::DescriptorType tp) :
         type(tp) {
         this->image_info = nullptr;

@@ -20,6 +20,7 @@ namespace wg::internal {
                              std::shared_ptr<const DeviceManager> device_manager,
                              CompatibleRenderPassRegistry& render_pass_registry);
 
+        virtual vk::Extent2D getDimensions() const;
 
         virtual bool hasColorImage() const;
         virtual const IImage& getColorImage() const;
@@ -30,5 +31,7 @@ namespace wg::internal {
         virtual IImage& getDepthImage();
 
         virtual const vk::Framebuffer& getFramebuffer() const;
+
+        ~DepthOnlyFramebuffer();
     };
 };

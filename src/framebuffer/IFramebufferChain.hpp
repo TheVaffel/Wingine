@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./IFramebuffer.hpp"
+#include "../semaphore.hpp"
 
 namespace wg::internal {
     class IFramebufferChain {

@@ -44,6 +44,9 @@ namespace wg::internal {
         const Command& getComputeCommand() const;
         const Command& getGeneralCommand() const;
 
+        std::vector<Command> createGraphicsCommands(uint32_t num_commands) const;
+        void destroyGraphicsCommands(const std::vector<Command>& commands) const;
+
         const vk::CommandPool getGraphicsCommandPool() const;
     };
 };

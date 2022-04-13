@@ -22,6 +22,10 @@ namespace wg::internal {
                                                                     device_manager->getDevice());
     }
 
+    vk::Extent2D BasicFramebuffer::getDimensions() const {
+        return this->color_image->getDimensions();
+    }
+
     bool BasicFramebuffer::hasColorImage() const {
         return true;
     }

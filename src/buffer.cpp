@@ -63,6 +63,10 @@ namespace wg {
         device.bindBufferMemory(this->buffer, this->memory, 0); // Buffer, memory, memoryOffset
     }
 
+    vk::Buffer Buffer::getBuffer() const {
+        return this->buffer;
+    }
+
     void* Buffer::_mapMemory() {
         void* data;
 

@@ -55,6 +55,10 @@ namespace wg {
                  const std::vector<Shader*>& shaders,
                  const PipelineSetup& setup);
 
+    public:
+        vk::Pipeline getPipeline() const;
+        vk::PipelineLayout getLayout() const;
+
         friend class RenderFamily;
         friend class Wingine;
     };

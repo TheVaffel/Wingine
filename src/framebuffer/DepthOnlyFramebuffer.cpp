@@ -17,6 +17,10 @@ namespace wg::internal {
                                                                         device_manager->getDevice());
     }
 
+    vk::Extent2D DepthOnlyFramebuffer::getDimensions() const {
+        return this->depth_image->getDimensions();
+    }
+
     bool DepthOnlyFramebuffer::hasColorImage() const {
         return false;
     }
@@ -43,5 +47,9 @@ namespace wg::internal {
 
     const vk::Framebuffer& DepthOnlyFramebuffer::getFramebuffer() const {
         return this->framebuffer;
+    }
+
+    DepthOnlyFramebuffer::~DepthOnlyFramebuffer() {
+        this->device_manager->getDevice().destroy(this->framebuffer);
     }
 };

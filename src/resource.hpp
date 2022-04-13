@@ -15,6 +15,9 @@ namespace wg {
         ResourceSet(Wingine& wing, vk::DescriptorSetLayout layout);
 
     public:
+
+        vk::DescriptorSet getDescriptorSet() const;
+
         void set(const std::vector<Resource*>& resources);
 
         friend class RenderFamily;

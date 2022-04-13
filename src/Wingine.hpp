@@ -13,13 +13,12 @@
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
-// #include "./SwapchainManager.hpp"
 #include "./DefaultFramebufferManager.hpp"
 #include "./framebuffer/IFramebuffer.hpp"
+#include "./draw_pass/BasicDrawPassSettings.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
-// #include "framebuffer.hpp"
 #include "resource.hpp"
 #include "pipeline.hpp"
 #include "renderfamily.hpp"
@@ -44,13 +43,6 @@ namespace wg {
         std::shared_ptr<internal::CommandManager> command_manager;
         std::shared_ptr<internal::DefaultFramebufferManager> default_framebuffer_manager;
 
-        /* vk::Fence image_acquired_fence;
-        vk::Semaphore image_acquire_semaphore;
-        vk::Semaphore finished_drawing_semaphore;
-
-        uint32_t current_swapchain_image;
-        std::vector<Framebuffer*> framebuffers; */
-
         // General purpose fence for the moving phase
         vk::Fence general_purpose_fence;
 
@@ -71,12 +63,9 @@ namespace wg {
 
         void init_vulkan(int width, int height, const std::string& app_name);
 
-        // void init_present_sync();
         void init_generic_render_pass();
-        void init_framebuffers();
         void init_descriptor_pool();
         void init_pipeline_cache();
-        // void stage_next_image(const std::initializer_list<SemaphoreChain*>& semaphore_chains);
 
         void cons_image_image(Image& image,
                               uint32_t width, uint32_t height,
@@ -105,7 +94,6 @@ namespace wg {
         void ensure_resource_set_layout_exists(const std::vector<uint64_t>& resourceSetLayout);
 
         // Don't delete color images, those are handled by swapchain
-        // void destroySwapchainFramebuffer(Framebuffer* framebuffer);
         void destroySwapchainImage(Image& image);
 
         vk::Queue getGraphicsQueue();
@@ -126,11 +114,9 @@ namespace wg {
 
     public:
 
-        void waitForLastPresent();
         void waitIdle();
 
         const internal::IFramebuffer& getCurrentFramebuffer();
-        int getCurrentFramebufferIndex();
         int getNumFramebuffers();
 
         int getWindowWidth();
@@ -147,6 +133,7 @@ namespace wg {
         StorageBuffer* createStorageBuffer(uint32_t num_bytes, bool host_updatable = true);
 
         RenderFamily* createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers = 0);
+        DrawPassPtr createBasicDrawPass(const Pipeline* pipeline, const internal::BasicDrawPassSettings& settings);
 
         ResourceSet* createResourceSet(const std::vector<uint64_t>& resourceLayout);
 
@@ -180,7 +167,10 @@ namespace wg {
                              const std::initializer_list<ResourceSet*>& resource_sets,
                              const std::initializer_list<SemaphoreChain*>& semaphores, int x_dim = 1, int y_dim = 1, int z_dim = 1);
 
-        void present(const std::initializer_list<SemaphoreChain*>& semaphores);
+        void setPresentWaitForSemaphores(const internal::SemaphoreSet& semaphores);
+        Semaphore createAndAddImageReadySemaphore();
+
+        void present();
 
         void destroy(Pipeline* pipeline);
         void destroy(RenderFamily* family);
@@ -196,8 +186,6 @@ namespace wg {
         template<typename Type>
         void destroy(Uniform<Type>* uniform);
 
-        // void destroy(Framebuffer* framebuffer);
-
         Wingine(Winval& win);
 
         Wingine(int width, int height,
@@ -211,7 +199,6 @@ namespace wg {
 
         friend class Buffer;
         friend class Pipeline;
-        // friend class Framebuffer;
         friend class RenderFamily;
         friend class ResourceSetLayout;
         friend class ResourceSet;

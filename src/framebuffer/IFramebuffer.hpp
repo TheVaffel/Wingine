@@ -6,6 +6,8 @@ namespace wg::internal {
     class IFramebuffer {
     public:
 
+        virtual vk::Extent2D getDimensions() const = 0;
+
         virtual bool hasColorImage() const = 0;
         virtual const IImage& getColorImage() const = 0;
         virtual IImage& getColorImage() = 0;

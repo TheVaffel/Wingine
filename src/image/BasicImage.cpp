@@ -6,14 +6,21 @@
 namespace wg::internal {
 
     BasicImage::BasicImage(const vk::Extent2D& dimensions,
+                           const vk::ImageAspectFlagBits& aspect,
                            std::shared_ptr<const DeviceManager> device_manager)
-        : dimensions(dimensions), current_layout(vk::ImageLayout::eUndefined), device_manager(device_manager)  { }
+        : dimensions(dimensions),
+          current_layout(vk::ImageLayout::eUndefined),
+          aspect(aspect),
+          device_manager(device_manager)
+    { }
 
     std::unique_ptr<BasicImage>
     BasicImage::createFramebufferColorImage(const vk::Extent2D& dimensions,
                                             std::shared_ptr<const DeviceManager> device_manager) {
 
-        std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(new BasicImage(dimensions, device_manager));
+        std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(new BasicImage(dimensions,
+                                                                                    vk::ImageAspectFlagBits::eColor,
+                                                                                    device_manager));
 
         im->image = imageUtil::createFramebufferColorImage(dimensions,
                                                            imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT,
@@ -34,7 +41,9 @@ namespace wg::internal {
     BasicImage::createFramebufferDepthImage(const vk::Extent2D& dimensions,
                                             std::shared_ptr<const DeviceManager> device_manager) {
 
-        std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(new BasicImage(dimensions, device_manager));
+        std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(new BasicImage(dimensions,
+                                                                                    vk::ImageAspectFlagBits::eDepth,
+                                                                                    device_manager));
 
         im->image = imageUtil::createFramebufferDepthImage(dimensions,
                                                            imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT,
@@ -65,6 +74,10 @@ namespace wg::internal {
 
     const vk::Extent2D BasicImage::getDimensions() const {
         return this->dimensions;
+    }
+
+    const vk::ImageAspectFlagBits BasicImage::getDefaultAspect() const {
+        return this->aspect;
     }
 
     const vk::ImageLayout BasicImage::getCurrentLayout() const {

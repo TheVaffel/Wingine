@@ -48,6 +48,10 @@ namespace wg::internal {
         return this->dimensions;
     }
 
+    const vk::ImageAspectFlagBits SwapchainColorImage::getDefaultAspect() const {
+        return vk::ImageAspectFlagBits::eColor;
+    }
+
     const vk::ImageLayout SwapchainColorImage::getCurrentLayout() const {
         return this->current_layout;
     }

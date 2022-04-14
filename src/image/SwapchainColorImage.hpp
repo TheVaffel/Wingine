@@ -27,6 +27,8 @@ namespace wg::internal {
         virtual const vk::ImageView getView() const;
         virtual const vk::Extent2D getDimensions() const;
 
+        virtual const vk::ImageAspectFlagBits getDefaultAspect() const;
+
         virtual const vk::ImageLayout getCurrentLayout() const;
         virtual void setCurrentLayout(const vk::ImageLayout& layout);
 

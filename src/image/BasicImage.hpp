@@ -14,10 +14,12 @@ namespace wg::internal {
         vk::ImageView view;
         vk::Extent2D dimensions;
         vk::ImageLayout current_layout;
+        vk::ImageAspectFlagBits aspect;
 
         std::shared_ptr<const DeviceManager> device_manager;
 
         BasicImage(const vk::Extent2D& dimensions,
+                   const vk::ImageAspectFlagBits& aspect,
                    std::shared_ptr<const DeviceManager> device_manager);
 
     public:
@@ -26,6 +28,8 @@ namespace wg::internal {
         virtual const vk::DeviceMemory getMemory() const;
         virtual const vk::ImageView getView() const;
         virtual const vk::Extent2D getDimensions() const;
+
+        virtual const vk::ImageAspectFlagBits getDefaultAspect() const;
 
         virtual const vk::ImageLayout getCurrentLayout() const;
 

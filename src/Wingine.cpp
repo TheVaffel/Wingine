@@ -313,19 +313,19 @@ namespace wg {
 
 
     void Wingine::setPresentWaitForSemaphores(const internal::SemaphoreSet& semaphores) {
-        this->default_framebuffer_manager->setPresentWaitSemaphores(semaphores);
+        this->default_framebuffer_chain->setPresentWaitSemaphores(semaphores);
     }
 
     void Wingine::present() {
-        this->default_framebuffer_manager->swapFramebuffer();
+        this->default_framebuffer_chain->swapFramebuffer();
     }
 
     Semaphore Wingine::createAndAddImageReadySemaphore() {
-        return this->default_framebuffer_manager->addSignalImageAcquiredSemaphore();
+        return this->default_framebuffer_chain->addSignalImageAcquiredSemaphore();
     }
 
     void Wingine::setImageReadySemaphores(const internal::SemaphoreSet& semaphores) {
-        return this->default_framebuffer_manager->setSignalImageAcquiredSemaphores(semaphores);
+        return this->default_framebuffer_chain->setSignalImageAcquiredSemaphores(semaphores);
     }
 
     void Wingine::init_generic_render_pass() {
@@ -409,7 +409,7 @@ namespace wg {
             std::make_shared<internal::CommandManager>(const_device_manager,
                                                        const_queue_manager);
 
-        this->default_framebuffer_manager =
+        this->default_framebuffer_chain =
             std::make_shared<internal::DefaultFramebufferManager>(vk::Extent2D(width, height),
                                                                   this->vulkan_instance_manager->getSurface(),
                                                                   const_device_manager,
@@ -546,11 +546,11 @@ namespace wg {
     }
 
     int Wingine::getNumFramebuffers() {
-        return this->default_framebuffer_manager->getNumFramebuffers();
+        return this->default_framebuffer_chain->getNumFramebuffers();
     }
 
     const internal::IFramebuffer& Wingine::getCurrentFramebuffer() {
-        return this->default_framebuffer_manager->getCurrentFramebuffer();
+        return this->default_framebuffer_chain->getCurrentFramebuffer();
     }
 
     IndexBuffer* Wingine::createIndexBuffer(uint32_t numIndices) {
@@ -638,7 +638,7 @@ namespace wg {
     }
 
     FramebufferChain Wingine::getDefaultFramebufferChain() {
-        return this->default_framebuffer_manager;
+        return this->default_framebuffer_chain;
     }
 
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {

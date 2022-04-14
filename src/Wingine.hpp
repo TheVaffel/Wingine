@@ -41,7 +41,7 @@ namespace wg {
 
         std::shared_ptr<internal::QueueManager> queue_manager;
         std::shared_ptr<internal::CommandManager> command_manager;
-        std::shared_ptr<internal::DefaultFramebufferManager> default_framebuffer_manager;
+        std::shared_ptr<internal::IFramebufferChain> default_framebuffer_chain;
 
         // General purpose fence for the moving phase
         vk::Fence general_purpose_fence;

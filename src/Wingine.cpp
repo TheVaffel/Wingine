@@ -1,5 +1,6 @@
 #include "./Wingine.hpp"
 #include "./log.hpp"
+#include "./constants.hpp"
 
 #include "./framebuffer/BasicFramebuffer.hpp"
 #include "./framebuffer/DepthOnlyFramebuffer.hpp"
@@ -15,6 +16,50 @@
  */
 
 namespace wg {
+
+    /*
+     * VulkanInitInfo
+     */
+
+    const vk::Extent2D& Wingine::VulkanInitInfo::getDimensions() const {
+        return this->dimensions;
+    }
+
+    std::string Wingine::VulkanInitInfo::getApplicationName() const {
+        return this->application_name;
+    }
+
+    bool Wingine::VulkanInitInfo::getIsHeadless() const {
+        return this->is_headless;
+    }
+
+    winval_type_0 Wingine::VulkanInitInfo::getWinArg0() const {
+        return this->win_arg0;
+    }
+
+    winval_type_1 Wingine::VulkanInitInfo::getWinArg1() const {
+        return this->win_arg1;
+    }
+
+    Wingine::VulkanInitInfo::VulkanInitInfo(uint32_t width, uint32_t height, const std::string& application_name)
+        : dimensions(width, height),
+          application_name(application_name),
+          is_headless(true) { }
+
+    Wingine::VulkanInitInfo::VulkanInitInfo(uint32_t width,
+                                            uint32_t height,
+                                            winval_type_0 arg0,
+                                            winval_type_1 arg1,
+                                            const std::string& application_name)
+        : dimensions(width, height),
+          application_name(application_name),
+          win_arg0(arg0),
+          win_arg1(arg1) { }
+
+
+    /*
+     * Wingine
+     */
 
     int Wingine::getWindowWidth() {
         return this->window_width;
@@ -367,25 +412,30 @@ namespace wg {
 
     void Wingine::waitIdle() {
 	this->queue_manager->getGraphicsQueue().waitIdle();
-	this->queue_manager->getPresentQueue().waitIdle();
+
+        if (this->queue_manager->hasPresentQueue()) {
+            this->queue_manager->getPresentQueue().waitIdle();
+        }
 
         if (this->queue_manager->hasComputeQueue()) {
             this->queue_manager->getComputeQueue().waitIdle();
         }
     }
 
-    void Wingine::init_vulkan(int width, int height, const std::string& app_name) {
-        throw std::runtime_error("Not implemented yet");
-    }
+    void Wingine::init_vulkan(const VulkanInitInfo& init_info) {
 
-    void Wingine::init_vulkan(int width, int height,
-                              winval_type_0 arg0, winval_type_1 arg1, const std::string& application_name) {
+        this->window_width = init_info.getDimensions().width;
+        this->window_height = init_info.getDimensions().height;
 
-        this->window_width = width;
-        this->window_height = height;
-
-        this->vulkan_instance_manager =
-            std::make_shared<internal::VulkanInstanceManager>(arg0, arg1, application_name);
+        if (init_info.getIsHeadless()) {
+            this->vulkan_instance_manager =
+                std::make_shared<internal::VulkanInstanceManager>(init_info.getApplicationName());
+        } else {
+            this->vulkan_instance_manager =
+                std::make_shared<internal::VulkanInstanceManager>(init_info.getWinArg0(),
+                                                                  init_info.getWinArg1(),
+                                                                  init_info.getApplicationName());
+        }
 
         this->device_manager =
             std::make_shared<internal::DeviceManager>(this->vulkan_instance_manager);
@@ -397,7 +447,7 @@ namespace wg {
 
         this->queue_manager =
             std::make_shared<internal::QueueManager>(const_device_manager,
-                                                     this->vulkan_instance_manager->getSurface());
+                                                     *this->vulkan_instance_manager);
 
         std::shared_ptr<const internal::QueueManager> const_queue_manager =
             const_pointer_cast<const internal::QueueManager>(this->queue_manager);
@@ -409,12 +459,25 @@ namespace wg {
             std::make_shared<internal::CommandManager>(const_device_manager,
                                                        const_queue_manager);
 
-        this->default_framebuffer_chain =
-            std::make_shared<internal::DefaultFramebufferManager>(vk::Extent2D(width, height),
-                                                                  this->vulkan_instance_manager->getSurface(),
-                                                                  const_device_manager,
-                                                                  const_queue_manager,
-                                                                  *this->compatibleRenderPassRegistry);
+        if (init_info.getIsHeadless()) {
+            this->default_framebuffer_chain =
+                std::make_shared<internal::BasicFramebufferChain<
+                    internal::BasicFramebuffer>>(
+                        internal::constants::preferred_swapchain_image_count,
+                        this->device_manager,
+                        this->queue_manager,
+                        init_info.getDimensions(),
+                        this->device_manager,
+                        *this->compatibleRenderPassRegistry);
+        } else {
+            this->default_framebuffer_chain =
+                std::make_shared<internal::DefaultFramebufferManager>(
+                    init_info.getDimensions(),
+                    this->vulkan_instance_manager->getSurface(),
+                    const_device_manager,
+                    const_queue_manager,
+                    *this->compatibleRenderPassRegistry);
+        }
 
         // General purpose fence for the moving stage
         vk::FenceCreateInfo fence_create_info;
@@ -496,27 +559,30 @@ namespace wg {
         image.view = this->device.createImageView(ivci);
     }
 
-    Wingine::Wingine(int width, int height,
-                     winval_type_0 arg0, winval_type_1 arg1, const char* str) {
-        this->init_vulkan(width, height,
-                          arg0, arg1, str);
+    Wingine::Wingine(uint32_t width, uint32_t height,
+                     winval_type_0 arg0, winval_type_1 arg1, const std::string& application_name) {
+        VulkanInitInfo init_info(width, height, arg0, arg1, application_name);
+        this->init_vulkan(init_info);
     }
 
-    Wingine::Wingine(int width, int height, const std::string& app_title) {
-        this->init_vulkan(width, height, app_title);
+    Wingine::Wingine(uint32_t width, uint32_t height, const std::string& app_title) {
+        VulkanInitInfo init_info(width, height, app_title);
+        this->init_vulkan(init_info);
     }
 
 
     Wingine::Wingine(Winval& win) {
 #ifdef WIN32
 
-        this->init_vulkan(win.getWidth(), win.getHeight(),
-                          win.getInstance(), win.getHWND(), win.getTitle());
+        VulkanInitInfo init_info(win.getWidth(), win.getHeight(),
+                                 win.getInstance(), win.getHWND(), win.getTitle());
+        this->init_vulkan(init_info);
 
 #else // WIN32
 
-        this->init_vulkan(win.getWidth(), win.getHeight(),
-                          win.getWindow(), win.getDisplay(), win.getTitle());
+        VulkanInitInfo init_info(win.getWidth(), win.getHeight(),
+                                 win.getWindow(), win.getDisplay(), win.getTitle());
+        this->init_vulkan(init_info);
 
 #endif // WIN32
     }

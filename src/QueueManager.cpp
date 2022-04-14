@@ -5,19 +5,34 @@
 namespace wg::internal {
 
     namespace {
-        void sanityCheckIndices(const QueueIndices& indices) {
 
+        void sanityCheckIndicesForGraphics(const QueueIndices& indices) {
             if (indices.graphics == -1) {
                 _wlog_error("Chosen graphics device does not support graphics");
             }
+        }
 
+        void sanityCheckIndicesForPresent(const QueueIndices& indices) {
             if (indices.present == -1) {
                 _wlog_error("Chosen graphics device does not support present");
             }
+        }
 
+        void sanityCheckIndicesForCompute(const QueueIndices& indices) {
             if(indices.compute == -1) {
                 _wlog_warn("Chosen graphics device does not support compute kernels");
             }
+        }
+
+        void sanityCheckIndices(const QueueIndices& indices) {
+            sanityCheckIndicesForGraphics(indices);
+            sanityCheckIndicesForPresent(indices);
+            sanityCheckIndicesForCompute(indices);
+        }
+
+        void sanityCheckIndicesWithoutSurface(const QueueIndices& indices) {
+            sanityCheckIndicesForGraphics(indices);
+            sanityCheckIndicesForCompute(indices);
         }
 
         QueueCollection getQueues(const DeviceManager& device_manager,
@@ -27,12 +42,14 @@ namespace wg::internal {
 
             vk::Queue present_queue;
 
-            // If graphics and present queue indices are equal, make queues equal
-            if(indices.graphics == indices.present) {
-                present_queue = graphics_queue;
-            } else {
-                present_queue =
-                    device_manager.getDevice().getQueue(indices.present, 0);
+            if (indices.present != -1) {
+                // If graphics and present queue indices are equal, make queues equal
+                if(indices.graphics == indices.present) {
+                    present_queue = graphics_queue;
+                } else {
+                    present_queue =
+                        device_manager.getDevice().getQueue(indices.present, 0);
+                }
             }
 
             vk::Queue compute_queue = nullptr;
@@ -51,12 +68,18 @@ namespace wg::internal {
     };
 
     QueueManager::QueueManager(std::shared_ptr<const DeviceManager> device_manager,
-                               vk::SurfaceKHR surface)
+                               const VulkanInstanceManager& instance_manager)
         : device_manager(device_manager) {
 
-        this->queue_indices = getQueueIndicesForDevice(device_manager->getPhysicalDevice(), surface);
+        if (instance_manager.hasSurface()) {
+            this->queue_indices = getQueueIndicesForDevice(device_manager->getPhysicalDevice(),
+                                                           instance_manager.getSurface());
 
-        sanityCheckIndices(this->queue_indices);
+            sanityCheckIndices(this->queue_indices);
+        } else {
+            this->queue_indices = getQueueIndicesForDeviceWithoutSurface(device_manager->getPhysicalDevice());
+            sanityCheckIndicesWithoutSurface(this->queue_indices);
+        }
 
         this->queues = getQueues(*device_manager, this->queue_indices);
     }
@@ -80,11 +103,18 @@ namespace wg::internal {
     }
 
     const vk::Queue QueueManager::getPresentQueue() const {
+        if (!this->hasPresentQueue()) {
+            throw std::runtime_error("[QueueManager] Does not have a present queue");
+        }
         return this->queues.present;
     }
 
     const vk::Queue QueueManager::getComputeQueue() const {
         return this->queues.compute;
+    }
+
+    bool QueueManager::hasPresentQueue() const {
+        return this->queue_indices.present != -1;
     }
 
     bool QueueManager::hasComputeQueue() const {

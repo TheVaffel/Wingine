@@ -24,7 +24,6 @@ namespace wg::internal {
         : vulkan_instance_manager(vulkan_instance_manager) {
 
         vk::Instance instance = vulkan_instance_manager->getInstance();
-        vk::SurfaceKHR surface = vulkan_instance_manager->getSurface();
 
         std::vector<vk::PhysicalDevice> found_devices = instance.enumeratePhysicalDevices();
 
@@ -35,7 +34,12 @@ namespace wg::internal {
 
         for(vk::PhysicalDevice dev : found_devices) {
             printDeviceName(dev);
-            uint32_t new_score = evaluatePhysicalDevice(dev, surface);
+            uint32_t new_score;
+            if (vulkan_instance_manager->hasSurface()) {
+                new_score = evaluatePhysicalDevice(dev, vulkan_instance_manager->getSurface());
+            } else {
+                new_score = evaluatePhysicalDeviceWithoutSurface(dev);
+            }
 
             if (new_score > max_score) {
                 max_score = new_score;
@@ -51,10 +55,16 @@ namespace wg::internal {
         this->physical_device = best_device;
         this->device_memory_props = best_device.getMemoryProperties();
 
-        QueueIndices queueIndices = getQueueIndicesForDevice(best_device, surface);
+        QueueIndices queue_indices;
+        if (vulkan_instance_manager->hasSurface()) {
+            queue_indices = getQueueIndicesForDevice(best_device,
+                                                     vulkan_instance_manager->getSurface());
+        } else {
+            queue_indices = getQueueIndicesForDeviceWithoutSurface(best_device);
+        }
 
         std::vector<vk::DeviceQueueCreateInfo> queue_create_infos =
-            getDeviceQueueCreateInfos(queueIndices);
+            getDeviceQueueCreateInfos(queue_indices);
 
         std::vector<const char*> device_extension_names;
         device_extension_names.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -76,13 +86,7 @@ namespace wg::internal {
             .setPEnabledFeatures(&feats)
             .setPNext(&feats12);
 
-        // vk::PhysicalDeviceProperties phprops;
-        // this->physical_device.getProperties(&phprops);
-
         this->device = this->physical_device.createDevice(device_info);
-
-
-        // this->dispatcher.init(this->device);
     }
 
     DeviceManager::~DeviceManager() {
@@ -103,8 +107,4 @@ namespace wg::internal {
     const vk::PhysicalDeviceMemoryProperties DeviceManager::getDeviceMemoryProperties() const {
         return this->device_memory_props;
     }
-
-    /* std::unique_ptr<QueueManager> createQueueManager() const {
-        return std::make_unique<QueueManager>(*this);
-        } */
 };

@@ -15,6 +15,8 @@ namespace wg::internal {
      * Returns the queue indices
      */
 
+    QueueIndices getQueueIndicesForDeviceWithoutSurface(vk::PhysicalDevice physical_device);
+
     QueueIndices getQueueIndicesForDevice(vk::PhysicalDevice physical_device,
                                           vk::SurfaceKHR surface);
 

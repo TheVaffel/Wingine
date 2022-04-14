@@ -82,9 +82,7 @@ namespace wg::internal {
         }
     };
 
-    VulkanInstanceManager::VulkanInstanceManager(VisualHandleT0 visualValue0,
-                                                 VisualHandleT1 visualValue1,
-                                                 const std::string& application_name) {
+    void VulkanInstanceManager::init_instance(const std::string& application_name) {
 
         auto instance_extension_names = getInstanceExtensionNames();
         auto instance_layer_names = getInstanceLayerNames();
@@ -131,15 +129,20 @@ namespace wg::internal {
                                     NULL);
 
         this->instance = vk::createInstance(cInfo);
+    }
 
+    void VulkanInstanceManager::init_dispatcher() {
 
         vk::DynamicLoader dl;
         PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
         this->dispatcher.init(vkGetInstanceProcAddr);
         this->dispatcher.init(this->instance);
 
-#ifdef DEBUG
 
+    }
+
+#ifdef DEBUG
+    void VulkanInstanceManager::init_debug_callback() {
         vk::DebugReportCallbackCreateInfoEXT callbackInfo;
         callbackInfo.setFlags(vk::DebugReportFlagBitsEXT::eError |
                               vk::DebugReportFlagBitsEXT::eWarning |
@@ -149,9 +152,32 @@ namespace wg::internal {
         this->debug_callback = this->instance
             .createDebugReportCallbackEXT(callbackInfo, nullptr, this->dispatcher);
 
+    }
 #endif // DEBUG
 
-        this->surface = getSurfaceFromVisual(this->instance, visualValue0, visualValue1);
+
+    void VulkanInstanceManager::init_surface(VisualHandleT0 v0,
+                                             VisualHandleT1 v1) {
+        this->surface = getSurfaceFromVisual(this->instance, v0, v1);
+    }
+
+    VulkanInstanceManager::VulkanInstanceManager(const std::string& application_name) {
+        this->init_instance(application_name);
+        this->init_dispatcher();
+#ifdef DEBUG
+        this->init_debug_callback();
+#endif
+    }
+
+    VulkanInstanceManager::VulkanInstanceManager(VisualHandleT0 visualValue0,
+                                                 VisualHandleT1 visualValue1,
+                                                 const std::string& application_name) {
+        this->init_instance(application_name);
+        this->init_dispatcher();
+#ifdef DEBUG
+        this->init_debug_callback();
+#endif
+        this->init_surface(visualValue0, visualValue1);
     }
 
     vk::Instance VulkanInstanceManager::getInstance() {
@@ -162,12 +188,12 @@ namespace wg::internal {
         return this->dispatcher;
     }
 
-    bool VulkanInstanceManager::getHasSurface() const {
+    bool VulkanInstanceManager::hasSurface() const {
         return this->surface != vk::SurfaceKHR {};
     }
 
-    vk::SurfaceKHR VulkanInstanceManager::getSurface() {
-        if (!this->getHasSurface()) {
+    vk::SurfaceKHR VulkanInstanceManager::getSurface() const {
+        if (!this->hasSurface()) {
             throw std::runtime_error("[VulkanInstanceManager] Does not have valid surface");
         }
 

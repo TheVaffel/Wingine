@@ -49,19 +49,28 @@ namespace wg::internal {
 
 #ifdef DEBUG
         vk::DebugReportCallbackEXT debug_callback;
+
+        void init_debug_callback();
 #endif // DEBUG
+
+        void init_instance(const std::string& application_name);
+        void init_dispatcher();
+        void init_surface(VisualHandleT0 v0,
+                          VisualHandleT1 v1);
 
     public:
 
         vk::Instance getInstance();
         vk::DispatchLoaderDynamic getDispatcher();
 
-        bool getHasSurface() const;
-        vk::SurfaceKHR getSurface();
+        bool hasSurface() const;
+        vk::SurfaceKHR getSurface() const;
 
+        VulkanInstanceManager(const std::string& application_name);
         VulkanInstanceManager(VisualHandleT0 v0,
                               VisualHandleT1 v1,
                               const std::string& application_name);
+
         ~VulkanInstanceManager();
 
         VulkanInstanceManager(const VulkanInstanceManager& vim) = delete;

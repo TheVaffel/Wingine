@@ -93,10 +93,13 @@ namespace wg::internal {
             semaphore_chain->swapSemaphore();
         }
 
+        std::cout << "Swapping semaphores for wait, first was " << this->getCurrentRawSemaphores()[0] << std::endl;
+
         current_semaphore_index = (current_semaphore_index + 1) % this->getSemaphoreChainLength();
     }
 
     void SemaphoreSet::swapSemaphoresFromSignal() {
         current_semaphore_index = (current_semaphore_index + 1) % this->getSemaphoreChainLength();
+        std::cout << "Swapping semaphores for signal, first was " << this->getCurrentRawSemaphores()[0] << std::endl;
     }
 };

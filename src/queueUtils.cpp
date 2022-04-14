@@ -31,8 +31,34 @@ namespace wg::internal {
                 indices->compute = index;
             }
         }
+
+        void setSupportedIndicesWithoutSurface(vk::PhysicalDevice physical_device,
+                                               vk::QueueFamilyProperties qprops,
+                                               int index,
+                                               QueueIndices* indices) {
+            if (queueFamilySupportsGraphics(qprops)) {
+                indices->graphics = index;
+            }
+
+            if (queueFamilySupportsCompute(qprops)) {
+                indices->compute = index;
+            }
+        }
     };
 
+    QueueIndices getQueueIndicesForDeviceWithoutSurface(vk::PhysicalDevice physical_device) {
+        QueueIndices indices;
+
+        std::vector<vk::QueueFamilyProperties> qprops = physical_device.getQueueFamilyProperties();
+        for (unsigned int i = 0; i < qprops.size(); i++) {
+            setSupportedIndicesWithoutSurface(physical_device,
+                                              qprops[i],
+                                              i,
+                                              &indices);
+        }
+
+        return indices;
+    }
 
     QueueIndices getQueueIndicesForDevice(vk::PhysicalDevice physical_device,
                                           vk::SurfaceKHR surface) {
@@ -58,11 +84,11 @@ namespace wg::internal {
         vk::DeviceQueueCreateInfo c_info;
         float queue_priorities[1] = { 1.0f };
         c_info.setQueueCount(1).setPQueuePriorities(queue_priorities)
-            .setQueueFamilyIndex(indices.present);
+            .setQueueFamilyIndex(indices.graphics);
         c_infos.push_back(c_info);
 
-        if (indices.present != indices.graphics) {
-            c_info.setQueueFamilyIndex(indices.graphics);
+        if (indices.present >= 0 && indices.present != indices.graphics) {
+            c_info.setQueueFamilyIndex(indices.present);
             c_infos.push_back(c_info);
         }
 

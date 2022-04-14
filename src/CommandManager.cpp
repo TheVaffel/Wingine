@@ -16,6 +16,9 @@ namespace wg::internal {
     }
 
     const Command& CommandManager::getPresentCommand() const {
+        if (!this->queue_manager->hasPresentQueue()) {
+            throw std::runtime_error("[CommandManager] Does not have a present command");
+        }
         return this->present_command;
     }
 
@@ -38,8 +41,10 @@ namespace wg::internal {
         cpi.setQueueFamilyIndex(this->queue_manager->getGraphicsQueueIndex());
         this->graphics_command_pool = this->device_manager->getDevice().createCommandPool(cpi);
 
-        cpi.setQueueFamilyIndex(this->queue_manager->getPresentQueueIndex());
-        this->present_command_pool = this->device_manager->getDevice().createCommandPool(cpi);
+        if (this->queue_manager->hasPresentQueue()) {
+            cpi.setQueueFamilyIndex(this->queue_manager->getPresentQueueIndex());
+            this->present_command_pool = this->device_manager->getDevice().createCommandPool(cpi);
+        }
 
         if (this->queue_manager->hasComputeQueue()) {
             cpi.setQueueFamilyIndex(this->queue_manager->getComputeQueueIndex());
@@ -52,11 +57,13 @@ namespace wg::internal {
         cbi.setLevel(vk::CommandBufferLevel::ePrimary)
             .setCommandBufferCount(1);
 
-        cbi.setCommandPool(this->present_command_pool);
-        this->present_command.buffer = this->device_manager->getDevice().allocateCommandBuffers(cbi)[0];
-
         cbi.setCommandPool(this->graphics_command_pool);
         this->general_command.buffer = this->device_manager->getDevice().allocateCommandBuffers(cbi)[0];
+
+        if (this->queue_manager->hasPresentQueue()) {
+            cbi.setCommandPool(this->present_command_pool);
+            this->present_command.buffer = this->device_manager->getDevice().allocateCommandBuffers(cbi)[0];
+        }
 
         if (this->queue_manager->hasComputeQueue()) {
             cbi.setCommandPool(this->compute_command_pool);
@@ -68,11 +75,13 @@ namespace wg::internal {
         vk::FenceCreateInfo fci;
         fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
-        this->present_command.fence =
-            this->device_manager->getDevice().createFence(fci);
-
         this->general_command.fence =
             this->device_manager->getDevice().createFence(fci);
+
+        if (this->queue_manager->hasPresentQueue()) {
+            this->present_command.fence =
+                this->device_manager->getDevice().createFence(fci);
+        }
 
         if (this->queue_manager->hasComputeQueue()) {
             this->compute_command.fence =
@@ -81,11 +90,14 @@ namespace wg::internal {
     }
 
     void CommandManager::resetCommandBuffers() {
-        this->present_command.buffer
-            .reset(vk::CommandBufferResetFlagBits::eReleaseResources);
 
         this->general_command.buffer
             .reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+
+        if (this->queue_manager->hasPresentQueue()) {
+            this->present_command.buffer
+                .reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+        }
 
         if(this->queue_manager->hasComputeQueue()) {
 
@@ -131,23 +143,24 @@ namespace wg::internal {
 
         device.freeCommandBuffers(this->graphics_command_pool,
                                         1, &this->general_command.buffer);
-        device.freeCommandBuffers(this->present_command_pool,
-                                        1, &this->present_command.buffer);
-
 
         device.destroyCommandPool(this->graphics_command_pool);
-        device.destroyCommandPool(this->present_command_pool);
-
-
-        _wassert_result(device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
-                        "wait for present command finish");
-        device.destroyFence(this->present_command.fence);
-
 
         _wassert_result(device.waitForFences(1, &this->general_command.fence, true, UINT64_MAX),
                         "wait for general purpose command finish");
         device.destroy(this->general_command.fence, nullptr);
 
+
+        if (this->queue_manager->hasPresentQueue()) {
+            device.freeCommandBuffers(this->present_command_pool,
+                                      1, &this->present_command.buffer);
+
+            device.destroyCommandPool(this->present_command_pool);
+
+            _wassert_result(device.waitForFences(1, &this->present_command.fence, true, UINT64_MAX),
+                            "wait for present command finish");
+            device.destroyFence(this->present_command.fence);
+        }
 
         if(this->queue_manager->hasComputeQueue()) {
             device.freeCommandBuffers(this->compute_command_pool,

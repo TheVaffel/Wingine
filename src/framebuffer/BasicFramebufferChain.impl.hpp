@@ -6,6 +6,8 @@
 #include "../DeviceManager.hpp"
 #include "../sync/semaphoreUtil.hpp"
 
+#include <iostream>
+
 namespace wg::internal {
 
     /*
@@ -57,9 +59,13 @@ namespace wg::internal {
 
     template<CFramebuffer T>
     void BasicFramebufferChain<T>::swapFramebuffer() {
+        std::cout << "[BasicFramebufferChain] SWOOP" << std::endl;
         semaphoreUtil::signalManySemaphoresFromManySemaphores(this->wait_semaphore_set.getCurrentRawSemaphores(),
                                                               this->signal_semaphore_set.getCurrentRawSemaphores(),
-                                                              this->queue_manager->getPresentQueue());
+                                                              this->queue_manager->getGraphicsQueue());
+
+        this->wait_semaphore_set.swapSemaphoresFromWait();
+        this->signal_semaphore_set.swapSemaphoresFromSignal();
 
         this->current_framebuffer = (this->current_framebuffer + 1) % this->framebuffers.size();
     }
@@ -74,6 +80,11 @@ namespace wg::internal {
         std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
             std::make_shared<ManagedSemaphoreChain>(this->getNumFramebuffers(),
                                                     this->device_manager);
+
+        semaphoreUtil::signalSemaphore(semaphore_chain->getSemaphoreRelativeToCurrent(0),
+                                       this->queue_manager->getGraphicsQueue());
+
+        std::cout << "Signalled newly created semaphore " << semaphore_chain->getSemaphoreRelativeToCurrent(0) << std::endl;
         this->signal_semaphore_set.addSemaphoreChainAsSignalled(semaphore_chain);
 
         return semaphore_chain;

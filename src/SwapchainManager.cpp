@@ -1,6 +1,7 @@
 #include "./SwapchainManager.hpp"
 
 #include "./image/imageUtil.hpp"
+#include "./constants.hpp"
 
 namespace wg::internal {
 
@@ -41,7 +42,7 @@ namespace wg::internal {
         uint32_t getNumSwapchainImages(const vk::SurfaceCapabilitiesKHR& caps) {
 
             uint32_t numSwaps =
-                std::max(caps.minImageCount, (uint32_t) 2);
+                std::max(caps.minImageCount, (uint32_t) constants::preferred_swapchain_image_count);
 
             if(caps.maxImageCount != 0) {
                 numSwaps =

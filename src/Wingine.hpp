@@ -29,6 +29,7 @@
 
 namespace wg {
 
+
     class Wingine {
 
         std::shared_ptr<internal::VulkanInstanceManager> vulkan_instance_manager;
@@ -56,12 +57,31 @@ namespace wg {
 
         std::shared_ptr<internal::CompatibleRenderPassRegistry> compatibleRenderPassRegistry;
 
-        void init_vulkan(int width, int height,
-                         winval_type_0 arg0,
-                         winval_type_1 arg1,
-                         const std::string& application_name);
 
-        void init_vulkan(int width, int height, const std::string& app_name);
+        class VulkanInitInfo {
+            vk::Extent2D dimensions;
+            std::string application_name;
+            bool is_headless = false;
+            winval_type_0 win_arg0;
+            winval_type_1 win_arg1;
+        public:
+
+            const vk::Extent2D& getDimensions() const;
+            std::string getApplicationName() const;
+            bool getIsHeadless() const;
+            winval_type_0 getWinArg0() const;
+            winval_type_1 getWinArg1() const;
+
+            VulkanInitInfo(uint32_t width, uint32_t height, const std::string& application_name);
+            VulkanInitInfo(uint32_t width,
+                           uint32_t height,
+                           winval_type_0 arg0,
+                           winval_type_1 arg1,
+                           const std::string& application_name);
+        };
+
+
+        void init_vulkan(const VulkanInitInfo& init_info);
 
         void init_generic_render_pass();
         void init_descriptor_pool();
@@ -187,12 +207,12 @@ namespace wg {
 
         Wingine(Winval& win);
 
-        Wingine(int width, int height,
+        Wingine(uint32_t width, uint32_t height,
                 winval_type_0 arg0,
                 winval_type_1 arg1,
-                const char* str = "Wingine");
+                const std::string& app_name = "Wingine");
 
-        Wingine(int width, int height, const std::string& app_name = "Wingine");
+        Wingine(uint32_t width, uint32_t height, const std::string& app_name = "Wingine");
 
         ~Wingine();
 

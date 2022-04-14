@@ -8,4 +8,6 @@ namespace wg::internal {
 
     uint32_t evaluatePhysicalDevice(vk::PhysicalDevice physical_device,
                                     vk::SurfaceKHR surface);
+
+    uint32_t evaluatePhysicalDeviceWithoutSurface(vk::PhysicalDevice physical_device);
 };

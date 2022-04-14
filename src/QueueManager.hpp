@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "./queueUtils.hpp"
+#include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 
 namespace wg::internal {
@@ -21,7 +22,8 @@ namespace wg::internal {
 
     public:
 
-        QueueManager(std::shared_ptr<const DeviceManager> device_manager, vk::SurfaceKHR surface);
+        QueueManager(std::shared_ptr<const DeviceManager> device_manager,
+                     const VulkanInstanceManager& instance_manager);
         ~QueueManager();
 
         QueueManager(const QueueManager&) = delete;
@@ -34,6 +36,7 @@ namespace wg::internal {
         const vk::Queue getPresentQueue() const;
         const vk::Queue getComputeQueue() const;
 
+        bool hasPresentQueue() const;
         bool hasComputeQueue() const;
     };
 };

@@ -19,7 +19,9 @@ namespace wg::internal {
                                                     std::shared_ptr<const QueueManager> queue_manager,
                                                     Args&&... arguments)
         : device_manager(device_manager),
-          queue_manager(queue_manager) {
+          queue_manager(queue_manager),
+          wait_semaphore_set({}),
+          signal_semaphore_set({}) {
         this->framebuffers.reserve(count);
         this->current_framebuffer = 0;
 
@@ -72,7 +74,7 @@ namespace wg::internal {
         std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
             std::make_shared<ManagedSemaphoreChain>(this->getNumFramebuffers(),
                                                     this->device_manager);
-        this->signal_semaphore_set->addSemaphoreChainAsSignalled(semaphore_chain);
+        this->signal_semaphore_set.addSemaphoreChainAsSignalled(semaphore_chain);
 
         return semaphore_chain;
     }

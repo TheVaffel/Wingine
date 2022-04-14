@@ -45,7 +45,7 @@ namespace wg::internal::semaphoreUtil {
     }
 
 
-    void signalSemaphore(const std::vector<vk::Semaphore>& semaphores,
+    void signalSemaphores(const std::vector<vk::Semaphore>& semaphores,
                          const vk::Queue& queue) {
 
         vk::SubmitInfo inf;

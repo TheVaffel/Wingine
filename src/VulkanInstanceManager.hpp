@@ -2,7 +2,8 @@
 
 #ifdef HEADLESS
 
-/* ... */
+#include <vulkan/vulkan.hpp>
+
 #elif defined(WIN32)
 
 #include <windows.h>
@@ -13,6 +14,7 @@ namespace wg {
 };
 
 #define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.hpp>
 #include "vulkan/vulkan_win32.h"
 
 #include <algorithm>
@@ -21,7 +23,6 @@ namespace wg {
 #undef max
 
 #else // HEADLESS || WIN32
-
 #include <unistd.h>
 
 #include <X11/Xlib.h>
@@ -32,12 +33,10 @@ namespace wg {
 };
 
 #define VK_USE_PLATFORM_XLIB_KHR
-
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_xlib.h>
 
 #endif // HEADLESS || WIN32
-
 
 namespace wg::internal {
 
@@ -55,8 +54,10 @@ namespace wg::internal {
 
         void init_instance(const std::string& application_name);
         void init_dispatcher();
+#ifndef HEADLESS
         void init_surface(VisualHandleT0 v0,
                           VisualHandleT1 v1);
+#endif // HEADFUL
 
     public:
 
@@ -67,9 +68,11 @@ namespace wg::internal {
         vk::SurfaceKHR getSurface() const;
 
         VulkanInstanceManager(const std::string& application_name);
+#ifndef HEADLESS
         VulkanInstanceManager(VisualHandleT0 v0,
                               VisualHandleT1 v1,
                               const std::string& application_name);
+#endif // HEADFUL
 
         ~VulkanInstanceManager();
 

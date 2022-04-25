@@ -1,5 +1,7 @@
 #include <vulkan/vulkan.hpp>
 
+#include <iostream>
+
 namespace wg::internal::imageUtil {
     namespace {
 
@@ -81,6 +83,19 @@ namespace wg::internal::imageUtil {
         return createImageRaw(device,
                               dimensions,
                               vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc,
+                              format,
+                              parameters);
+    }
+
+
+    vk::Image createHostAccessibleColorImage(const vk::Extent2D& dimensions,
+                                             const vk::Format& format,
+                                             const vk::Device& device) {
+        ImageParameters parameters;
+        parameters.image_tiling = vk::ImageTiling::eLinear;
+        return createImageRaw(device,
+                              dimensions,
+                              vk::ImageUsageFlagBits::eTransferDst,
                               format,
                               parameters);
     }

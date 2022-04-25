@@ -59,7 +59,6 @@ namespace wg::internal {
 
     template<CFramebuffer T>
     void BasicFramebufferChain<T>::swapFramebuffer() {
-        std::cout << "[BasicFramebufferChain] SWOOP" << std::endl;
         semaphoreUtil::signalManySemaphoresFromManySemaphores(this->wait_semaphore_set.getCurrentRawSemaphores(),
                                                               this->signal_semaphore_set.getCurrentRawSemaphores(),
                                                               this->queue_manager->getGraphicsQueue());
@@ -84,7 +83,6 @@ namespace wg::internal {
         semaphoreUtil::signalSemaphore(semaphore_chain->getSemaphoreRelativeToCurrent(0),
                                        this->queue_manager->getGraphicsQueue());
 
-        std::cout << "Signalled newly created semaphore " << semaphore_chain->getSemaphoreRelativeToCurrent(0) << std::endl;
         this->signal_semaphore_set.addSemaphoreChainAsSignalled(semaphore_chain);
 
         return semaphore_chain;

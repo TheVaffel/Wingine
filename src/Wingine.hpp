@@ -5,7 +5,9 @@
 #include <vector>
 #include <map>
 
+#ifndef HEADLESS
 #include <Winval.hpp>
+#endif
 
 #include "declarations.hpp"
 
@@ -15,6 +17,7 @@
 #include "./QueueManager.hpp"
 #include "./DefaultFramebufferManager.hpp"
 #include "./framebuffer/IFramebuffer.hpp"
+#include "./image/HostVisibleImageView.hpp"
 #include "./draw_pass/BasicDrawPassSettings.hpp"
 
 #include "buffer.hpp"
@@ -43,6 +46,8 @@ namespace wg {
         std::shared_ptr<internal::QueueManager> queue_manager;
         std::shared_ptr<internal::CommandManager> command_manager;
         std::shared_ptr<internal::IFramebufferChain> default_framebuffer_chain;
+        std::shared_ptr<internal::HostVisibleImageView> host_visible_image;
+        std::shared_ptr<internal::IImage> host_accessible_image;
 
         // General purpose fence for the moving phase
         vk::Fence general_purpose_fence;
@@ -62,22 +67,32 @@ namespace wg {
             vk::Extent2D dimensions;
             std::string application_name;
             bool is_headless = false;
+
+#ifndef HEADLESS
+
             winval_type_0 win_arg0;
             winval_type_1 win_arg1;
+#endif
         public:
 
             const vk::Extent2D& getDimensions() const;
             std::string getApplicationName() const;
             bool getIsHeadless() const;
+
+#ifndef HEADLESS
             winval_type_0 getWinArg0() const;
             winval_type_1 getWinArg1() const;
+#endif
 
             VulkanInitInfo(uint32_t width, uint32_t height, const std::string& application_name);
+
+#ifndef HEADLESS
             VulkanInitInfo(uint32_t width,
                            uint32_t height,
                            winval_type_0 arg0,
                            winval_type_1 arg1,
                            const std::string& application_name);
+#endif
         };
 
 
@@ -191,6 +206,9 @@ namespace wg {
 
         void present();
 
+        uint32_t getRenderedImageRowByteStride() const;
+        void copyLastRenderedImage(uint32_t* dst);
+
         void destroy(Pipeline* pipeline);
         void destroy(RenderFamily* family);
         void destroy(Buffer* buffer);
@@ -205,12 +223,14 @@ namespace wg {
         template<typename Type>
         void destroy(Uniform<Type>* uniform);
 
+#ifndef HEADLESS
         Wingine(Winval& win);
 
         Wingine(uint32_t width, uint32_t height,
                 winval_type_0 arg0,
                 winval_type_1 arg1,
                 const std::string& app_name = "Wingine");
+#endif
 
         Wingine(uint32_t width, uint32_t height, const std::string& app_name = "Wingine");
 

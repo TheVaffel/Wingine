@@ -14,6 +14,7 @@ namespace wg::internal {
 
         vk::Extent2D dimensions;
         vk::ImageLayout current_layout;
+        vk::ImageLayout intended_layout;
 
         std::shared_ptr<const DeviceManager> device_manager;
 
@@ -30,6 +31,7 @@ namespace wg::internal {
         virtual const vk::ImageAspectFlagBits getDefaultAspect() const;
 
         virtual const vk::ImageLayout getCurrentLayout() const;
+        virtual const vk::ImageLayout getIntendedLayout() const;
         virtual void setCurrentLayout(const vk::ImageLayout& layout);
 
         static std::unique_ptr<SwapchainColorImage>

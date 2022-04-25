@@ -4,7 +4,9 @@
 
 #include "./framebuffer/BasicFramebuffer.hpp"
 #include "./framebuffer/DepthOnlyFramebuffer.hpp"
-#include "./framebuffer/BasicFramebufferChain.hpp"
+#include "./framebuffer/HostCopyingFramebufferChain.hpp"
+
+#include "./image/BasicImage.hpp"
 
 #include "./draw_pass/BasicDrawPass.hpp"
 
@@ -33,6 +35,7 @@ namespace wg {
         return this->is_headless;
     }
 
+#ifndef HEADLESS
     winval_type_0 Wingine::VulkanInitInfo::getWinArg0() const {
         return this->win_arg0;
     }
@@ -40,12 +43,14 @@ namespace wg {
     winval_type_1 Wingine::VulkanInitInfo::getWinArg1() const {
         return this->win_arg1;
     }
+#endif
 
     Wingine::VulkanInitInfo::VulkanInitInfo(uint32_t width, uint32_t height, const std::string& application_name)
         : dimensions(width, height),
           application_name(application_name),
           is_headless(true) { }
 
+#ifndef HEADLESS
     Wingine::VulkanInitInfo::VulkanInitInfo(uint32_t width,
                                             uint32_t height,
                                             winval_type_0 arg0,
@@ -55,7 +60,7 @@ namespace wg {
           application_name(application_name),
           win_arg0(arg0),
           win_arg1(arg1) { }
-
+#endif
 
     /*
      * Wingine
@@ -351,11 +356,9 @@ namespace wg {
         return this->device.createRenderPass(rpci);
     }
 
-
     void Wingine::register_compatible_render_pass(internal::renderPassUtil::RenderPassType type) {
         this->compatibleRenderPassRegistry->ensureAndGetRenderPass(type);
     }
-
 
     void Wingine::setPresentWaitForSemaphores(const internal::SemaphoreSet& semaphores) {
         this->default_framebuffer_chain->setPresentWaitSemaphores(semaphores);
@@ -363,6 +366,21 @@ namespace wg {
 
     void Wingine::present() {
         this->default_framebuffer_chain->swapFramebuffer();
+    }
+
+    uint32_t Wingine::getRenderedImageRowByteStride() const {
+        if (!this->host_visible_image) {
+            throw std::runtime_error("[Wingine] Image copying not enabled (not in headless mode?)");
+        }
+
+        return this->host_visible_image->getByteStride();
+    }
+
+    void Wingine::copyLastRenderedImage(uint32_t* dst) {
+        if (!this->host_visible_image) {
+            throw std::runtime_error("[Wingine] Image copying not enabled (not in headless mode?)");
+        }
+        this->host_visible_image->copyImageToHost(dst);
     }
 
     Semaphore Wingine::createAndAddImageReadySemaphore() {
@@ -430,12 +448,16 @@ namespace wg {
         if (init_info.getIsHeadless()) {
             this->vulkan_instance_manager =
                 std::make_shared<internal::VulkanInstanceManager>(init_info.getApplicationName());
-        } else {
+        }
+
+#ifndef HEADLESS
+        else {
             this->vulkan_instance_manager =
                 std::make_shared<internal::VulkanInstanceManager>(init_info.getWinArg0(),
                                                                   init_info.getWinArg1(),
                                                                   init_info.getApplicationName());
         }
+#endif
 
         this->device_manager =
             std::make_shared<internal::DeviceManager>(this->vulkan_instance_manager);
@@ -459,16 +481,23 @@ namespace wg {
             std::make_shared<internal::CommandManager>(const_device_manager,
                                                        const_queue_manager);
 
+        std::shared_ptr<const internal::CommandManager> const_command_manager =
+            const_pointer_cast<const internal::CommandManager>(this->command_manager);
+
         if (init_info.getIsHeadless()) {
+            this->host_visible_image = std::make_shared<internal::HostVisibleImageView>(
+                internal::constants::preferred_swapchain_image_count,
+                init_info.getDimensions(),
+                device_manager);
+
             this->default_framebuffer_chain =
-                std::make_shared<internal::BasicFramebufferChain<
-                    internal::BasicFramebuffer>>(
-                        internal::constants::preferred_swapchain_image_count,
-                        this->device_manager,
-                        this->queue_manager,
-                        init_info.getDimensions(),
-                        this->device_manager,
-                        *this->compatibleRenderPassRegistry);
+                std::make_shared<internal::HostCopyingFramebufferChain>(
+                    internal::constants::preferred_swapchain_image_count,
+                    host_visible_image,
+                    const_queue_manager,
+                    const_command_manager,
+                    const_device_manager,
+                    *this->compatibleRenderPassRegistry);
         } else {
             this->default_framebuffer_chain =
                 std::make_shared<internal::DefaultFramebufferManager>(
@@ -559,18 +588,15 @@ namespace wg {
         image.view = this->device.createImageView(ivci);
     }
 
+#ifndef HEADLESS
     Wingine::Wingine(uint32_t width, uint32_t height,
                      winval_type_0 arg0, winval_type_1 arg1, const std::string& application_name) {
         VulkanInitInfo init_info(width, height, arg0, arg1, application_name);
         this->init_vulkan(init_info);
     }
+#endif
 
-    Wingine::Wingine(uint32_t width, uint32_t height, const std::string& app_title) {
-        VulkanInitInfo init_info(width, height, app_title);
-        this->init_vulkan(init_info);
-    }
-
-
+#ifndef HEADLESS
     Wingine::Wingine(Winval& win) {
 #ifdef WIN32
 
@@ -585,6 +611,12 @@ namespace wg {
         this->init_vulkan(init_info);
 
 #endif // WIN32
+    }
+#endif
+
+    Wingine::Wingine(uint32_t width, uint32_t height, const std::string& app_title) {
+        VulkanInitInfo init_info(width, height, app_title);
+        this->init_vulkan(init_info);
     }
 
     vk::Device Wingine::getDevice() {

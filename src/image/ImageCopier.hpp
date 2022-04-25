@@ -1,3 +1,5 @@
+#pragma once
+
 #include "./IImage.hpp"
 #include "../CommandManager.hpp"
 #include "../sync/SemaphoreSet.hpp"
@@ -30,6 +32,8 @@ namespace wg::internal {
         void runCopy();
         void awaitCopy();
         void runAndAwaitCopy();
+
+        vk::Fence getImageCopyCompleteFence();
 
         ~ImageCopier();
     };

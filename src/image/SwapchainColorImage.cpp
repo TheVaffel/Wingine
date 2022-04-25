@@ -8,9 +8,8 @@ namespace wg::internal {
                                              std::shared_ptr<const DeviceManager> device_manager)
         : dimensions(dimensions),
           current_layout(vk::ImageLayout::eUndefined),
-          device_manager(device_manager) {
-
-    }
+          intended_layout(vk::ImageLayout::ePresentSrcKHR),
+          device_manager(device_manager) { }
 
 
     std::unique_ptr<SwapchainColorImage>
@@ -54,6 +53,10 @@ namespace wg::internal {
 
     const vk::ImageLayout SwapchainColorImage::getCurrentLayout() const {
         return this->current_layout;
+    }
+
+    const vk::ImageLayout SwapchainColorImage::getIntendedLayout() const {
+        return this->intended_layout;
     }
 
     void SwapchainColorImage::setCurrentLayout(const vk::ImageLayout& layout) {

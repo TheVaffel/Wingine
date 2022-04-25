@@ -47,6 +47,19 @@ namespace wg::internal::memoryUtil {
             vk::DeviceMemory memory = device.allocateMemory(allocate_info);
             return memory;
         }
+
+        vk::DeviceMemory createMemoryForRequirements(
+            const vk::MemoryRequirements& requirements,
+            const vk::MemoryPropertyFlagBits& property_flags,
+            const vk::PhysicalDeviceMemoryProperties& device_memory_properties,
+            const vk::Device& device) {
+
+            uint32_t memory_type_index = getMemoryTypeIndex(requirements,
+                                                            property_flags,
+                                                            device_memory_properties);
+
+            return createMemory(requirements.size, memory_type_index, device);
+        }
     };
 
 
@@ -54,21 +67,64 @@ namespace wg::internal::memoryUtil {
      * Memory
      */
 
-    vk::DeviceMemory
-    createAndBindMemoryForImage(const vk::Image& image,
-                                const vk::Device& device,
-                                const vk::PhysicalDeviceMemoryProperties& device_memory_properties) {
-        vk::MemoryRequirements requirements;
-        requirements = device.getImageMemoryRequirements(image);
+    vk::DeviceMemory createAndBindMemoryForImage(
+        const vk::Image& image,
+        const vk::Device& device,
+        const vk::PhysicalDeviceMemoryProperties& device_memory_properties) {
 
+        vk::MemoryRequirements requirements = device.getImageMemoryRequirements(image);
+
+        vk::DeviceMemory memory = createMemoryForRequirements(
+            requirements,
+            vk::MemoryPropertyFlagBits::eDeviceLocal,
+            device_memory_properties,
+            device);
+
+        device.bindImageMemory(image, memory, 0);
+
+        return memory;
+    }
+
+
+    vk::DeviceMemory createAndBindHostAccessibleMemoryForImage(
+        const vk::Image& image,
+        const vk::Device& device,
+        const vk::PhysicalDeviceMemoryProperties& device_properties) {
+
+        vk::MemoryRequirements requirements = device.getImageMemoryRequirements(image);
         uint32_t memory_type_index = getMemoryTypeIndex(requirements,
-                                                        vk::MemoryPropertyFlagBits::eDeviceLocal,
-                                                        device_memory_properties);
+                                                        vk::MemoryPropertyFlagBits::eHostVisible,
+                                                        device_properties);
 
         vk::DeviceMemory memory = createMemory(requirements.size, memory_type_index, device);
 
         device.bindImageMemory(image, memory, 0);
 
         return memory;
+
+    }
+
+
+    vk::DeviceMemory createAndBindHostAccessibleMemoryForBuffer(
+        const vk::Buffer& buffer,
+        const vk::Device& device,
+        const vk::PhysicalDeviceMemoryProperties& device_memory_properties) {
+        vk::MemoryRequirements requirements = device.getBufferMemoryRequirements(buffer);
+
+
+        vk::DeviceMemory memory = createMemoryForRequirements(
+            requirements,
+            vk::MemoryPropertyFlagBits::eHostVisible,
+            device_memory_properties,
+            device);
+
+        device.bindBufferMemory(buffer, memory, 0);
+
+        return memory;
+    }
+
+    void unmapMemory(const vk::DeviceMemory& memory,
+                     const vk::Device& device) {
+        device.unmapMemory(memory);
     }
 };

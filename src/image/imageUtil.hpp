@@ -7,6 +7,10 @@ namespace wg::internal::imageUtil {
     const vk::Format DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT = vk::Format::eB8G8R8A8Unorm;
     const vk::Format DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT = vk::Format::eD32Sfloat;
 
+    /*
+     * Image
+     */
+
     vk::Image createFramebufferColorImage(const vk::Extent2D& dimensions,
                                           const vk::Format& format,
                                           const vk::Device& device);
@@ -15,6 +19,13 @@ namespace wg::internal::imageUtil {
                                           const vk::Format& format,
                                           const vk::Device& device);
 
+    vk::Image createHostAccessibleColorImage(const vk::Extent2D& dimensions,
+                                             const vk::Format& format,
+                                             const vk::Device& device);
+
+    /*
+     * ImageView
+     */
 
     vk::ImageView createColorImageView(const vk::Image& image,
                                        const vk::Format& format,
@@ -23,6 +34,5 @@ namespace wg::internal::imageUtil {
     vk::ImageView createDepthImageView(const vk::Image& image,
                                        const vk::Format& format,
                                        const vk::Device& device);
-
 
 };

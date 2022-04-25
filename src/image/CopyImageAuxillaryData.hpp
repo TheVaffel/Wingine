@@ -14,4 +14,9 @@ namespace wg::internal {
             src_final_transition_data,
             dst_final_transition_data;
     };
+
+    struct CopyImageToBufferAuxillaryData {
+        CommandLayoutTransitionData src_initial_transition_data,
+            src_final_transition_data;
+    };
 };

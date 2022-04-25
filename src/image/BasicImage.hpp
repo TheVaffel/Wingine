@@ -13,13 +13,17 @@ namespace wg::internal {
         vk::DeviceMemory memory;
         vk::ImageView view;
         vk::Extent2D dimensions;
+
         vk::ImageLayout current_layout;
+        vk::ImageLayout intended_layout;
+
         vk::ImageAspectFlagBits aspect;
 
         std::shared_ptr<const DeviceManager> device_manager;
 
         BasicImage(const vk::Extent2D& dimensions,
                    const vk::ImageAspectFlagBits& aspect,
+                   const vk::ImageLayout& intended_layout,
                    std::shared_ptr<const DeviceManager> device_manager);
 
     public:
@@ -32,6 +36,7 @@ namespace wg::internal {
         virtual const vk::ImageAspectFlagBits getDefaultAspect() const;
 
         virtual const vk::ImageLayout getCurrentLayout() const;
+        virtual const vk::ImageLayout getIntendedLayout() const;
 
         // Improvement: Make private, change through friendly image mutator class?
         virtual void setCurrentLayout(const vk::ImageLayout& layout);
@@ -44,6 +49,9 @@ namespace wg::internal {
         createFramebufferDepthImage(const vk::Extent2D& dimensions,
                                     std::shared_ptr<const DeviceManager> device_manager);
 
+        static std::unique_ptr<BasicImage>
+        createHostAccessibleColorImage(const vk::Extent2D& dimensions,
+                                       std::shared_ptr<const DeviceManager> device_manager);
         ~BasicImage();
     };
 

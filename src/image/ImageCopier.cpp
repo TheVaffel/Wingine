@@ -32,6 +32,8 @@ namespace wg::internal {
         std::vector<vk::PipelineStageFlags> wait_stages(this->wait_semaphore_set.getNumSemaphores(),
                                                         vk::PipelineStageFlagBits::eTopOfPipe);
 
+        this->awaitCopy();
+
         vk::SubmitInfo submit_info;
         submit_info.setCommandBufferCount(1)
             .setPCommandBuffers(&this->command.buffer)
@@ -57,13 +59,18 @@ namespace wg::internal {
     }
 
     void ImageCopier::awaitCopy() {
-        fenceUtil::awaitFence(this->command.fence,
-                              this->device_manager->getDevice());
+        fenceUtil::awaitAndResetFence(this->command.fence,
+                                      this->device_manager->getDevice());
     }
 
     void ImageCopier::runAndAwaitCopy() {
         this->runCopy();
         this->awaitCopy();
+    }
+
+
+    vk::Fence ImageCopier::getImageCopyCompleteFence() {
+        return this->command.fence;
     }
 
     ImageCopier::~ImageCopier() {

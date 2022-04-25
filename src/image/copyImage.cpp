@@ -50,22 +50,81 @@ namespace wg::internal::copyImage {
             return image_copy;
         }
 
+        vk::BufferImageCopy createImageToBufferCopyInfo(const IImage& src,
+                                                        const IBuffer& dst) {
+            vk::BufferImageCopy buffer_image_copy;
+            vk::ImageSubresourceLayers subresource = getSubresourceLayers(src);
+            buffer_image_copy
+                .setBufferOffset(0)
+                .setImageSubresource(subresource)
+                .setImageOffset({ 0, 0, 0 })
+                .setImageExtent({ src.getDimensions().width,
+                        src.getDimensions().height,
+                        1 });
+
+            return buffer_image_copy;
+        }
+
+        vk::AccessFlagBits getAccessMask(const vk::ImageLayout& layout) {
+            switch(layout) {
+            case vk::ImageLayout::eColorAttachmentOptimal:
+            case vk::ImageLayout::ePresentSrcKHR:
+                return vk::AccessFlagBits::eColorAttachmentWrite;
+            case vk::ImageLayout::ePreinitialized:
+                return vk::AccessFlagBits::eHostWrite;
+            case vk::ImageLayout::eShaderReadOnlyOptimal:
+                return vk::AccessFlagBits::eShaderRead;
+            case vk::ImageLayout::eTransferDstOptimal:
+                return vk::AccessFlagBits::eTransferWrite;
+            case vk::ImageLayout::eTransferSrcOptimal:
+                return vk::AccessFlagBits::eTransferRead;
+            case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+                return vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            default:
+                throw std::runtime_error("[copyImage] No applicable access mask for layout " +
+                                         vk::to_string(layout));
+            }
+        }
+
+        vk::PipelineStageFlags getPipelineStageFromLayout(const vk::ImageLayout& layout) {
+            switch (layout) {
+            case vk::ImageLayout::eTransferDstOptimal:
+                return vk::PipelineStageFlagBits::eTransfer;
+            case vk::ImageLayout::eTransferSrcOptimal:
+                return vk::PipelineStageFlagBits::eTransfer;
+            case vk::ImageLayout::ePresentSrcKHR:
+            case vk::ImageLayout::eColorAttachmentOptimal:
+                return vk::PipelineStageFlagBits::eColorAttachmentOutput;
+            case vk::ImageLayout::eShaderReadOnlyOptimal:
+                return vk::PipelineStageFlagBits::eComputeShader |
+                    vk::PipelineStageFlagBits::eFragmentShader;
+            case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+                return vk::PipelineStageFlagBits::eLateFragmentTests;
+            case vk::ImageLayout::ePreinitialized:
+            return vk::PipelineStageFlagBits::eHost;
+            default:
+                throw std::runtime_error("[copyImage] No applicable pipeline stage for layout " +
+                                         vk::to_string(layout));
+            }
+        }
+
         void recordSetLayout(CommandLayoutTransitionData& data,
                              const vk::CommandBuffer& command_buffer,
+                             const vk::ImageLayout& old_layout,
                              const vk::ImageLayout& new_layout,
                              IImage& image) {
 
             vk::ImageSubresourceRange subresource_range = getSubresourceRange(image);
 
-            data.image_memory_barrier.setOldLayout(image.getCurrentLayout())
+            data.image_memory_barrier.setOldLayout(old_layout)
                 .setNewLayout(new_layout)
                 .setImage(image.getImage())
                 .setSubresourceRange(subresource_range)
-                .setSrcAccessMask(vk::AccessFlagBits::eTransferRead)
-                .setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
+                .setSrcAccessMask(getAccessMask(old_layout))
+                .setDstAccessMask(getAccessMask(new_layout));
 
-            command_buffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer,
-                                           vk::PipelineStageFlagBits::eTransfer,
+            command_buffer.pipelineBarrier(getPipelineStageFromLayout(old_layout),
+                                           getPipelineStageFromLayout(new_layout),
                                            {},
                                            0,
                                            nullptr,
@@ -90,6 +149,19 @@ namespace wg::internal::copyImage {
                            &image_copy);
         }
 
+        void recordImageToBufferCopy(const vk::CommandBuffer& command_buffer,
+                                     const IImage& src,
+                                     const IBuffer& dst) {
+            vk::BufferImageCopy buffer_image_copy = createImageToBufferCopyInfo(src, dst);
+
+            command_buffer
+                .copyImageToBuffer(src.getImage(),
+                                   vk::ImageLayout::eTransferSrcOptimal,
+                                   dst.getBuffer(),
+                                   1,
+                                   &buffer_image_copy);
+        }
+
     };
 
     void recordCopyImage(IImage& src,
@@ -106,15 +178,14 @@ namespace wg::internal::copyImage {
         vk::CommandBufferBeginInfo begin_info;
         command.buffer.begin(begin_info);
 
-        vk::ImageLayout original_src_layout = src.getCurrentLayout();
-        vk::ImageLayout original_dst_layout = dst.getCurrentLayout();
-
         recordSetLayout(auxillary_data.src_initial_transition_data,
                         command.buffer,
+                        src.getIntendedLayout(),
                         vk::ImageLayout::eTransferSrcOptimal,
                         src);
         recordSetLayout(auxillary_data.dst_initial_transition_data,
                         command.buffer,
+                        vk::ImageLayout::eUndefined,
                         vk::ImageLayout::eTransferDstOptimal,
                         dst);
 
@@ -124,13 +195,42 @@ namespace wg::internal::copyImage {
 
         recordSetLayout(auxillary_data.src_final_transition_data,
                         command.buffer,
-                        original_src_layout,
+                        vk::ImageLayout::eTransferSrcOptimal,
+                        src.getIntendedLayout(),
                         src);
 
         recordSetLayout(auxillary_data.dst_final_transition_data,
                         command.buffer,
-                        original_dst_layout,
+                        vk::ImageLayout::eTransferDstOptimal,
+                        dst.getIntendedLayout(),
                         dst);
+
+        command.buffer.end();
+    }
+
+
+    void recordCopyImageToBuffer(IImage& src,
+                                 IBuffer& dst,
+                                 CopyImageToBufferAuxillaryData& auxillary_data,
+                                 const Command& command,
+                                 const vk::Device& device,
+                                 const vk::Queue& queue) {
+        vk::CommandBufferBeginInfo begin_info;
+        command.buffer.begin(begin_info);
+
+        recordSetLayout(auxillary_data.src_initial_transition_data,
+                        command.buffer,
+                        src.getIntendedLayout(),
+                        vk::ImageLayout::eTransferSrcOptimal,
+                        src);
+        recordImageToBufferCopy(command.buffer,
+                                src,
+                                dst);
+        recordSetLayout(auxillary_data.src_final_transition_data,
+                        command.buffer,
+                        vk::ImageLayout::eTransferSrcOptimal,
+                        src.getIntendedLayout(),
+                        src);
 
         command.buffer.end();
     }

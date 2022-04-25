@@ -1,16 +1,16 @@
-#include <Winval.hpp>
 
 #include "../include/Wingine.hpp"
 #include "../include/WgUtils.hpp"
 
+#include "HGraf/improc_io.hpp"
+
 #include <spurv.hpp>
 
-#include <chrono>
-
 int main() {
-    const int width = 800, height = 800;
-    Winval win(width, height);
-    wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
+
+    const int width = 480, height = 360;
+
+    wg::Wingine wing(width, height, "Test2");
 
     const int num_points = 3;
     const int num_triangles = 1;
@@ -110,15 +110,12 @@ int main() {
 
     wing.setPresentWaitForSemaphores({semaphore0});
 
-    int fps = 0;
+    uint32_t stride = wing.getRenderedImageRowByteStride();
+    hg::Image<std::array<unsigned char, 4>> image(width, height, stride);
 
-    std::chrono::high_resolution_clock clock;
-    auto start = clock.now();
+    const uint32_t num_images = 3;
 
-    double report_second_interval = 0.2;
-
-    while (win.isOpen()) {
-
+    for (uint32_t i = 0; i < num_images; i++) {
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
         cameraUniform->set(renderMatrix);
@@ -126,21 +123,13 @@ int main() {
         draw_pass->render();
 
         wing.present();
+        wing.copyLastRenderedImage((uint32_t*)image.getData());
 
-        auto now = clock.now();
+        std::ostringstream file_name_oss;
+        file_name_oss << "frame_" << i << ".png";
 
-        double duration = std::chrono::duration<double>(now - start).count();
-        fps++;
-        if(duration >= report_second_interval) {
-            std::cout << "FPS = " << (fps / report_second_interval) << std::endl;
-            fps = 0;
-            start = now;
-        }
-
-        win.flushEvents();
-        if(win.isKeyPressed(WK_ESC)) {
-            break;
-        }
+        hg::writeImage(image, file_name_oss.str());
+        std::cout << "Wrote file using filename argument " << file_name_oss.str() << std::endl;
     }
 
     wing.waitIdle();

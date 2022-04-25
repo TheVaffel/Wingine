@@ -27,14 +27,15 @@ namespace wg::internal {
 
         std::vector<const char*> getInstanceExtensionNames() {
             return std::vector<const char*> {
-                VK_KHR_SURFACE_EXTENSION_NAME,
-                VK_KHR_SURFACE_EXTENSION_NAME,
-                /* Platform specific extensions */
+              VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME,
+                  /* Platform specific extensions */
+#ifndef HEADLESS
 #ifdef WIN32
                 VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #else // WIN32
                 VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
 #endif // WIN32
+#endif // HEADLESS
                 /* Debug specific extensions */
 #ifdef DEBUG
                 VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
@@ -65,6 +66,7 @@ namespace wg::internal {
             };
         }
 
+#ifndef HEADLESS
         vk::SurfaceKHR getSurfaceFromVisual(vk::Instance instance,
                                             VisualHandleT0 arg0,
                                             VisualHandleT1 arg1) {
@@ -80,6 +82,7 @@ namespace wg::internal {
             return instance.createXlibSurfaceKHR(info, nullptr);
 #endif // WIN32
         }
+#endif // HEADLESS
     };
 
     void VulkanInstanceManager::init_instance(const std::string& application_name) {
@@ -156,17 +159,10 @@ namespace wg::internal {
 #endif // DEBUG
 
 
+#ifndef HEADLESS
     void VulkanInstanceManager::init_surface(VisualHandleT0 v0,
                                              VisualHandleT1 v1) {
         this->surface = getSurfaceFromVisual(this->instance, v0, v1);
-    }
-
-    VulkanInstanceManager::VulkanInstanceManager(const std::string& application_name) {
-        this->init_instance(application_name);
-        this->init_dispatcher();
-#ifdef DEBUG
-        this->init_debug_callback();
-#endif
     }
 
     VulkanInstanceManager::VulkanInstanceManager(VisualHandleT0 visualValue0,
@@ -178,6 +174,16 @@ namespace wg::internal {
         this->init_debug_callback();
 #endif
         this->init_surface(visualValue0, visualValue1);
+    }
+#endif // HEADLESS
+
+
+    VulkanInstanceManager::VulkanInstanceManager(const std::string& application_name) {
+        this->init_instance(application_name);
+        this->init_dispatcher();
+#ifdef DEBUG
+        this->init_debug_callback();
+#endif
     }
 
     vk::Instance VulkanInstanceManager::getInstance() {

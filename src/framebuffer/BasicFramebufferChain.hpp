@@ -22,8 +22,8 @@ namespace wg::internal {
         std::vector<std::unique_ptr<IFramebuffer>> framebuffers;
         uint32_t current_framebuffer;
 
-        SemaphoreSet wait_semaphore_set;
-        SemaphoreSet signal_semaphore_set;
+        WaitSemaphoreSet wait_semaphore_set;
+        SignalSemaphoreSet signal_semaphore_set;
 
     public:
 
@@ -45,9 +45,9 @@ namespace wg::internal {
 
         virtual void swapFramebuffer();
 
-        virtual void setPresentWaitSemaphores(const SemaphoreSet& semaphores);
+        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores);
         virtual std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore();
-        virtual void setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores);
+        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores);
     };
 };
 

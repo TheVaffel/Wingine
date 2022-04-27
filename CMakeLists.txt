@@ -42,7 +42,7 @@ set(IMAGE_SOURCES
   ImageToBufferCopier.cpp
   copyImage.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
-set(SEMAPHORE_SOURCES semaphoreUtil.cpp SemaphoreSet.cpp ManagedSemaphoreChain.cpp fenceUtil.cpp)
+set(SEMAPHORE_SOURCES semaphoreUtil.cpp ManagedSemaphoreChain.cpp WaitSemaphoreSet.cpp SignalSemaphoreSet.cpp fenceUtil.cpp)
 set(DRAW_PASS_SOURCES IDrawPass.cpp BasicDrawPass.cpp BasicDrawPassSettings.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp)

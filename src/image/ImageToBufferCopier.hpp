@@ -2,7 +2,8 @@
 
 #include "./IImage.hpp"
 #include "../CommandManager.hpp"
-#include "../sync/SemaphoreSet.hpp"
+#include "../sync/WaitSemaphoreSet.hpp"
+#include "../sync/SignalSemaphoreSet.hpp"
 #include "./CopyImageAuxillaryData.hpp"
 
 #include "../util/IndexCounter.hpp"
@@ -18,8 +19,8 @@ namespace wg::internal {
 
         IndexCounter current_image_counter;
 
-        SemaphoreSet wait_semaphore_set;
-        SemaphoreSet signal_semaphore_set;
+        WaitSemaphoreSet wait_semaphore_set;
+        SignalSemaphoreSet signal_semaphore_set;
 
         CopyImageToBufferAuxillaryData auxillary_data;
 
@@ -33,8 +34,8 @@ namespace wg::internal {
         void recordCopyImage(const std::vector<IImage*>& srcs,
                              const std::vector<IBuffer*>& dsts);
 
-        void setWaitSemaphoreSet(const SemaphoreSet& semaphores);
-        void setSignalSemaphoreSet(const SemaphoreSet& semaphores);
+        void setWaitSemaphoreSet(const WaitSemaphoreSet& semaphores);
+        void setSignalSemaphoreSet(const SignalSemaphoreSet& semaphores);
         std::shared_ptr<ManagedSemaphoreChain> addSignalSemaphore();
 
         void runCopy();

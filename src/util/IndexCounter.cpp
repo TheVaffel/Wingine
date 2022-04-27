@@ -7,7 +7,6 @@ namespace wg::internal {
         : num_indices(num_indices), current_index(0) {
 
         fl_assert_gt(num_indices, 0);
-
     }
 
     uint32_t IndexCounter::getCurrentIndex() const {
@@ -20,6 +19,14 @@ namespace wg::internal {
 
     uint32_t IndexCounter::getPreviousIndex() const {
         return (this->current_index + this->num_indices - 1) % this->num_indices;
+    }
+
+    uint32_t IndexCounter::getRelativeIndex(uint32_t offset) const {
+        return (this->current_index + offset) % this->num_indices;
+    }
+
+    uint32_t IndexCounter::getNumIndices() const {
+        return this->num_indices;
     }
 
     void IndexCounter::incrementIndex() {

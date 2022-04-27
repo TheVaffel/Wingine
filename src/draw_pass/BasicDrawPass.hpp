@@ -36,8 +36,8 @@ namespace wg::internal {
         uint32_t num_framebuffers;
         uint32_t current_framebuffer_index;
 
-        SemaphoreSet signal_semaphore_set;
-        SemaphoreSet wait_semaphore_set;
+        SignalSemaphoreSet signal_semaphore_set;
+        WaitSemaphoreSet wait_semaphore_set;
 
         std::vector<Command> commands;
 
@@ -68,8 +68,8 @@ namespace wg::internal {
         [[nodiscard]]
         virtual std::shared_ptr<ManagedSemaphoreChain> createAndAddOnFinishSemaphore();
 
-        virtual void resetOnFinishSemaphores(const SemaphoreSet& semaphores);
-        virtual void setWaitSemaphores(const SemaphoreSet& semaphoreSet);
+        virtual void resetOnFinishSemaphores(const SignalSemaphoreSet& semaphores);
+        virtual void setWaitSemaphores(const WaitSemaphoreSet& semaphoreSet);
 
         virtual void render();
 

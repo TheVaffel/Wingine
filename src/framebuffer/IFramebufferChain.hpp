@@ -2,7 +2,8 @@
 
 #include "./IFramebuffer.hpp"
 
-#include "../sync/SemaphoreSet.hpp"
+#include "../sync/WaitSemaphoreSet.hpp"
+#include "../sync/SignalSemaphoreSet.hpp"
 
 namespace wg::internal {
     class IFramebufferChain {
@@ -17,9 +18,9 @@ namespace wg::internal {
 
         virtual void swapFramebuffer() = 0;
 
-        virtual void setPresentWaitSemaphores(const SemaphoreSet& semaphores) = 0;
+        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) = 0;
         virtual std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore() = 0;
-        virtual void setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores) = 0;
+        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) = 0;
 
         ~IFramebufferChain();
     };

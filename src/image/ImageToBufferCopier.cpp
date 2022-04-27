@@ -16,8 +16,8 @@ namespace wg::internal {
           command_manager(command_manager),
           device_manager(device_manager),
           current_image_counter(num_images),
-          wait_semaphore_set({}),
-          signal_semaphore_set({}) {
+          wait_semaphore_set(num_images, device_manager),
+          signal_semaphore_set(num_images, device_manager) {
 
         this->commands = command_manager->createGraphicsCommands(num_images);
     }
@@ -55,30 +55,22 @@ namespace wg::internal {
                                            this->commands[this->current_image_counter.getCurrentIndex()].fence),
                         "command submission from ImageToBufferCopier");
 
-        this->wait_semaphore_set.swapSemaphoresFromWait();
-        this->signal_semaphore_set.swapSemaphoresFromSignal();
+        this->wait_semaphore_set.swapSemaphores();
+        this->signal_semaphore_set.swapSemaphores();
         this->current_image_counter.incrementIndex();
     }
 
 
-    void ImageToBufferCopier::setWaitSemaphoreSet(const SemaphoreSet& semaphores) {
+    void ImageToBufferCopier::setWaitSemaphoreSet(const WaitSemaphoreSet& semaphores) {
         this->wait_semaphore_set = semaphores;
     }
 
-    void ImageToBufferCopier::setSignalSemaphoreSet(const SemaphoreSet& semaphores) {
+    void ImageToBufferCopier::setSignalSemaphoreSet(const SignalSemaphoreSet& semaphores) {
         this->signal_semaphore_set = semaphores;
     }
 
     std::shared_ptr<ManagedSemaphoreChain> ImageToBufferCopier::addSignalSemaphore() {
-        std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
-            std::make_shared<ManagedSemaphoreChain>(this->commands.size(),
-                                                    this->device_manager);
-
-        semaphoreUtil::signalSemaphore(semaphore_chain->getSemaphoreRelativeToCurrent(0),
-                                       this->queue);
-
-        this->signal_semaphore_set.addSemaphoreChainAsSignalled(semaphore_chain);
-        return semaphore_chain;
+        return this->signal_semaphore_set.addSignalledSemaphoreChain(this->queue);
     }
 
     void ImageToBufferCopier::awaitPreviousCopy() {

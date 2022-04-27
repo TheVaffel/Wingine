@@ -8,7 +8,8 @@
 #include <memory>
 
 #include "../sync/ManagedSemaphoreChain.hpp"
-#include "../sync/SemaphoreSet.hpp"
+#include "../sync/SignalSemaphoreSet.hpp"
+#include "../sync/WaitSemaphoreSet.hpp"
 
 namespace wg::internal {
     class IDrawPass {
@@ -22,10 +23,9 @@ namespace wg::internal {
         [[nodiscard]]
         virtual std::shared_ptr<ManagedSemaphoreChain> createAndAddOnFinishSemaphore() = 0;
 
-        virtual void resetOnFinishSemaphores(
-            const SemaphoreSet& semaphores) = 0;
+        virtual void resetOnFinishSemaphores(const SignalSemaphoreSet& semaphores) = 0;
 
-        virtual void setWaitSemaphores(const SemaphoreSet& semaphoreSet) = 0;
+        virtual void setWaitSemaphores(const WaitSemaphoreSet& semaphoreSet) = 0;
 
         virtual void render() = 0;
 

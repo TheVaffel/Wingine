@@ -22,8 +22,8 @@ namespace wg::internal {
                                                     Args&&... arguments)
         : device_manager(device_manager),
           queue_manager(queue_manager),
-          wait_semaphore_set({}),
-          signal_semaphore_set({}) {
+          wait_semaphore_set(count, device_manager),
+          signal_semaphore_set(count, device_manager) {
         this->framebuffers.reserve(count);
         this->current_framebuffer = 0;
 
@@ -63,33 +63,24 @@ namespace wg::internal {
                                                               this->signal_semaphore_set.getCurrentRawSemaphores(),
                                                               this->queue_manager->getGraphicsQueue());
 
-        this->wait_semaphore_set.swapSemaphoresFromWait();
-        this->signal_semaphore_set.swapSemaphoresFromSignal();
+        this->wait_semaphore_set.swapSemaphores();
+        this->signal_semaphore_set.swapSemaphores();
 
         this->current_framebuffer = (this->current_framebuffer + 1) % this->framebuffers.size();
     }
 
     template<CFramebuffer T>
-    void BasicFramebufferChain<T>::setPresentWaitSemaphores(const SemaphoreSet& semaphores) {
+    void BasicFramebufferChain<T>::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
         this->wait_semaphore_set = semaphores;
     }
 
     template<CFramebuffer T>
     std::shared_ptr<ManagedSemaphoreChain> BasicFramebufferChain<T>::addSignalImageAcquiredSemaphore() {
-        std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
-            std::make_shared<ManagedSemaphoreChain>(this->getNumFramebuffers(),
-                                                    this->device_manager);
-
-        semaphoreUtil::signalSemaphore(semaphore_chain->getSemaphoreRelativeToCurrent(0),
-                                       this->queue_manager->getGraphicsQueue());
-
-        this->signal_semaphore_set.addSemaphoreChainAsSignalled(semaphore_chain);
-
-        return semaphore_chain;
+        return this->signal_semaphore_set.addSignalledSemaphoreChain(this->queue_manager->getGraphicsQueue());
     }
 
     template<CFramebuffer T>
-    void BasicFramebufferChain<T>::setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores) {
+    void BasicFramebufferChain<T>::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
         this->signal_semaphore_set = semaphores;
     }
 };

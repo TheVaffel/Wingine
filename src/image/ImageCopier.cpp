@@ -11,8 +11,8 @@ namespace wg::internal {
         : queue(queue),
           command_manager(command_manager),
           device_manager(device_manager),
-          wait_semaphore_set({}),
-          signal_semaphore_set({}) {
+          wait_semaphore_set(1, device_manager),
+          signal_semaphore_set(1, device_manager) {
 
         this->command = command_manager->createGraphicsCommands(1)[0];
     }
@@ -42,19 +42,19 @@ namespace wg::internal {
             .setPWaitSemaphores(this->wait_semaphore_set.getCurrentRawSemaphores().data())
             .setSignalSemaphores(this->signal_semaphore_set.getCurrentRawSemaphores());
 
-        this->wait_semaphore_set.swapSemaphoresFromWait();
-        this->signal_semaphore_set.swapSemaphoresFromSignal();
+        this->wait_semaphore_set.swapSemaphores();
+        this->signal_semaphore_set.swapSemaphores();
 
         _wassert_result(this->queue.submit(1, &submit_info, this->command.fence),
                         "command submission from ImageCopier");
     }
 
 
-    void ImageCopier::setWaitSemaphoreSet(const SemaphoreSet& semaphores) {
+    void ImageCopier::setWaitSemaphoreSet(const WaitSemaphoreSet& semaphores) {
         this->wait_semaphore_set = semaphores;
     }
 
-    void ImageCopier::setSignalSemaphoreSet(const SemaphoreSet& semaphores) {
+    void ImageCopier::setSignalSemaphoreSet(const SignalSemaphoreSet& semaphores) {
         this->signal_semaphore_set = semaphores;
     }
 

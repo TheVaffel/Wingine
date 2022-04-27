@@ -13,10 +13,6 @@ namespace wg::internal {
                                                          command_manager,
                                                          device_manager)),
           inner_framebuffer_index_counter(num_framebuffers),
-          semaphore_chain(std::make_shared<ManagedSemaphoreChain>(num_framebuffers,
-                                                                  device_manager)),
-          image_copy_signal_semaphore_set({semaphore_chain}),
-          image_copy_wait_semaphore_set({semaphore_chain}),
           dst_image(dst_image),
           queue_manager(queue_manager),
           device_manager(device_manager),
@@ -27,9 +23,13 @@ namespace wg::internal {
                                   device_manager,
                                   render_pass_registry)
     {
-        this->inner_framebuffer_chain.setSignalImageAcquiredSemaphores(this->image_copy_signal_semaphore_set);
 
-        this->image_copier->setWaitSemaphoreSet(this->image_copy_wait_semaphore_set);
+        std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
+            std::make_shared<ManagedSemaphoreChain>(num_framebuffers,
+                                                    device_manager);
+        this->inner_framebuffer_chain.setSignalImageAcquiredSemaphores({semaphore_chain});
+
+        this->image_copier->setWaitSemaphoreSet({semaphore_chain});
 
         std::vector<IImage*> images;
         std::vector<IBuffer*> buffers;
@@ -70,7 +70,7 @@ namespace wg::internal {
         this->dst_image->setReadyForCopyFence(image_copier->getLastImageCopyCompleteFence());
     }
 
-    void HostCopyingFramebufferChain::setPresentWaitSemaphores(const SemaphoreSet& semaphores) {
+    void HostCopyingFramebufferChain::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
         this->inner_framebuffer_chain.setPresentWaitSemaphores(semaphores);
     }
 
@@ -78,7 +78,7 @@ namespace wg::internal {
         return this->image_copier->addSignalSemaphore();
     }
 
-    void HostCopyingFramebufferChain::setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores) {
+    void HostCopyingFramebufferChain::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
         this->image_copier->setSignalSemaphoreSet(semaphores);
     }
 };

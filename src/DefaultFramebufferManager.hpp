@@ -10,7 +10,8 @@
 #include "./framebuffer/IFramebufferChain.hpp"
 #include "./render_pass/CompatibleRenderPassRegistry.hpp"
 
-#include "./sync/SemaphoreSet.hpp"
+#include "./sync/WaitSemaphoreSet.hpp"
+#include "./sync/SignalSemaphoreSet.hpp"
 
 namespace wg::internal {
     class DefaultFramebufferManager : public IFramebufferChain {
@@ -22,8 +23,8 @@ namespace wg::internal {
         std::vector<vk::Fence> image_acquired_fences;
         std::vector<vk::Semaphore> image_acquired_semaphores;
 
-        SemaphoreSet wait_before_present_semaphore_set;
-        SemaphoreSet signal_on_image_acquired_semaphore_set;
+        WaitSemaphoreSet wait_before_present_semaphore_set;
+        SignalSemaphoreSet signal_on_image_acquired_semaphore_set;
 
         uint32_t current_swapchain_image;
         std::vector<std::unique_ptr<IFramebuffer>> framebuffers;
@@ -55,8 +56,8 @@ namespace wg::internal {
         virtual const IFramebuffer& getFramebuffer(uint32_t index) const;
         virtual IFramebuffer& getFramebuffer(uint32_t index);
 
-        virtual void setPresentWaitSemaphores(const SemaphoreSet& semaphores);
+        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores);
         virtual std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore();
-        virtual void setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores);
+        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores);
     };
 };

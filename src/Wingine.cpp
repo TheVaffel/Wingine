@@ -360,7 +360,7 @@ namespace wg {
         this->compatibleRenderPassRegistry->ensureAndGetRenderPass(type);
     }
 
-    void Wingine::setPresentWaitForSemaphores(const internal::SemaphoreSet& semaphores) {
+    void Wingine::setPresentWaitForSemaphores(const internal::WaitSemaphoreSet& semaphores) {
         this->default_framebuffer_chain->setPresentWaitSemaphores(semaphores);
     }
 
@@ -387,7 +387,7 @@ namespace wg {
         return this->default_framebuffer_chain->addSignalImageAcquiredSemaphore();
     }
 
-    void Wingine::setImageReadySemaphores(const internal::SemaphoreSet& semaphores) {
+    void Wingine::setImageReadySemaphores(const internal::SignalSemaphoreSet& semaphores) {
         return this->default_framebuffer_chain->setSignalImageAcquiredSemaphores(semaphores);
     }
 

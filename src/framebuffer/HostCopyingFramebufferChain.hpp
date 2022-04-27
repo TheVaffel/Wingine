@@ -16,10 +16,6 @@ namespace wg::internal {
 
         IndexCounter inner_framebuffer_index_counter;
 
-        std::shared_ptr<ManagedSemaphoreChain> semaphore_chain;
-        SemaphoreSet image_copy_signal_semaphore_set;
-        SemaphoreSet image_copy_wait_semaphore_set;
-
         std::shared_ptr<HostVisibleImageView> dst_image;
         std::shared_ptr<const QueueManager> queue_manager;
         std::shared_ptr<const DeviceManager> device_manager;
@@ -43,8 +39,8 @@ namespace wg::internal {
 
         virtual void swapFramebuffer();
 
-        virtual void setPresentWaitSemaphores(const SemaphoreSet& semaphores);
+        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores);
         virtual std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore();
-        virtual void setSignalImageAcquiredSemaphores(const SemaphoreSet& semaphores);
+        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores);
     };
 };

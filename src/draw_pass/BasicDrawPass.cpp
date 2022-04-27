@@ -139,8 +139,8 @@ namespace wg::internal {
           pipeline(pipeline),
           num_framebuffers(num_framebuffers),
           current_framebuffer_index(0),
-          signal_semaphore_set({}),
-          wait_semaphore_set({}),
+          signal_semaphore_set(num_framebuffers, device_manager),
+          wait_semaphore_set(num_framebuffers, device_manager),
           is_recording(false) {
         this->commands = this->command_manager->createGraphicsCommands(num_framebuffers);
 
@@ -205,19 +205,16 @@ namespace wg::internal {
 
     std::shared_ptr<ManagedSemaphoreChain> BasicDrawPass::createAndAddOnFinishSemaphore() {
         std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
-            std::make_shared<ManagedSemaphoreChain>(this->num_framebuffers, this->device_manager);
-
-        this->signal_semaphore_set.addSemaphoreChainAsUnsignalled(semaphore_chain);
+            this->signal_semaphore_set.addSemaphoreChain();
 
         return semaphore_chain;
     }
 
-    void BasicDrawPass::resetOnFinishSemaphores(const SemaphoreSet& semaphores) {
+    void BasicDrawPass::resetOnFinishSemaphores(const SignalSemaphoreSet& semaphores) {
         this->signal_semaphore_set = semaphores;
     }
 
-
-    void BasicDrawPass::setWaitSemaphores(const SemaphoreSet& semaphore_set) {
+    void BasicDrawPass::setWaitSemaphores(const WaitSemaphoreSet& semaphore_set) {
         this->wait_semaphore_set = semaphore_set;
     }
 
@@ -234,8 +231,7 @@ namespace wg::internal {
             .setWaitSemaphores(this->wait_semaphore_set.getCurrentRawSemaphores())
             .setWaitSemaphoreCount(this->wait_semaphore_set.getNumSemaphores());
 
-
-        this->wait_semaphore_set.swapSemaphoresFromWait();
+        this->wait_semaphore_set.swapSemaphores();
     }
 
     void BasicDrawPass::applySignalSemaphoresToSubmitInfo(SubmitInfoData& construction_data) {
@@ -245,7 +241,7 @@ namespace wg::internal {
             .setSignalSemaphoreCount(this->signal_semaphore_set
                                      .getCurrentRawSemaphores().size());
 
-        this->signal_semaphore_set.swapSemaphoresFromSignal();
+        this->signal_semaphore_set.swapSemaphores();
     }
 
     void BasicDrawPass::createSubmitInfo(SubmitInfoData& construction_data) {

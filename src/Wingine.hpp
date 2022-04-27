@@ -200,9 +200,9 @@ namespace wg {
                              const std::initializer_list<ResourceSet*>& resource_sets,
                              const std::initializer_list<SemaphoreChain*>& semaphores, int x_dim = 1, int y_dim = 1, int z_dim = 1);
 
-        void setPresentWaitForSemaphores(const internal::SemaphoreSet& semaphores);
+        void setPresentWaitForSemaphores(const internal::WaitSemaphoreSet& semaphores);
         Semaphore createAndAddImageReadySemaphore();
-        void setImageReadySemaphores(const internal::SemaphoreSet& semaphores);
+        void setImageReadySemaphores(const internal::SignalSemaphoreSet& semaphores);
 
         void present();
 

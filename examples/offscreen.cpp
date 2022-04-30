@@ -129,7 +129,7 @@ int main() {
         file_name_oss << "frame_" << i << ".png";
 
         hg::writeImage(image, file_name_oss.str());
-        std::cout << "Wrote file using filename argument " << file_name_oss.str() << std::endl;
+        std::cout << "Wrote file " << file_name_oss.str() << std::endl;
     }
 
     wing.waitIdle();

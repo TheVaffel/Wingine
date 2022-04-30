@@ -2,7 +2,7 @@
 
 #include "./copyImage.hpp"
 #include "../sync/fenceUtil.hpp"
-#include "../log.hpp"
+#include "../util/log.hpp"
 
 namespace wg::internal {
     ImageCopier::ImageCopier(const vk::Queue& queue,

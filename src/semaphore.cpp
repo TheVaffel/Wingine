@@ -1,7 +1,7 @@
 #include "./semaphore.hpp"
 #include "./Wingine.hpp"
 
-#include "./log.hpp"
+#include "./util/log.hpp"
 
 namespace wg {
 

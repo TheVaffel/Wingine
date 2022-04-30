@@ -1,5 +1,5 @@
 #include "./Wingine.hpp"
-#include "./log.hpp"
+#include "./util/log.hpp"
 #include "./constants.hpp"
 
 #include "./framebuffer/BasicFramebuffer.hpp"

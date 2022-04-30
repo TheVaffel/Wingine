@@ -3,7 +3,7 @@
 #include "./Wingine.hpp"
 
 #include "./framebuffer/IFramebuffer.hpp"
-#include "./log.hpp"
+#include "./util/log.hpp"
 
 #include <flawed_assert.hpp>
 

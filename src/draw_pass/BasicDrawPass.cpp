@@ -1,6 +1,6 @@
 #include "./BasicDrawPass.hpp"
 
-#include "../log.hpp"
+#include "../util/log.hpp"
 
 #include "../sync/fenceUtil.hpp"
 

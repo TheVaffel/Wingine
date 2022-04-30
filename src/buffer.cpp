@@ -1,6 +1,6 @@
 #include "./buffer.hpp"
 #include "./util.hpp"
-#include "./log.hpp"
+#include "./util/log.hpp"
 
 #include "./Wingine.hpp"
 

@@ -53,4 +53,6 @@ namespace wg::internal {
 
         ~ManagedSemaphoreChain();
     };
+
+    using SemaphoreChainPtr = std::shared_ptr<ManagedSemaphoreChain>;
 };

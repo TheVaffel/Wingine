@@ -182,10 +182,10 @@ namespace wg {
         Framebuffer createFramebuffer(uint32_t width, uint32_t height,
                                       bool depthOnly = false);
 
-        FramebufferChain createFramebufferSet(uint32_t width,
-                                            uint32_t height,
-                                            bool depthOnly = false,
-                                            uint32_t count = 3);
+        FramebufferChain createFramebufferChain(uint32_t width,
+                                                uint32_t height,
+                                                bool depthOnly = false,
+                                                uint32_t count = 3);
 
         FramebufferChain getDefaultFramebufferChain();
 

@@ -712,8 +712,8 @@ namespace wg {
         }
     }
 
-    FramebufferChain Wingine::createFramebufferSet(uint32_t width, uint32_t height,
-                                                 bool depthOnly, uint32_t num_framebuffers) {
+    FramebufferChain Wingine::createFramebufferChain(uint32_t width, uint32_t height,
+                                                     bool depthOnly, uint32_t num_framebuffers) {
         if (depthOnly) {
             return std::make_shared<
                 internal::BasicFramebufferChain<
@@ -767,7 +767,7 @@ namespace wg {
     }
 
     DrawPassPtr Wingine::createBasicDrawPass(const Pipeline* pipeline,
-                                          const internal::BasicDrawPassSettings& settings) {
+                                             const internal::BasicDrawPassSettings& settings) {
         return std::make_shared<internal::BasicDrawPass>(pipeline,
                                                          this->getDefaultFramebufferChain()->getNumFramebuffers(),
                                                          settings,

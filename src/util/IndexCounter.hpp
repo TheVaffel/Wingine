@@ -4,6 +4,7 @@
 
 namespace wg::internal {
     class IndexCounter {
+    protected:
         uint32_t num_indices;
         uint32_t current_index;
     public:

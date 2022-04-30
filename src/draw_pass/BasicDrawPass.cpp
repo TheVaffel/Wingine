@@ -132,15 +132,13 @@ namespace wg::internal {
                                  std::shared_ptr<const CommandManager> command_manager,
                                  std::shared_ptr<const QueueManager> queue_manager,
                                  std::shared_ptr<const DeviceManager> device_manager)
-        : command_manager(command_manager),
+        : DrawPassBase(num_framebuffers, device_manager),
+          command_manager(command_manager),
           queue_manager(queue_manager),
-          device_manager(device_manager),
           settings(settings),
           pipeline(pipeline),
           num_framebuffers(num_framebuffers),
           current_framebuffer_index(0),
-          signal_semaphore_set(num_framebuffers, device_manager),
-          wait_semaphore_set(num_framebuffers, device_manager),
           is_recording(false) {
         this->commands = this->command_manager->createGraphicsCommands(num_framebuffers);
 
@@ -203,24 +201,9 @@ namespace wg::internal {
         this->is_recording = false;
     }
 
-    std::shared_ptr<ManagedSemaphoreChain> BasicDrawPass::createAndAddOnFinishSemaphore() {
-        std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
-            this->signal_semaphore_set.addSemaphoreChain();
-
-        return semaphore_chain;
-    }
-
-    void BasicDrawPass::resetOnFinishSemaphores(const SignalSemaphoreSet& semaphores) {
-        this->signal_semaphore_set = semaphores;
-    }
-
-    void BasicDrawPass::setWaitSemaphores(const WaitSemaphoreSet& semaphore_set) {
-        this->wait_semaphore_set = semaphore_set;
-    }
-
     std::vector<vk::PipelineStageFlags> BasicDrawPass::getPipelineWaitStageFlags() {
         // Bigbig optimization opportunity
-        return std::vector<vk::PipelineStageFlags>(this->wait_semaphore_set.getNumSemaphores(),
+        return std::vector<vk::PipelineStageFlags>(this->signal_and_wait_semaphores.getWaitSemaphores().getNumSemaphores(),
                                                    vk::PipelineStageFlagBits::eTopOfPipe);
     }
 
@@ -228,20 +211,20 @@ namespace wg::internal {
         construction_data.wait_stage_flags = this->getPipelineWaitStageFlags();
         construction_data.submit_info
             .setPWaitDstStageMask(construction_data.wait_stage_flags.data())
-            .setWaitSemaphores(this->wait_semaphore_set.getCurrentRawSemaphores())
-            .setWaitSemaphoreCount(this->wait_semaphore_set.getNumSemaphores());
+            .setWaitSemaphores(this->getWaitSemaphores().getCurrentRawSemaphores())
+            .setWaitSemaphoreCount(this->getWaitSemaphores().getNumSemaphores());
 
-        this->wait_semaphore_set.swapSemaphores();
+        this->getWaitSemaphores().swapSemaphores();
     }
 
     void BasicDrawPass::applySignalSemaphoresToSubmitInfo(SubmitInfoData& construction_data) {
         construction_data.submit_info
-            .setPSignalSemaphores(this->signal_semaphore_set
+            .setPSignalSemaphores(this->getSignalSemaphores()
                                   .getCurrentRawSemaphores().data())
-            .setSignalSemaphoreCount(this->signal_semaphore_set
+            .setSignalSemaphoreCount(this->getSignalSemaphores()
                                      .getCurrentRawSemaphores().size());
 
-        this->signal_semaphore_set.swapSemaphores();
+        this->getSignalSemaphores().swapSemaphores();
     }
 
     void BasicDrawPass::createSubmitInfo(SubmitInfoData& construction_data) {

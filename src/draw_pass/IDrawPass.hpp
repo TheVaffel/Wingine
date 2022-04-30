@@ -21,10 +21,9 @@ namespace wg::internal {
         virtual void endRecording() = 0;
 
         [[nodiscard]]
-        virtual std::shared_ptr<ManagedSemaphoreChain> createAndAddOnFinishSemaphore() = 0;
+        virtual SemaphoreChainPtr createAndAddOnFinishSemaphore() = 0;
 
-        virtual void resetOnFinishSemaphores(const SignalSemaphoreSet& semaphores) = 0;
-
+        virtual void setOnFinishSemaphores(const SignalSemaphoreSet& semaphores) = 0;
         virtual void setWaitSemaphores(const WaitSemaphoreSet& semaphoreSet) = 0;
 
         virtual void render() = 0;

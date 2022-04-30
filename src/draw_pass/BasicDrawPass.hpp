@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./IDrawPass.hpp"
+#include "./DrawPassBase.hpp"
 
 #include "./BasicDrawPassSettings.hpp"
 
@@ -14,7 +14,7 @@ namespace wg::internal {
      * depth/stencil attachment in the framebuffer
      */
 
-    class BasicDrawPass : public IDrawPass {
+    class BasicDrawPass : public DrawPassBase {
 
         /*
          * Utility struct to hold stage flags that must be persisted on call stack
@@ -27,7 +27,6 @@ namespace wg::internal {
 
         std::shared_ptr<const CommandManager> command_manager;
         std::shared_ptr<const QueueManager> queue_manager;
-        std::shared_ptr<const DeviceManager> device_manager;
 
         BasicDrawPassSettings settings;
 
@@ -35,9 +34,6 @@ namespace wg::internal {
 
         uint32_t num_framebuffers;
         uint32_t current_framebuffer_index;
-
-        SignalSemaphoreSet signal_semaphore_set;
-        WaitSemaphoreSet wait_semaphore_set;
 
         std::vector<Command> commands;
 
@@ -64,12 +60,6 @@ namespace wg::internal {
         virtual void recordDraw(const std::vector<const Buffer*>& buffers, const IndexBuffer* ind_buf,
                                 const std::vector<ResourceSet*>& sets, uint32_t instanceCount = 1);
         virtual void endRecording();
-
-        [[nodiscard]]
-        virtual std::shared_ptr<ManagedSemaphoreChain> createAndAddOnFinishSemaphore();
-
-        virtual void resetOnFinishSemaphores(const SignalSemaphoreSet& semaphores);
-        virtual void setWaitSemaphores(const WaitSemaphoreSet& semaphoreSet);
 
         virtual void render();
 

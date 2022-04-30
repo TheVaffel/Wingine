@@ -15,10 +15,9 @@
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
-#include "./DefaultFramebufferManager.hpp"
-#include "./framebuffer/IFramebuffer.hpp"
 #include "./image/HostVisibleImageView.hpp"
 #include "./draw_pass/BasicDrawPassSettings.hpp"
+#include "./framebuffer/SwapchainFramebufferChain.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"

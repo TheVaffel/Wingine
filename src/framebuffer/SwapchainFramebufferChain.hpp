@@ -2,19 +2,21 @@
 
 #include <vector>
 
-#include "./DeviceManager.hpp"
-#include "./SwapchainManager.hpp"
+#include "../DeviceManager.hpp"
+#include "../SwapchainManager.hpp"
 
-// #include "./framebuffer.hpp"
-#include "./framebuffer/IFramebuffer.hpp"
-#include "./framebuffer/IFramebufferChain.hpp"
-#include "./render_pass/CompatibleRenderPassRegistry.hpp"
+#include "../framebuffer/IFramebuffer.hpp"
+#include "../framebuffer/IFramebufferChain.hpp"
 
-#include "./sync/WaitSemaphoreSet.hpp"
-#include "./sync/SignalSemaphoreSet.hpp"
+#include "../render_pass/CompatibleRenderPassRegistry.hpp"
+
+#include "../sync/WaitSemaphoreSet.hpp"
+#include "../sync/SignalSemaphoreSet.hpp"
+
+#include "../util/SettableIndexCounter.hpp"
 
 namespace wg::internal {
-    class DefaultFramebufferManager : public IFramebufferChain {
+    class SwapchainFramebufferChain : public IFramebufferChain {
 
         std::shared_ptr<const DeviceManager> device_manager;
         std::shared_ptr<const QueueManager> queue_manager;
@@ -26,7 +28,7 @@ namespace wg::internal {
         WaitSemaphoreSet wait_before_present_semaphore_set;
         SignalSemaphoreSet signal_on_image_acquired_semaphore_set;
 
-        uint32_t current_swapchain_image;
+        SettableIndexCounter swapchain_index_counter;
         std::vector<std::unique_ptr<IFramebuffer>> framebuffers;
 
         void initSyncStructs(const vk::Device& device, const vk::Queue& queue);
@@ -40,12 +42,12 @@ namespace wg::internal {
 
     public:
 
-        DefaultFramebufferManager(const vk::Extent2D& dimensions,
+        SwapchainFramebufferChain(const vk::Extent2D& dimensions,
                                   const vk::SurfaceKHR& surface,
                                   std::shared_ptr<const DeviceManager> device_manager,
                                   std::shared_ptr<const QueueManager> queue_manager,
                                   CompatibleRenderPassRegistry& render_pass_registry);
-        ~DefaultFramebufferManager();
+        ~SwapchainFramebufferChain();
 
         virtual void swapFramebuffer();
         virtual const IFramebuffer& getCurrentFramebuffer() const;

@@ -500,7 +500,7 @@ namespace wg {
                     *this->compatibleRenderPassRegistry);
         } else {
             this->default_framebuffer_chain =
-                std::make_shared<internal::DefaultFramebufferManager>(
+                std::make_shared<internal::SwapchainFramebufferChain>(
                     init_info.getDimensions(),
                     this->vulkan_instance_manager->getSurface(),
                     const_device_manager,

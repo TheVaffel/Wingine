@@ -31,7 +31,8 @@ set(FRAMEBUFFER_SOURCES
   SwapchainFramebuffer.cpp
   IFramebufferChain.cpp
   DepthOnlyFramebuffer.cpp
-  HostCopyingFramebufferChain.cpp)
+  HostCopyingFramebufferChain.cpp
+  SwapchainFramebufferChain.cpp)
 set(IMAGE_SOURCES
   imageUtil.cpp
   IImage.cpp
@@ -42,10 +43,16 @@ set(IMAGE_SOURCES
   ImageToBufferCopier.cpp
   copyImage.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
-set(SEMAPHORE_SOURCES semaphoreUtil.cpp ManagedSemaphoreChain.cpp WaitSemaphoreSet.cpp SignalSemaphoreSet.cpp fenceUtil.cpp)
+set(SYNC_SOURCES
+  semaphoreUtil.cpp
+  ManagedSemaphoreChain.cpp
+  SemaphoreSetBase.cpp
+  WaitSemaphoreSet.cpp
+  SignalSemaphoreSet.cpp
+  fenceUtil.cpp)
 set(DRAW_PASS_SOURCES IDrawPass.cpp BasicDrawPass.cpp BasicDrawPassSettings.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
-set(UTIL_SOURCES IndexCounter.cpp)
+set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 
 list(TRANSFORM BUFFER_SOURCES PREPEND "buffer/")
@@ -53,7 +60,7 @@ list(TRANSFORM FRAMEBUFFER_SOURCES PREPEND "framebuffer/")
 list(TRANSFORM IMAGE_SOURCES PREPEND "image/")
 list(TRANSFORM RENDER_PASS_SOURCES PREPEND "render_pass/")
 list(TRANSFORM MEMORY_SOURCES PREPEND "memory/")
-list(TRANSFORM SEMAPHORE_SOURCES PREPEND "sync/")
+list(TRANSFORM SYNC_SOURCES PREPEND "sync/")
 list(TRANSFORM DRAW_PASS_SOURCES PREPEND "draw_pass/")
 list(TRANSFORM UTIL_SOURCES PREPEND "util/")
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
@@ -63,7 +70,6 @@ set(WINGINE_SOURCES
   image.cpp
   renderfamily.cpp
   Wingine.cpp
-  # framebuffer.cpp
   pipeline.cpp
   resource.cpp
   util.cpp
@@ -73,8 +79,6 @@ set(WINGINE_SOURCES
   QueueManager.cpp
   CommandManager.cpp
   SwapchainManager.cpp
-  DefaultFramebufferManager.cpp
-  log.cpp
   queueUtils.cpp
   deviceEvaluation.cpp
   ${BUFFER_SOURCES}
@@ -82,7 +86,7 @@ set(WINGINE_SOURCES
   ${IMAGE_SOURCES}
   ${RENDER_PASS_SOURCES}
   ${MEMORY_SOURCES}
-  ${SEMAPHORE_SOURCES}
+  ${SYNC_SOURCES}
   ${DRAW_PASS_SOURCES}
   ${UTIL_SOURCES}
   ${WGUTIL_SOURCES})
@@ -128,9 +132,9 @@ add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
 add_executable(model_viewer ${WINGINE_EXAMPLES_DIR}/model_viewer.cpp)
 add_executable(instance_test ${WINGINE_EXAMPLES_DIR}/instance_test.cpp)
 add_executable(frag ${WINGINE_EXAMPLES_DIR}/frag.cpp)
-add_executable(test2 ${WINGINE_EXAMPLES_DIR}/test2.cpp)
+add_executable(offscreen ${WINGINE_EXAMPLES_DIR}/offscreen.cpp)
 
-target_compile_definitions(test2 PUBLIC HEADLESS)
+target_compile_definitions(offscreen PUBLIC HEADLESS)
 
 target_link_libraries(Wingine ${common_libs})
 
@@ -141,4 +145,4 @@ target_link_libraries(texture_test ${all_libs})
 target_link_libraries(model_viewer ${all_libs})
 target_link_libraries(instance_test ${all_libs})
 target_link_libraries(frag ${all_libs})
-target_link_libraries(test2 ${all_libs})
+target_link_libraries(offscreen ${all_libs})

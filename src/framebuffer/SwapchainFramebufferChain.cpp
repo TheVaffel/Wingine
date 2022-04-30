@@ -1,15 +1,15 @@
-#include "./DefaultFramebufferManager.hpp"
+#include "./SwapchainFramebufferChain.hpp"
 
-#include "./framebuffer/SwapchainFramebuffer.hpp"
-#include "./sync/semaphoreUtil.hpp"
-#include "./sync/fenceUtil.hpp"
-#include "./log.hpp"
+#include "../framebuffer/SwapchainFramebuffer.hpp"
+#include "../sync/semaphoreUtil.hpp"
+#include "../sync/fenceUtil.hpp"
+#include "../util/log.hpp"
 
 #include <iostream>
 
 namespace wg::internal {
 
-    DefaultFramebufferManager::DefaultFramebufferManager(const vk::Extent2D& dimensions,
+    SwapchainFramebufferChain::SwapchainFramebufferChain(const vk::Extent2D& dimensions,
                                                          const vk::SurfaceKHR& surface,
                                                          std::shared_ptr<const DeviceManager> device_manager,
                                                          std::shared_ptr<const QueueManager> queue_manager,
@@ -22,12 +22,7 @@ namespace wg::internal {
                                                                *queue_manager)),
           wait_before_present_semaphore_set(swapchain_manager->getNumImages(), device_manager),
           signal_on_image_acquired_semaphore_set(swapchain_manager->getNumImages(), device_manager),
-          current_swapchain_image(0) {
-
-        this->swapchain_manager = std::make_shared<SwapchainManager>(dimensions,
-                                                                     surface,
-                                                                     device_manager,
-                                                                     *queue_manager);
+          swapchain_index_counter(this->swapchain_manager->getNumImages()) {
 
         this->initSyncStructs(device_manager->getDevice(),
                               queue_manager->getPresentQueue());
@@ -45,7 +40,7 @@ namespace wg::internal {
 
 
 
-    void DefaultFramebufferManager::initSyncStructs(const vk::Device& device,
+    void SwapchainFramebufferChain::initSyncStructs(const vk::Device& device,
                                                     const vk::Queue& queue) {
         vk::FenceCreateInfo fence_create_info;
         fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
@@ -59,20 +54,20 @@ namespace wg::internal {
         }
     }
 
-    void DefaultFramebufferManager::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
+    void SwapchainFramebufferChain::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
         this->wait_before_present_semaphore_set = semaphores;
     }
 
-    std::shared_ptr<ManagedSemaphoreChain> DefaultFramebufferManager::addSignalImageAcquiredSemaphore() {
+    std::shared_ptr<ManagedSemaphoreChain> SwapchainFramebufferChain::addSignalImageAcquiredSemaphore() {
         return this->signal_on_image_acquired_semaphore_set
             .addSignalledSemaphoreChain(this->queue_manager->getPresentQueue());
     }
 
-    void DefaultFramebufferManager::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
+    void SwapchainFramebufferChain::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
         this->signal_on_image_acquired_semaphore_set = semaphores;
     }
 
-    void DefaultFramebufferManager::present() {
+    void SwapchainFramebufferChain::present() {
         #ifdef DEBUG
         if(!this->wait_before_present_semaphore_set.getNumSemaphores()) {
             std::cerr << "[Wingine::present] Warning: No semaphore submitted to present(), "
@@ -83,7 +78,7 @@ namespace wg::internal {
 
         vk::PresentInfoKHR presentInfo;
 
-        uint32_t swapchain_image_index = this->current_swapchain_image;
+        uint32_t swapchain_image_index = this->swapchain_index_counter.getCurrentIndex();
 
         presentInfo.setSwapchainCount(1)
             .setPSwapchains(&this->swapchain_manager->getSwapchain())
@@ -101,24 +96,27 @@ namespace wg::internal {
         this->stageNextImage();
     }
 
-    bool DefaultFramebufferManager::hasSemaphoresToSignal() const {
+    bool SwapchainFramebufferChain::hasSemaphoresToSignal() const {
         return this->signal_on_image_acquired_semaphore_set
             .getCurrentRawSemaphores().size() != 0;
     }
 
-    void DefaultFramebufferManager::runImageAcquisition(const vk::Semaphore& signal_semaphore ) {
+    void SwapchainFramebufferChain::runImageAcquisition(const vk::Semaphore& signal_semaphore ) {
+
+        uint32_t swapchain_index = this->swapchain_index_counter.getCurrentIndex();
 
         _wassert_result(this->device_manager->getDevice()
                         .acquireNextImageKHR(this->swapchain_manager->getSwapchain(),
                                              UINT64_MAX,
                                              signal_semaphore,
-                                             this->image_acquired_fences[this->current_swapchain_image],
-                                             &(this->current_swapchain_image)),
+                                             this->image_acquired_fences[swapchain_index],
+                                             &(swapchain_index)),
                         "acquiring next image");
 
+        this->swapchain_index_counter.setIndex(swapchain_index);
     }
 
-    void DefaultFramebufferManager::signalImageAcquisitionSemaphores(uint32_t index) {
+    void SwapchainFramebufferChain::signalImageAcquisitionSemaphores(uint32_t index) {
             semaphoreUtil::signalManySemaphoresFromSingleSemaphore(
                 this->signal_on_image_acquired_semaphore_set.getCurrentRawSemaphores(),
                 this->image_acquired_semaphores[index],
@@ -126,17 +124,17 @@ namespace wg::internal {
             this->signal_on_image_acquired_semaphore_set.swapSemaphores();
     }
 
-    void DefaultFramebufferManager::stageNextImage() {
+    void SwapchainFramebufferChain::stageNextImage() {
 
-        fenceUtil::awaitAndResetFence(this->image_acquired_fences[this->current_swapchain_image],
+        fenceUtil::awaitAndResetFence(this->image_acquired_fences[this->swapchain_index_counter.getCurrentIndex()],
                                       this->device_manager->getDevice());
 
-        uint32_t currently_acquiring_image_index = this->current_swapchain_image;
+        uint32_t currently_acquiring_image_index = this->swapchain_index_counter.getCurrentIndex();
 
         bool should_signal_semaphore = this->hasSemaphoresToSignal();
 
         vk::Semaphore signal_semaphore = should_signal_semaphore ?
-            this->image_acquired_semaphores[this->current_swapchain_image] : nullptr;
+            this->image_acquired_semaphores[this->swapchain_index_counter.getCurrentIndex()] : nullptr;
 
         this->runImageAcquisition(signal_semaphore);
 
@@ -145,31 +143,31 @@ namespace wg::internal {
         }
     }
 
-    void DefaultFramebufferManager::swapFramebuffer() {
+    void SwapchainFramebufferChain::swapFramebuffer() {
         this->present();
     }
 
-    const IFramebuffer& DefaultFramebufferManager::getCurrentFramebuffer() const {
-        return *this->framebuffers[this->current_swapchain_image];
+    const IFramebuffer& SwapchainFramebufferChain::getCurrentFramebuffer() const {
+        return *this->framebuffers[this->swapchain_index_counter.getCurrentIndex()];
     }
 
-    IFramebuffer& DefaultFramebufferManager::getCurrentFramebuffer() {
-        return *this->framebuffers[this->current_swapchain_image];
+    IFramebuffer& SwapchainFramebufferChain::getCurrentFramebuffer() {
+        return *this->framebuffers[this->swapchain_index_counter.getCurrentIndex()];
     }
 
-    uint32_t DefaultFramebufferManager::getNumFramebuffers() const {
+    uint32_t SwapchainFramebufferChain::getNumFramebuffers() const {
         return this->framebuffers.size();
     }
 
-    const IFramebuffer& DefaultFramebufferManager::getFramebuffer(uint32_t index) const {
+    const IFramebuffer& SwapchainFramebufferChain::getFramebuffer(uint32_t index) const {
         return *this->framebuffers[index];
     }
 
-    IFramebuffer& DefaultFramebufferManager::getFramebuffer(uint32_t index) {
+    IFramebuffer& SwapchainFramebufferChain::getFramebuffer(uint32_t index) {
         return *this->framebuffers[index];
     }
 
-    DefaultFramebufferManager::~DefaultFramebufferManager() {
+    SwapchainFramebufferChain::~SwapchainFramebufferChain() {
         const vk::Device& device = this->device_manager->getDevice();
 
         for (uint32_t i = 0; i < this->swapchain_manager->getNumImages(); i++) {

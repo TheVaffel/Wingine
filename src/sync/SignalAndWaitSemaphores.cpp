@@ -17,7 +17,15 @@ namespace wg::internal {
         return this->wait_semaphore_set;
     }
 
-    SemaphoreChainPtr SignalAndWaitSemaphores::createAndAddOnFinishSemaphore() {
+    const SignalSemaphoreSet& SignalAndWaitSemaphores::getSignalSemaphores() const {
+        return this->signal_semaphore_set;
+    }
+
+    const WaitSemaphoreSet& SignalAndWaitSemaphores::getWaitSemaphores() const {
+        return this->wait_semaphore_set;
+    }
+
+    SemaphoreChainPtr SignalAndWaitSemaphores::createOnFinishSemaphore() {
         return this->signal_semaphore_set.addSemaphoreChain();
     }
 

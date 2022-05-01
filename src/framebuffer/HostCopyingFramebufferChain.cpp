@@ -8,20 +8,20 @@ namespace wg::internal {
                                                              std::shared_ptr<const CommandManager> command_manager,
                                                              std::shared_ptr<const DeviceManager> device_manager,
                                                              CompatibleRenderPassRegistry& render_pass_registry)
-    : image_copier(std::make_unique<ImageToBufferCopier>(num_framebuffers,
+    : device_manager(device_manager),
+      queue_manager(queue_manager),
+      image_copier(std::make_unique<ImageToBufferCopier>(num_framebuffers,
                                                          queue_manager->getGraphicsQueue(),
                                                          command_manager,
                                                          device_manager)),
-          inner_framebuffer_index_counter(num_framebuffers),
-          dst_image(dst_image),
-          queue_manager(queue_manager),
-          device_manager(device_manager),
-          inner_framebuffer_chain(num_framebuffers,
-                                  device_manager,
-                                  queue_manager,
-                                  dst_image->getDimensions(),
-                                  device_manager,
-                                  render_pass_registry)
+      inner_framebuffer_index_counter(num_framebuffers),
+      dst_image(dst_image),
+      inner_framebuffer_chain(num_framebuffers,
+                              device_manager,
+                              queue_manager,
+                              dst_image->getDimensions(),
+                              device_manager,
+                              render_pass_registry)
     {
 
         std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
@@ -34,10 +34,9 @@ namespace wg::internal {
         std::vector<IImage*> images;
         std::vector<IBuffer*> buffers;
         for (uint32_t i = 0; i < num_framebuffers; i++) {
-            images.push_back(&this->inner_framebuffer_chain.getFramebuffer(i).getColorImage());
+            images.push_back(&this->inner_framebuffer_chain.IFramebufferChain::getFramebuffer(i).getColorImage());
             buffers.push_back(&this->dst_image->getBuffer(i));
         }
-
 
         this->image_copier->recordCopyImage(images,
                                             buffers);
@@ -52,15 +51,7 @@ namespace wg::internal {
         return this->inner_framebuffer_chain.getFramebuffer(index);
     }
 
-    IFramebuffer& HostCopyingFramebufferChain::getFramebuffer(uint32_t index) {
-        return this->inner_framebuffer_chain.getFramebuffer(index);
-    }
-
     const IFramebuffer& HostCopyingFramebufferChain::getCurrentFramebuffer() const {
-        return this->inner_framebuffer_chain.getCurrentFramebuffer();
-    }
-
-    IFramebuffer& HostCopyingFramebufferChain::getCurrentFramebuffer() {
         return this->inner_framebuffer_chain.getCurrentFramebuffer();
     }
 
@@ -70,15 +61,20 @@ namespace wg::internal {
         this->dst_image->setReadyForCopyFence(image_copier->getLastImageCopyCompleteFence());
     }
 
+
     void HostCopyingFramebufferChain::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
         this->inner_framebuffer_chain.setPresentWaitSemaphores(semaphores);
     }
 
-    std::shared_ptr<ManagedSemaphoreChain> HostCopyingFramebufferChain::addSignalImageAcquiredSemaphore() {
+    SemaphoreChainPtr HostCopyingFramebufferChain::addSignalImageAcquiredSemaphore() {
         return this->image_copier->addSignalSemaphore();
     }
 
     void HostCopyingFramebufferChain::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
         this->image_copier->setSignalSemaphoreSet(semaphores);
+    }
+
+    SignalAndWaitSemaphores& HostCopyingFramebufferChain::getSemaphores() {
+        throw std::runtime_error("[HostCopyingFramebufferChain] getSemaphores() not implemented");
     }
 };

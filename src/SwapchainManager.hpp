@@ -30,5 +30,8 @@ namespace wg::internal {
 
         const std::vector<vk::Image>& getImages() const;
         uint32_t getNumImages() const;
+
+        static uint32_t getNumFramebuffers(const vk::SurfaceKHR& surface,
+                                           std::shared_ptr<const DeviceManager> device_manager);
     };
 };

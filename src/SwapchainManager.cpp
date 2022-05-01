@@ -193,4 +193,18 @@ namespace wg::internal {
 
         device.destroy(this->swapchain);
     }
+
+
+    /*
+     * Static methods
+     */
+
+    uint32_t SwapchainManager::getNumFramebuffers(const vk::SurfaceKHR& surface,
+                                                  std::shared_ptr<const DeviceManager> device_manager) {
+
+        vk::SurfaceCapabilitiesKHR caps =
+            device_manager->getPhysicalDevice().getSurfaceCapabilitiesKHR(surface);
+
+        return getNumSwapchainImages(caps);
+    }
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./IFramebufferChain.hpp"
+#include "./FramebufferChainBase.hpp"
 
 #include "../DeviceManager.hpp"
 #include "../QueueManager.hpp"
@@ -14,16 +14,10 @@ namespace wg::internal {
     concept CFramebuffer = std::derived_from<T, IFramebuffer>;
 
     template <CFramebuffer T>
-    class BasicFramebufferChain : public IFramebufferChain {
-
-        std::shared_ptr<const DeviceManager> device_manager;
-        std::shared_ptr<const QueueManager> queue_manager;
+    class BasicFramebufferChain : public FramebufferChainBase {
 
         std::vector<std::unique_ptr<IFramebuffer>> framebuffers;
-        uint32_t current_framebuffer;
-
-        WaitSemaphoreSet wait_semaphore_set;
-        SignalSemaphoreSet signal_semaphore_set;
+        IndexCounter framebuffer_index;
 
     public:
 
@@ -38,16 +32,9 @@ namespace wg::internal {
 
         virtual uint32_t getNumFramebuffers() const;
         virtual const IFramebuffer& getFramebuffer(uint32_t index) const;
-        virtual IFramebuffer& getFramebuffer(uint32_t index);
-
         virtual const IFramebuffer& getCurrentFramebuffer() const;
-        virtual IFramebuffer& getCurrentFramebuffer();
 
         virtual void swapFramebuffer();
-
-        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores);
-        virtual std::shared_ptr<ManagedSemaphoreChain> addSignalImageAcquiredSemaphore();
-        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores);
     };
 };
 

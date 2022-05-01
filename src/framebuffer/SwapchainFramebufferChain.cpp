@@ -14,15 +14,14 @@ namespace wg::internal {
                                                          std::shared_ptr<const DeviceManager> device_manager,
                                                          std::shared_ptr<const QueueManager> queue_manager,
                                                          CompatibleRenderPassRegistry& render_pass_registry)
-        : device_manager(device_manager),
-          queue_manager(queue_manager),
-          swapchain_manager(std::make_shared<SwapchainManager>(dimensions,
-                                                               surface,
-                                                               device_manager,
-                                                               *queue_manager)),
-          wait_before_present_semaphore_set(swapchain_manager->getNumImages(), device_manager),
-          signal_on_image_acquired_semaphore_set(swapchain_manager->getNumImages(), device_manager),
-          swapchain_index_counter(this->swapchain_manager->getNumImages()) {
+    : FramebufferChainBase(SwapchainManager::getNumFramebuffers(surface, device_manager),
+                           queue_manager,
+                           device_manager),
+      swapchain_manager(std::make_shared<SwapchainManager>(dimensions,
+                                                           surface,
+                                                           device_manager,
+                                                           *queue_manager)),
+      swapchain_index_counter(this->swapchain_manager->getNumImages()) {
 
         this->initSyncStructs(device_manager->getDevice(),
                               queue_manager->getPresentQueue());
@@ -54,22 +53,9 @@ namespace wg::internal {
         }
     }
 
-    void SwapchainFramebufferChain::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
-        this->wait_before_present_semaphore_set = semaphores;
-    }
-
-    std::shared_ptr<ManagedSemaphoreChain> SwapchainFramebufferChain::addSignalImageAcquiredSemaphore() {
-        return this->signal_on_image_acquired_semaphore_set
-            .addSignalledSemaphoreChain(this->queue_manager->getPresentQueue());
-    }
-
-    void SwapchainFramebufferChain::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
-        this->signal_on_image_acquired_semaphore_set = semaphores;
-    }
-
     void SwapchainFramebufferChain::present() {
         #ifdef DEBUG
-        if(!this->wait_before_present_semaphore_set.getNumSemaphores()) {
+        if(!this->getWaitSemaphores().getNumSemaphores()) {
             std::cerr << "[Wingine::present] Warning: No semaphore submitted to present(), "
                       << "presentation may not happen correctly"
                       << std::endl;
@@ -83,12 +69,12 @@ namespace wg::internal {
         presentInfo.setSwapchainCount(1)
             .setPSwapchains(&this->swapchain_manager->getSwapchain())
             .setPImageIndices(&swapchain_image_index)
-            .setWaitSemaphoreCount(this->wait_before_present_semaphore_set.getNumSemaphores())
-            .setPWaitSemaphores(this->wait_before_present_semaphore_set
+            .setWaitSemaphoreCount(this->getWaitSemaphores().getNumSemaphores())
+            .setPWaitSemaphores(this->getWaitSemaphores()
                                 .getCurrentRawSemaphores().data())
             .setPResults(nullptr);
 
-        this->wait_before_present_semaphore_set.swapSemaphores();
+        this->getWaitSemaphores().swapSemaphores();
 
         _wassert_result(this->queue_manager->getPresentQueue().presentKHR(presentInfo),
                         "submit present command");
@@ -97,7 +83,7 @@ namespace wg::internal {
     }
 
     bool SwapchainFramebufferChain::hasSemaphoresToSignal() const {
-        return this->signal_on_image_acquired_semaphore_set
+        return this->getSignalSemaphores()
             .getCurrentRawSemaphores().size() != 0;
     }
 
@@ -118,10 +104,10 @@ namespace wg::internal {
 
     void SwapchainFramebufferChain::signalImageAcquisitionSemaphores(uint32_t index) {
             semaphoreUtil::signalManySemaphoresFromSingleSemaphore(
-                this->signal_on_image_acquired_semaphore_set.getCurrentRawSemaphores(),
+                this->getSignalSemaphores().getCurrentRawSemaphores(),
                 this->image_acquired_semaphores[index],
                 this->queue_manager->getPresentQueue());
-            this->signal_on_image_acquired_semaphore_set.swapSemaphores();
+            this->getSignalSemaphores().swapSemaphores();
     }
 
     void SwapchainFramebufferChain::stageNextImage() {
@@ -151,19 +137,11 @@ namespace wg::internal {
         return *this->framebuffers[this->swapchain_index_counter.getCurrentIndex()];
     }
 
-    IFramebuffer& SwapchainFramebufferChain::getCurrentFramebuffer() {
-        return *this->framebuffers[this->swapchain_index_counter.getCurrentIndex()];
-    }
-
     uint32_t SwapchainFramebufferChain::getNumFramebuffers() const {
         return this->framebuffers.size();
     }
 
     const IFramebuffer& SwapchainFramebufferChain::getFramebuffer(uint32_t index) const {
-        return *this->framebuffers[index];
-    }
-
-    IFramebuffer& SwapchainFramebufferChain::getFramebuffer(uint32_t index) {
         return *this->framebuffers[index];
     }
 

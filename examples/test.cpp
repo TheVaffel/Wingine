@@ -65,7 +65,6 @@ int main() {
         vec4_v s_pos = shader.input<0>();
         vec4_v s_col = shader.input<1>();
 
-        // SUniformBinding<mat4_s> trans_bind = shader.uniformBinding<mat4_s>(0, 0);
         mat4_v trans = shader.uniformBinding<mat4_s>(0, 0).member<0>().load();
 
         vec4_v transformed_pos = trans * s_pos;
@@ -105,28 +104,29 @@ int main() {
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
-    wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
+    wg::BasicDrawPassSettings draw_pass_settings;
+    draw_pass_settings.setShouldClear(true);
+    wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
-    family->startRecording(wing.getDefaultFramebufferChain());
-    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    family->endRecording();
+    draw_pass->startRecording(wing.getDefaultFramebufferChain());
+    draw_pass->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    draw_pass->endRecording();
 
-    wg::SemaphoreChain* chain = wing.createSemaphoreChain();
+    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
+    wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
 
     while (win.isOpen()) {
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
         cameraUniform->set(renderMatrix);
 
-        family->submit({chain});
+        draw_pass->render();
 
-        wing.present({chain});
+        wing.present();
 
         win.sleepMilliseconds(40);
-
-        wing.waitForLastPresent();
 
         win.flushEvents();
         if(win.isKeyPressed(WK_ESC)) {
@@ -134,9 +134,7 @@ int main() {
         }
     }
 
-    wing.destroy(chain);
-
-    wing.destroy(family);
+    wing.waitIdle();
 
     wing.destroy(vertex_shader);
     wing.destroy(fragment_shader);

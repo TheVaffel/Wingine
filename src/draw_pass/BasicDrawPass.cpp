@@ -203,7 +203,7 @@ namespace wg::internal {
 
     std::vector<vk::PipelineStageFlags> BasicDrawPass::getPipelineWaitStageFlags() {
         // Bigbig optimization opportunity
-        return std::vector<vk::PipelineStageFlags>(this->signal_and_wait_semaphores.getWaitSemaphores().getNumSemaphores(),
+        return std::vector<vk::PipelineStageFlags>(this->getWaitSemaphores().getNumSemaphores(),
                                                    vk::PipelineStageFlagBits::eTopOfPipe);
     }
 

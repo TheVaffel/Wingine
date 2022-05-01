@@ -1,4 +1,4 @@
-#include "./IFramebuffer.hpp"
+#include "./FramebufferChainBase.hpp"
 
 #include "../SwapchainManager.hpp"
 

@@ -53,7 +53,7 @@ set(SYNC_SOURCES
   WaitSemaphoreSet.cpp
   SignalSemaphoreSet.cpp
   fenceUtil.cpp)
-set(DRAW_PASS_SOURCES IDrawPass.cpp BasicDrawPass.cpp BasicDrawPassSettings.cpp DrawPassBase.cpp)
+set(DRAW_PASS_SOURCES BasicDrawPass.cpp BasicDrawPassSettings.cpp DrawPassBase.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)

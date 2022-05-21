@@ -20,6 +20,6 @@ namespace wg::internal {
 
         virtual void render() = 0;
 
-        virtual ~IDrawPass();
+        virtual ~IDrawPass() = default;
     };
 };

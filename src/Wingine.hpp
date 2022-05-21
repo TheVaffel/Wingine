@@ -15,6 +15,7 @@
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
+#include "./buffer/StagingBufferManager.hpp"
 #include "./image/HostVisibleImageView.hpp"
 #include "./draw_pass/BasicDrawPassSettings.hpp"
 #include "./framebuffer/SwapchainFramebufferChain.hpp"
@@ -44,6 +45,7 @@ namespace wg {
 
         std::shared_ptr<internal::QueueManager> queue_manager;
         std::shared_ptr<internal::CommandManager> command_manager;
+        std::shared_ptr<internal::StagingBufferManager> staging_buffer_manager;
         std::shared_ptr<internal::IFramebufferChain> default_framebuffer_chain;
         std::shared_ptr<internal::HostVisibleImageView> host_visible_image;
         std::shared_ptr<internal::IImage> host_accessible_image;
@@ -159,10 +161,8 @@ namespace wg {
 
         IndexBuffer* createIndexBuffer(uint32_t num_indices);
 
-        template<typename Type>
-        Uniform<Type>* createUniform();
-
-        StorageBuffer* createStorageBuffer(uint32_t num_bytes, bool host_updatable = true);
+        template<typename T>
+        Uniform<T> createUniform();
 
         RenderFamily* createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers = 0);
         DrawPassPtr createBasicDrawPass(const Pipeline* pipeline, const internal::BasicDrawPassSettings& settings);
@@ -187,11 +187,13 @@ namespace wg {
                                                 bool depthOnly = false,
                                                 uint32_t count = 3);
 
+        ImageCopierPtr createImageCopier();
+
         FramebufferChain getDefaultFramebufferChain();
 
         ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
-        Texture* createTexture(uint32_t width, uint32_t height, const TextureSetup& setup = TextureSetup());
+        TexturePtr createBasicTexture(uint32_t width, uint32_t height, const BasicTextureSetup& setup = {});
 
         SemaphoreChain* createSemaphoreChain();
 
@@ -199,9 +201,9 @@ namespace wg {
                              const std::initializer_list<ResourceSet*>& resource_sets,
                              const std::initializer_list<SemaphoreChain*>& semaphores, int x_dim = 1, int y_dim = 1, int z_dim = 1);
 
-        void setPresentWaitForSemaphores(const internal::WaitSemaphoreSet& semaphores);
+        void setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores);
         Semaphore createAndAddImageReadySemaphore();
-        void setImageReadySemaphores(const internal::SignalSemaphoreSet& semaphores);
+        void setImageReadySemaphores(internal::SignalSemaphoreSet&& semaphores);
 
         void present();
 
@@ -212,15 +214,10 @@ namespace wg {
         void destroy(RenderFamily* family);
         void destroy(Buffer* buffer);
         void destroy(Shader* shader);
-        void destroy(Texture* texture);
-        void destroy(StorageBuffer* storageBuffer);
         void destroy(SemaphoreChain* semaphore_chain);
         void destroy(ResourceImage* resource_image);
         void destroy(ResourceSet* resource_set);
         void destroy(ComputePipeline* compute_pipeline);
-
-        template<typename Type>
-        void destroy(Uniform<Type>* uniform);
 
 #ifndef HEADLESS
         Wingine(Winval& win);
@@ -254,17 +251,7 @@ namespace wg {
     VertexBuffer<Type>* Wingine::createVertexBuffer(uint32_t num, bool host_updatable) {
         return new VertexBuffer<Type>(*this, num, host_updatable);
     }
-
-    template<typename Type>
-    Uniform<Type>* Wingine::createUniform() {
-        return new Uniform<Type>(*this);
-    }
-
-
-    template<typename Type>
-    void Wingine::destroy(Uniform<Type>* uniform) {
-        this->destroy(uniform->buffer);
-        delete uniform->buffer_info;
-        delete uniform;
-    }
 };
+
+
+#include "./Wingine.impl.hpp"

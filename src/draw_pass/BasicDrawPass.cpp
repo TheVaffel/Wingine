@@ -21,10 +21,19 @@ namespace wg::internal {
         std::vector<vk::ClearValue> getColorAndDepthClearValues(const BasicDrawPassSettings& settings) {
             std::vector<vk::ClearValue> clear_values(2);
 
-            if (settings.shouldClearColor()) {
-                clear_values[0].color.setFloat32({ 0.2f, 0.2f, 0.2f, 1.0f });
-                clear_values[1].depthStencil.depth = 1.0f;
-                clear_values[1].depthStencil.stencil = 0.0f;
+            if (settings.getNumColorAttachments() > 0) {
+                if (settings.shouldClearColor()) {
+                    clear_values[0].color.setFloat32({ 0.2f, 0.2f, 0.2f, 1.0f });
+                }
+                if (settings.shouldClearDepth()) {
+                    clear_values[1].depthStencil.depth = 1.0f;
+                    clear_values[1].depthStencil.stencil = 0.0f;
+                }
+            } else {
+                if (settings.shouldClearDepth()) {
+                    clear_values[0].depthStencil.depth = 1.0f;
+                    clear_values[0].depthStencil.stencil = 0.0f;
+                }
             }
 
             return clear_values;
@@ -145,6 +154,7 @@ namespace wg::internal {
         renderPassUtil::RenderPassSetup render_pass_setup;
         render_pass_setup.setColorClears({ settings.shouldClearColor() });
         render_pass_setup.setDepthClear(settings.shouldClearDepth());
+        render_pass_setup.setNumColorAttachments(settings.getNumColorAttachments());
 
         this->render_pass = renderPassUtil::createRenderPass(render_pass_setup, device_manager->getDevice());
     }

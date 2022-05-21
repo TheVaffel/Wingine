@@ -18,6 +18,10 @@ namespace wg::internal {
                     std::shared_ptr<const DeviceManager> device_manager);
 
     public:
+        BasicBuffer(uint32_t byte_size,
+                    const vk::BufferUsageFlags& usage,
+                    const vk::MemoryPropertyFlags& memory_properties,
+                    std::shared_ptr<const DeviceManager> device_manager);
 
         static std::unique_ptr<BasicBuffer>
         createHostVisibleBuffer(uint32_t byte_size,

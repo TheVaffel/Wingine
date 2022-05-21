@@ -64,6 +64,18 @@ namespace wg::internal::imageUtil {
      * Images
      */
 
+    vk::Image createSimpleImage(const vk::Extent2D& dimensions,
+                                const vk::ImageUsageFlags& usage,
+                                const vk::Format& format,
+                                const vk::Device& device) {
+        const ImageParameters parameters;
+        return createImageRaw(device,
+                              dimensions,
+                              usage,
+                              format,
+                              parameters);
+    }
+
     vk::Image createFramebufferColorImage(const vk::Extent2D& dimensions,
                                           const vk::Format& format,
                                           const vk::Device& device) {

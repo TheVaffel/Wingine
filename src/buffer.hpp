@@ -33,9 +33,6 @@ namespace wg {
     public:
         vk::Buffer getBuffer() const;
 
-        template<typename Type>
-        friend class Uniform;
-        friend class StorageBuffer;
         friend class RenderFamily;
         friend class Wingine;
     };
@@ -49,8 +46,6 @@ namespace wg {
 
         friend class Wingine;
         friend class Resource;
-        template<typename Type>
-        friend class Uniform;
     };
 
     template<typename Type>

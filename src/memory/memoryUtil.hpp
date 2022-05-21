@@ -12,6 +12,12 @@ namespace wg::internal::memoryUtil {
         const vk::Device& device,
         const vk::PhysicalDeviceMemoryProperties& device_properties);
 
+    vk::DeviceMemory createAndBindMemoryForBuffer(
+        const vk::Buffer& buffer,
+        const vk::MemoryPropertyFlags& memory_properties,
+        const vk::Device& device,
+        const vk::PhysicalDeviceMemoryProperties& device_properties);
+
     vk::DeviceMemory createAndBindHostAccessibleMemoryForBuffer(
         const vk::Buffer& buffer,
         const vk::Device& device,

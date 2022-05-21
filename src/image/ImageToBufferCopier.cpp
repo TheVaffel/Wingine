@@ -61,12 +61,12 @@ namespace wg::internal {
     }
 
 
-    void ImageToBufferCopier::setWaitSemaphoreSet(const WaitSemaphoreSet& semaphores) {
-        this->wait_semaphore_set = semaphores;
+    void ImageToBufferCopier::setWaitSemaphoreSet(WaitSemaphoreSet&& semaphores) {
+        this->wait_semaphore_set.adoptFrom(std::move(semaphores));
     }
 
-    void ImageToBufferCopier::setSignalSemaphoreSet(const SignalSemaphoreSet& semaphores) {
-        this->signal_semaphore_set = semaphores;
+    void ImageToBufferCopier::setSignalSemaphoreSet(SignalSemaphoreSet&& semaphores) {
+        this->signal_semaphore_set.adoptFrom(std::move(semaphores));
     }
 
     std::shared_ptr<ManagedSemaphoreChain> ImageToBufferCopier::addSignalSemaphore() {

@@ -37,9 +37,9 @@ namespace wg::internal {
         virtual const IFramebuffer& getFramebuffer(uint32_t index) const override;
         virtual const IFramebuffer& getCurrentFramebuffer() const override;
 
-        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) override;
+        virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) override;
         virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() override;
-        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) override;
+        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) override;
 
         virtual void swapFramebuffer() override;
     };

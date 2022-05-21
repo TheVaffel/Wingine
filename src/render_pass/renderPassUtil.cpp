@@ -4,6 +4,7 @@
 
 #include <tuple>
 #include <optional>
+#include <iostream>
 
 namespace wg::internal::renderPassUtil {
 

@@ -1,12 +1,10 @@
 #include "./BasicDrawPassSettings.hpp"
 
+#include <stdexcept>
+
 namespace wg::internal {
 
     const bool& BasicDrawPassSettings::shouldClearColor() const {
-        return this->should_clear_color;
-    }
-
-    bool& BasicDrawPassSettings::shouldClearColor() {
         return this->should_clear_color;
     }
 
@@ -14,8 +12,21 @@ namespace wg::internal {
         return this->should_clear_depth;
     }
 
-    bool& BasicDrawPassSettings::shouldClearDepth() {
-        return this->should_clear_depth;
+
+    bool BasicDrawPassSettings::isDepthOnly() const {
+        return this->num_color_attachments == 0;
+    }
+
+    BasicDrawPassSettings& BasicDrawPassSettings::setDepthOnly(bool enable) {
+        if (!enable) {
+            throw std::runtime_error("[BasicDrawPassSettings] turning off depthOnly not supported");
+        }
+        this->num_color_attachments = 0;
+        return *this;
+    }
+
+    uint32_t BasicDrawPassSettings::getNumColorAttachments() const {
+        return this->num_color_attachments;
     }
 
     const std::array<float, 4>& BasicDrawPassSettings::getClearColor() const {

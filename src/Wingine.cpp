@@ -7,6 +7,7 @@
 #include "./framebuffer/HostCopyingFramebufferChain.hpp"
 
 #include "./image/BasicImage.hpp"
+#include "./image/ImageCopier.hpp"
 
 #include "./draw_pass/BasicDrawPass.hpp"
 
@@ -360,8 +361,8 @@ namespace wg {
         this->compatibleRenderPassRegistry->ensureAndGetRenderPass(type);
     }
 
-    void Wingine::setPresentWaitForSemaphores(const internal::WaitSemaphoreSet& semaphores) {
-        this->default_framebuffer_chain->setPresentWaitSemaphores(semaphores);
+    void Wingine::setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores) {
+        this->default_framebuffer_chain->setPresentWaitSemaphores(std::move(semaphores));
     }
 
     void Wingine::present() {
@@ -387,8 +388,8 @@ namespace wg {
         return this->default_framebuffer_chain->addSignalImageAcquiredSemaphore();
     }
 
-    void Wingine::setImageReadySemaphores(const internal::SignalSemaphoreSet& semaphores) {
-        return this->default_framebuffer_chain->setSignalImageAcquiredSemaphores(semaphores);
+    void Wingine::setImageReadySemaphores(internal::SignalSemaphoreSet&& semaphores) {
+        return this->default_framebuffer_chain->setSignalImageAcquiredSemaphores(std::move(semaphores));
     }
 
     void Wingine::init_generic_render_pass() {
@@ -507,6 +508,11 @@ namespace wg {
                     const_queue_manager,
                     *this->compatibleRenderPassRegistry);
         }
+
+        this->staging_buffer_manager =
+            std::make_shared<internal::StagingBufferManager>(this->command_manager,
+                                                             this->queue_manager,
+                                                             const_device_manager);
 
         // General purpose fence for the moving stage
         vk::FenceCreateInfo fence_create_info;
@@ -739,16 +745,22 @@ namespace wg {
         return this->default_framebuffer_chain;
     }
 
+    ImageCopierPtr Wingine::createImageCopier() {
+        return std::make_unique<internal::ImageCopier>(this->queue_manager->getGraphicsQueue(),
+                                                       this->command_manager,
+                                                       this->device_manager);
+    }
+
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {
         ResourceImage* image = new ResourceImage(*this, width, height);
 
         return image;
     }
 
-    Texture* Wingine::createTexture(uint32_t width, uint32_t height, const TextureSetup& setup) {
-        Texture* texture = new Texture(*this,
-                                       width, height, setup);
-        return texture;
+    TexturePtr Wingine::createBasicTexture(uint32_t width, uint32_t height, const BasicTextureSetup& setup) {
+        return std::make_shared<internal::BasicTexture>(vk::Extent2D(width, height),
+                                                        setup,
+                                                        this->device_manager);
     }
 
     SemaphoreChain* Wingine::createSemaphoreChain() {
@@ -756,10 +768,10 @@ namespace wg {
         return semaphore_chain;
     }
 
-    StorageBuffer* Wingine::createStorageBuffer(uint32_t num_bytes, bool host_updatable) {
+    /* StorageBuffer* Wingine::createStorageBuffer(uint32_t num_bytes, bool host_updatable) {
         return new StorageBuffer(*this,
                                  num_bytes, host_updatable);
-    }
+                                 } */
 
     RenderFamily* Wingine::createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers) {
         return new RenderFamily(*this, this->compatibleRenderPassRegistry,
@@ -897,17 +909,6 @@ namespace wg {
         delete shader;
     }
 
-    void Wingine::destroy(Texture* texture) {
-        delete texture->image_info;
-
-        this->device.destroy(texture->sampler, nullptr);
-        this->destroy(*(Image*)texture);
-
-        this->device.destroy(texture->staging_image, nullptr);
-        this->device.free(texture->staging_memory, nullptr);
-        delete texture;
-    }
-
     void Wingine::destroy(SemaphoreChain* semaphore_chain) {
         this->waitIdle();
         _wassert_result(this->device.resetFences(1, &this->general_purpose_fence),
@@ -943,11 +944,11 @@ namespace wg {
         this->device.destroy(image.view, nullptr);
     }
 
-    void Wingine::destroy(StorageBuffer* storagebuffer) {
+    /* void Wingine::destroy(StorageBuffer* storagebuffer) {
         this->destroy(storagebuffer->buffer);
         delete storagebuffer->buffer_info;
         delete storagebuffer;
-    }
+        } */
 
     Wingine::~Wingine() {
 

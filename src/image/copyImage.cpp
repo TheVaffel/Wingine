@@ -80,6 +80,8 @@ namespace wg::internal::copyImage {
                 return vk::AccessFlagBits::eTransferRead;
             case vk::ImageLayout::eDepthStencilAttachmentOptimal:
                 return vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            case vk::ImageLayout::eUndefined:
+                return vk::AccessFlagBits::eNone;
             default:
                 throw std::runtime_error("[copyImage] No applicable access mask for layout " +
                                          vk::to_string(layout));
@@ -101,7 +103,9 @@ namespace wg::internal::copyImage {
             case vk::ImageLayout::eDepthStencilAttachmentOptimal:
                 return vk::PipelineStageFlagBits::eLateFragmentTests;
             case vk::ImageLayout::ePreinitialized:
-            return vk::PipelineStageFlagBits::eHost;
+                return vk::PipelineStageFlagBits::eHost;
+            case vk::ImageLayout::eUndefined:
+                return vk::PipelineStageFlagBits::eTopOfPipe;
             default:
                 throw std::runtime_error("[copyImage] No applicable pipeline stage for layout " +
                                          vk::to_string(layout));

@@ -11,6 +11,7 @@ namespace wg::internal {
         SignalSemaphoreSet(const std::initializer_list<SemaphoreChainPtr>& semaphores);
 
         SignalSemaphoreSet(const SignalSemaphoreSet& semaphore_set) = delete;
+
         virtual void swapSemaphores() override;
 
         SemaphoreChainPtr addSignalledSemaphoreChain(const vk::Queue& queue);

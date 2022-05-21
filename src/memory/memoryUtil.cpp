@@ -50,7 +50,7 @@ namespace wg::internal::memoryUtil {
 
         vk::DeviceMemory createMemoryForRequirements(
             const vk::MemoryRequirements& requirements,
-            const vk::MemoryPropertyFlagBits& property_flags,
+            const vk::MemoryPropertyFlags& property_flags,
             const vk::PhysicalDeviceMemoryProperties& device_memory_properties,
             const vk::Device& device) {
 
@@ -104,13 +104,30 @@ namespace wg::internal::memoryUtil {
 
     }
 
+    vk::DeviceMemory createAndBindMemoryForBuffer(
+        const vk::Buffer& buffer,
+        const vk::MemoryPropertyFlags& memory_properties,
+        const vk::Device& device,
+        const vk::PhysicalDeviceMemoryProperties& device_memory_properties) {
+
+        vk::MemoryRequirements requirements = device.getBufferMemoryRequirements(buffer);
+
+        vk::DeviceMemory memory = createMemoryForRequirements(
+            requirements,
+            memory_properties,
+            device_memory_properties,
+            device);
+
+        device.bindBufferMemory(buffer, memory, 0);
+        return memory;
+    }
 
     vk::DeviceMemory createAndBindHostAccessibleMemoryForBuffer(
         const vk::Buffer& buffer,
         const vk::Device& device,
         const vk::PhysicalDeviceMemoryProperties& device_memory_properties) {
-        vk::MemoryRequirements requirements = device.getBufferMemoryRequirements(buffer);
 
+        vk::MemoryRequirements requirements = device.getBufferMemoryRequirements(buffer);
 
         vk::DeviceMemory memory = createMemoryForRequirements(
             requirements,

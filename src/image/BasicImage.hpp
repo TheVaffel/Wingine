@@ -8,7 +8,7 @@
 namespace wg::internal {
 
     // Simple general-purpose image
-    class BasicImage : public IImage {
+    class BasicImage : public virtual IImage {
         vk::Image image;
         vk::DeviceMemory memory;
         vk::ImageView view;
@@ -19,11 +19,19 @@ namespace wg::internal {
 
         vk::ImageAspectFlagBits aspect;
 
+        BasicImage(const vk::Extent2D& dimensions,
+                   const vk::ImageAspectFlagBits& aspect,
+                   const vk::ImageLayout& intended_layout,
+                   std::shared_ptr<const DeviceManager> device_manager);
+
+    protected:
+
         std::shared_ptr<const DeviceManager> device_manager;
 
         BasicImage(const vk::Extent2D& dimensions,
                    const vk::ImageAspectFlagBits& aspect,
                    const vk::ImageLayout& intended_layout,
+                   const vk::ImageUsageFlags& usage,
                    std::shared_ptr<const DeviceManager> device_manager);
 
     public:

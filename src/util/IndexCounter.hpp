@@ -10,6 +10,7 @@ namespace wg::internal {
     public:
 
         IndexCounter(uint32_t num_indices);
+        IndexCounter(uint32_t num_indices, uint32_t start_index);
 
         uint32_t getCurrentIndex() const;
         uint32_t getNextIndex() const;

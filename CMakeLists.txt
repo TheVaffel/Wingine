@@ -23,7 +23,10 @@ set(FLAWED_LIB_DIR "${FLAWED_ROOT}/lib")
 set(BUFFER_SOURCES
   bufferUtil.cpp
   IBuffer.cpp
-  BasicBuffer.cpp)
+  BasicBuffer.cpp
+  BasicStorageBuffer.cpp
+  StagingBufferManager.cpp
+  copyBuffer.cpp)
 set(FRAMEBUFFER_SOURCES
   framebufferUtil.cpp
   IFramebuffer.cpp
@@ -42,7 +45,9 @@ set(IMAGE_SOURCES
   HostVisibleImageView.cpp
   ImageCopier.cpp
   ImageToBufferCopier.cpp
-  copyImage.cpp)
+  copyImage.cpp
+  BasicTexture.cpp
+  samplerUtil.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
 set(SYNC_SOURCES
   semaphoreUtil.cpp

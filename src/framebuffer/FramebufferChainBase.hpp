@@ -18,8 +18,8 @@ namespace wg::internal {
                              std::shared_ptr<const DeviceManager> device_manager);
 
     public:
-        virtual void setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores);
-        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore();
-        virtual void setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores);
+        virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) override;
+        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() override;
+        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) override;
     };
 };

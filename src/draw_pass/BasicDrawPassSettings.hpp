@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 
 namespace wg::internal {
     class BasicDrawPassSettings {
@@ -10,12 +11,16 @@ namespace wg::internal {
         std::array<float, 4> clear_color = { 0.2f, 0.2f, 0.2f, 1.0f };
         float clear_depth = 1.0f;
 
+        uint32_t num_color_attachments = 1;
+
     public:
         const bool& shouldClearColor() const;
-        bool& shouldClearColor();
 
         const bool& shouldClearDepth() const;
-        bool& shouldClearDepth();
+
+        bool isDepthOnly() const;
+        BasicDrawPassSettings& setDepthOnly(bool enable);
+        uint32_t getNumColorAttachments() const;
 
         std::array<float, 4>& getClearColor();
         const std::array<float, 4>& getClearColor() const;

@@ -22,10 +22,6 @@ namespace wg {
         bool per_instance = false;
     };
 
-    // Uniform template
-    template<typename Type>
-    class Uniform;
-
     enum ResourceType {
         resUniform = (uint64_t)VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         resStorageBuffer = (uint64_t)VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -35,10 +31,6 @@ namespace wg {
 
     // These are shifted, because we want to combine them
     // with resource types as a bitmask
-    /* enum ShaderStage {
-    // shaVertex = ((long long unsigned int)VK_SHADER_STAGE_VERTEX_BIT) << 32LL,
-    // shaFragment = ((long long unsigned int)VK_SHADER_STAGE_FRAGMENT_BIT) << 32LL
-    }; */
     // Also, turns out we can't really assume compilers support 64-bit
     // enum values (looking at you, Windows), so we'll go the cheap way
     // and declare them as integers instead
@@ -53,10 +45,7 @@ namespace wg {
     };
 
     class Wingine;
-    class Resource;
     class RenderFamily;
-    // class Framebuffer;
-    class Texture;
     class Image;
     class Buffer;
     class SemaphoreChain;
@@ -66,5 +55,4 @@ namespace wg {
     class VertexBuffer;
 
     class IndexBuffer;
-    class StorageBuffer;
 };

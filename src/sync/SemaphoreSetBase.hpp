@@ -43,12 +43,17 @@ namespace wg::internal {
                          const std::vector<SemaphoreChainPtr>& semaphores);
 
         SemaphoreSetBase(const SemaphoreSetBase& semaphore_set_base) = delete;
+        SemaphoreSetBase(SemaphoreSetBase&& semaphore_set_base) = delete;
 
+        void removeSemaphores();
         virtual ~SemaphoreSetBase();
 
     public:
 
-        SemaphoreSetBase& operator=(const SemaphoreSetBase& semaphore_set_base);
+        SemaphoreSetBase& operator=(const SemaphoreSetBase& semaphore_set_base) = delete;
+        SemaphoreSetBase& operator=(SemaphoreSetBase&& semaphore_set_base) = delete;
+
+        void adoptFrom(SemaphoreSetBase&& semaphore_set_base);
 
         const std::vector<vk::Semaphore>& getCurrentRawSemaphores() const;
         uint32_t getNumSemaphores() const;
@@ -56,5 +61,7 @@ namespace wg::internal {
         virtual void swapSemaphores() = 0;
 
         SemaphoreChainPtr addSemaphoreChain();
+
+        void clear();
     };
 };

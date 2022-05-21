@@ -9,7 +9,7 @@ namespace wg::internal {
         WaitSemaphoreSet wait_semaphore_set;
     public:
 
-        SignalAndWaitSemaphores(uint32_t num_chains,
+        SignalAndWaitSemaphores(uint32_t chain_length,
                                 std::shared_ptr<const DeviceManager> device_manager);
 
         const SignalSemaphoreSet& getSignalSemaphores() const;
@@ -18,8 +18,8 @@ namespace wg::internal {
         SignalSemaphoreSet& getSignalSemaphores();
         WaitSemaphoreSet& getWaitSemaphores();
 
-        void setWaitSemaphores(const WaitSemaphoreSet& semaphores);
-        void setOnFinishSemaphores(const SignalSemaphoreSet& semaphores);
+        void setWaitSemaphores(WaitSemaphoreSet&& semaphores);
+        void setOnFinishSemaphores(SignalSemaphoreSet&& semaphores);
 
         [[nodiscard]]
         SemaphoreChainPtr createOnFinishSemaphore();

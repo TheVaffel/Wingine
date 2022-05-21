@@ -44,7 +44,7 @@ int main() {
 
     wgut::Model model({position_buffer, color_buffer}, index_buffer);
 
-    wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
+    wg::Uniform<falg::Mat4> cameraUniform = wing.createUniform<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
 
@@ -106,8 +106,8 @@ int main() {
     draw_pass->endRecording();
 
     draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
-    wg::Semaphore semaphore0 = draw_pass->getSemaphores().createOnFinishSemaphore();
 
+    wg::Semaphore semaphore0 = draw_pass->getSemaphores().createOnFinishSemaphore();
     wing.setPresentWaitForSemaphores({semaphore0});
 
     uint32_t stride = wing.getRenderedImageRowByteStride();
@@ -142,7 +142,4 @@ int main() {
     wing.destroy(position_buffer);
     wing.destroy(color_buffer);
     wing.destroy(index_buffer);
-
-    wing.destroy(cameraUniform);
-
 }

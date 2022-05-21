@@ -1,9 +1,9 @@
 #include "./SynchronizedQueueOperationBase.hpp"
 
 namespace wg::internal {
-    SynchronizedQueueOperationBase::SynchronizedQueueOperationBase(uint32_t num_chains,
+    SynchronizedQueueOperationBase::SynchronizedQueueOperationBase(uint32_t chain_length,
                                                                    std::shared_ptr<const DeviceManager> device_manager)
-        : semaphores(num_chains, device_manager) { }
+        : semaphores(chain_length, device_manager) { }
 
     SignalAndWaitSemaphores& SynchronizedQueueOperationBase::getSemaphores() {
         return this->semaphores;

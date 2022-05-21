@@ -16,6 +16,43 @@ namespace wg::internal {
           device_manager(device_manager)
     { }
 
+    BasicImage::BasicImage(const vk::Extent2D& dimensions,
+                           const vk::ImageAspectFlagBits& aspect,
+                           const vk::ImageLayout& intended_layout,
+                           const vk::ImageUsageFlags& usage,
+                           std::shared_ptr<const DeviceManager> device_manager)
+        : dimensions(dimensions),
+          current_layout(vk::ImageLayout::eUndefined),
+          intended_layout(intended_layout),
+          aspect(aspect),
+          device_manager(device_manager) {
+
+        bool isDepth = aspect == vk::ImageAspectFlagBits::eDepth;
+        const vk::Format format = isDepth ?
+            imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT :
+            imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT;
+
+        this->image = imageUtil::createSimpleImage(dimensions,
+                                                  usage,
+                                                  format,
+                                                  device_manager->getDevice());
+
+        this->memory =
+            memoryUtil::createAndBindMemoryForImage(this->image,
+                                                    device_manager->getDevice(),
+                                                    device_manager->getDeviceMemoryProperties());
+
+        if (isDepth) {
+            this->view = imageUtil::createDepthImageView(this->image,
+                                                         format,
+                                                         device_manager->getDevice());
+        } else {
+            this->view = imageUtil::createColorImageView(this->image,
+                                                         format,
+                                                         device_manager->getDevice());
+        }
+    }
+
     std::unique_ptr<BasicImage>
     BasicImage::createFramebufferColorImage(const vk::Extent2D& dimensions,
                                             std::shared_ptr<const DeviceManager> device_manager) {

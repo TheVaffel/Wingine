@@ -10,7 +10,7 @@ namespace wg::internal {
 
 
     WaitSemaphoreSet::WaitSemaphoreSet(const std::initializer_list<SemaphoreChainPtr>& semaphores)
-        : SemaphoreSetBase(SemaphoreSetType::Signal, semaphores) { }
+        : SemaphoreSetBase(SemaphoreSetType::Wait, semaphores) { }
 
     void WaitSemaphoreSet::swapSemaphores() {
         this->raw_semaphores_index.incrementIndex();

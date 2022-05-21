@@ -4,9 +4,11 @@
 
 namespace wg::internal {
     IndexCounter::IndexCounter(uint32_t num_indices)
-        : num_indices(num_indices), current_index(0) {
+        : num_indices(num_indices), current_index(0) { }
 
-        fl_assert_gt(num_indices, 0u);
+    IndexCounter::IndexCounter(uint32_t num_indices, uint32_t start_index)
+        : num_indices(num_indices), current_index(start_index) {
+        fl_assert_lt(start_index, num_indices);
     }
 
     uint32_t IndexCounter::getCurrentIndex() const {

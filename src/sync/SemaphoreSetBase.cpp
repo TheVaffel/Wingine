@@ -46,14 +46,6 @@ namespace wg::internal {
         this->init(semaphores);
     }
 
-    SemaphoreSetBase& SemaphoreSetBase::operator=(const SemaphoreSetBase& semaphore_set_base) {
-        this->unregisterAllSemaphores();
-
-        this->init(semaphore_set_base.semaphore_chains);
-
-        return *this;
-    }
-
     void SemaphoreSetBase::init(const std::vector<SemaphoreChainPtr>& semaphore_chains) {
         this->semaphore_chains = semaphore_chains;
         this->initRawSemaphores();
@@ -68,6 +60,18 @@ namespace wg::internal {
     SemaphoreSetBase::createRawSemaphores(const std::vector<SemaphoreChainPtr>& semaphore_chains) {
         if (semaphore_chains.size() == 0) {
             return std::vector<std::vector<vk::Semaphore>>();
+        }
+
+        uint32_t chain_length = semaphore_chains[0]->getNumSemaphores();
+        for (uint32_t i = 1; i < semaphore_chains.size(); i++) {
+            if (semaphore_chains[i]->getNumSemaphores() != chain_length) {
+                throw std::runtime_error("[SemaphoreSetBase] Semaphores chains in semaphore set has different lengths");
+            }
+        }
+
+        if (this->raw_semaphores_index.getNumIndices() != chain_length) {
+            this->raw_semaphores_index = IndexCounter(chain_length,
+                                                      this->raw_semaphores_index.getCurrentIndex() % chain_length);
         }
 
         std::vector<std::vector<vk::Semaphore>> chains(semaphore_chains[0]->getNumSemaphores());
@@ -152,6 +156,27 @@ namespace wg::internal {
         this->raw_semaphores = createRawSemaphores(this->semaphore_chains);
 
         return semaphore_chain;
+    }
+
+    void SemaphoreSetBase::adoptFrom(SemaphoreSetBase&& other_base) {
+        this->unregisterAllSemaphores();
+        this->removeSemaphores();
+
+        other_base.unregisterAllSemaphores();
+
+        this->init(other_base.semaphore_chains);
+
+        other_base.removeSemaphores();
+    }
+
+    void SemaphoreSetBase::removeSemaphores() {
+        this->semaphore_chains.clear();
+        this->raw_semaphores.clear();
+    }
+
+    void SemaphoreSetBase::clear() {
+        this->unregisterAllSemaphores();
+        this->removeSemaphores();
     }
 
     SemaphoreSetBase::~SemaphoreSetBase() {

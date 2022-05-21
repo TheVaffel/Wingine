@@ -26,7 +26,7 @@ namespace wg::internal {
 
 
     SignalSemaphoreSet::SignalSemaphoreSet(const std::initializer_list<SemaphoreChainPtr>& semaphores)
-        : SemaphoreSetBase(SemaphoreSetType::Wait, semaphores) { }
+        : SemaphoreSetBase(SemaphoreSetType::Signal, semaphores) { }
 
     SemaphoreChainPtr SignalSemaphoreSet::addSignalledSemaphoreChain(const vk::Queue& queue) {
 

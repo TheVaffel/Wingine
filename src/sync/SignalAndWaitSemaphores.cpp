@@ -3,10 +3,10 @@
 namespace wg::internal {
 
     SignalAndWaitSemaphores::SignalAndWaitSemaphores(
-        uint32_t num_chains,
+        uint32_t chain_length,
         std::shared_ptr<const DeviceManager> device_manager)
-        : signal_semaphore_set(num_chains, device_manager),
-          wait_semaphore_set(num_chains, device_manager)
+        : signal_semaphore_set(chain_length, device_manager),
+          wait_semaphore_set(chain_length, device_manager)
         { }
 
     SignalSemaphoreSet& SignalAndWaitSemaphores::getSignalSemaphores() {
@@ -29,12 +29,12 @@ namespace wg::internal {
         return this->signal_semaphore_set.addSemaphoreChain();
     }
 
-    void SignalAndWaitSemaphores::setOnFinishSemaphores(const SignalSemaphoreSet& semaphores) {
-        this->signal_semaphore_set = semaphores;
+    void SignalAndWaitSemaphores::setOnFinishSemaphores(SignalSemaphoreSet&& semaphores) {
+        this->signal_semaphore_set.adoptFrom(std::move(semaphores));
     }
 
-    void SignalAndWaitSemaphores::setWaitSemaphores(const WaitSemaphoreSet& semaphore_semaphore_set) {
-        this->wait_semaphore_set = semaphore_semaphore_set;
+    void SignalAndWaitSemaphores::setWaitSemaphores(WaitSemaphoreSet&& wait_semaphore_set) {
+        this->wait_semaphore_set.adoptFrom(std::move(wait_semaphore_set));
     }
 
 };

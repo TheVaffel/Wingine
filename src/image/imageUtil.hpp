@@ -11,6 +11,11 @@ namespace wg::internal::imageUtil {
      * Image
      */
 
+    vk::Image createSimpleImage(const vk::Extent2D& dimensions,
+                                const vk::ImageUsageFlags& usage,
+                                const vk::Format& format,
+                                const vk::Device& device);
+
     vk::Image createFramebufferColorImage(const vk::Extent2D& dimensions,
                                           const vk::Format& format,
                                           const vk::Device& device);

@@ -8,7 +8,7 @@ namespace wg::internal {
         SignalAndWaitSemaphores semaphores;
 
     protected:
-        SynchronizedQueueOperationBase(uint32_t num_chains,
+        SynchronizedQueueOperationBase(uint32_t chain_length,
                                        std::shared_ptr<const DeviceManager> device_manager);
 
         const SignalSemaphoreSet& getSignalSemaphores() const;

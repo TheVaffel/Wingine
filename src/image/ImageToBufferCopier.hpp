@@ -34,8 +34,8 @@ namespace wg::internal {
         void recordCopyImage(const std::vector<IImage*>& srcs,
                              const std::vector<IBuffer*>& dsts);
 
-        void setWaitSemaphoreSet(const WaitSemaphoreSet& semaphores);
-        void setSignalSemaphoreSet(const SignalSemaphoreSet& semaphores);
+        void setWaitSemaphoreSet(WaitSemaphoreSet&& semaphores);
+        void setSignalSemaphoreSet(SignalSemaphoreSet&& semaphores);
         std::shared_ptr<ManagedSemaphoreChain> addSignalSemaphore();
 
         void runCopy();

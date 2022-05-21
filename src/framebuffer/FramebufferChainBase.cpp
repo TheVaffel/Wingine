@@ -8,8 +8,8 @@ namespace wg::internal {
           queue_manager(queue_manager),
           device_manager(device_manager) { }
 
-    void FramebufferChainBase::setPresentWaitSemaphores(const WaitSemaphoreSet& semaphores) {
-        this->getWaitSemaphores() = semaphores;
+    void FramebufferChainBase::setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) {
+        this->getWaitSemaphores().adoptFrom(std::move(semaphores));
     }
 
     SemaphoreChainPtr FramebufferChainBase::addSignalImageAcquiredSemaphore() {
@@ -17,7 +17,7 @@ namespace wg::internal {
     }
 
 
-    void FramebufferChainBase::setSignalImageAcquiredSemaphores(const SignalSemaphoreSet& semaphores) {
-        this->getSignalSemaphores() = semaphores;
+    void FramebufferChainBase::setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) {
+        this->getSignalSemaphores().adoptFrom(std::move(semaphores));
     }
 };

@@ -1,5 +1,7 @@
 #include <vulkan/vulkan.hpp>
 
+#include "./imageUtil.hpp"
+
 #include <iostream>
 
 namespace wg::internal::imageUtil {
@@ -88,6 +90,17 @@ namespace wg::internal::imageUtil {
                               parameters);
     }
 
+    vk::Image createFramebufferTextureColorImage(const vk::Extent2D& dimensions,
+                                                 const vk::Format& format,
+                                                 const vk::Device& device) {
+        const ImageParameters parameters;
+        return createImageRaw(device,
+                              dimensions,
+                              vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
+                              format,
+                              parameters);
+    }
+
     vk::Image createFramebufferDepthImage(const vk::Extent2D& dimensions,
                                           const vk::Format& format,
                                           const vk::Device& device) {
@@ -95,6 +108,17 @@ namespace wg::internal::imageUtil {
         return createImageRaw(device,
                               dimensions,
                               vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc,
+                              format,
+                              parameters);
+    }
+
+    vk::Image createFramebufferTextureDepthImage(const vk::Extent2D& dimensions,
+                                                 const vk::Format& format,
+                                                 const vk::Device& device) {
+        const ImageParameters parameters;
+        return createImageRaw(device,
+                              dimensions,
+                              vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
                               format,
                               parameters);
     }
@@ -147,5 +171,96 @@ namespace wg::internal::imageUtil {
                 });
 
         return device.createImageView(ivci);
+    }
+
+    /*
+     * Recording
+     */
+
+    namespace {
+        vk::ImageSubresourceRange getSubresourceRange(const IImage& image) {
+
+            vk::ImageSubresourceRange subresource_range;
+            subresource_range.setAspectMask(image.getDefaultAspect())
+                .setLevelCount(1)
+                .setBaseArrayLayer(0)
+                .setLayerCount(1);
+            return subresource_range;
+        }
+
+
+        vk::AccessFlagBits getAccessMask(const vk::ImageLayout& layout) {
+            switch(layout) {
+            case vk::ImageLayout::eColorAttachmentOptimal:
+            case vk::ImageLayout::ePresentSrcKHR:
+            case vk::ImageLayout::eGeneral:
+                return vk::AccessFlagBits::eMemoryRead;
+            case vk::ImageLayout::ePreinitialized:
+                return vk::AccessFlagBits::eHostWrite;
+            case vk::ImageLayout::eShaderReadOnlyOptimal:
+                return vk::AccessFlagBits::eShaderRead;
+            case vk::ImageLayout::eTransferDstOptimal:
+                return vk::AccessFlagBits::eTransferWrite;
+            case vk::ImageLayout::eTransferSrcOptimal:
+                return vk::AccessFlagBits::eTransferRead;
+            case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+                return vk::AccessFlagBits::eDepthStencilAttachmentWrite;
+            case vk::ImageLayout::eUndefined:
+                return vk::AccessFlagBits::eNone;
+            default:
+                throw std::runtime_error("[copyImage] No applicable access mask for layout " +
+                                         vk::to_string(layout));
+            }
+        }
+
+        vk::PipelineStageFlags getPipelineStageFromLayout(const vk::ImageLayout& layout) {
+            switch (layout) {
+            case vk::ImageLayout::eTransferDstOptimal:
+            case vk::ImageLayout::eTransferSrcOptimal:
+            case vk::ImageLayout::eGeneral:
+                return vk::PipelineStageFlagBits::eTransfer;
+            case vk::ImageLayout::ePresentSrcKHR:
+            case vk::ImageLayout::eColorAttachmentOptimal:
+                return vk::PipelineStageFlagBits::eColorAttachmentOutput;
+            case vk::ImageLayout::eShaderReadOnlyOptimal:
+                return vk::PipelineStageFlagBits::eComputeShader |
+                    vk::PipelineStageFlagBits::eFragmentShader;
+            case vk::ImageLayout::eDepthStencilAttachmentOptimal:
+                return vk::PipelineStageFlagBits::eLateFragmentTests;
+            case vk::ImageLayout::ePreinitialized:
+                return vk::PipelineStageFlagBits::eHost;
+            case vk::ImageLayout::eUndefined:
+                return vk::PipelineStageFlagBits::eTopOfPipe;
+            default:
+                throw std::runtime_error("[copyImage] No applicable pipeline stage for layout " +
+                                         vk::to_string(layout));
+            }
+        }
+    };
+
+    void recordSetLayout(CommandLayoutTransitionData& data,
+                         const vk::CommandBuffer& command_buffer,
+                         const vk::ImageLayout& old_layout,
+                         const vk::ImageLayout& new_layout,
+                         IImage& image) {
+
+        vk::ImageSubresourceRange subresource_range = getSubresourceRange(image);
+
+        data.image_memory_barrier.setOldLayout(old_layout)
+            .setNewLayout(new_layout)
+            .setImage(image.getImage())
+            .setSubresourceRange(subresource_range)
+            .setSrcAccessMask(getAccessMask(old_layout))
+            .setDstAccessMask(getAccessMask(new_layout));
+
+        command_buffer.pipelineBarrier(getPipelineStageFromLayout(old_layout),
+                                       getPipelineStageFromLayout(new_layout),
+                                       {},
+                                       0,
+                                       nullptr,
+                                       0,
+                                       nullptr,
+                                       1,
+                                       &data.image_memory_barrier);
     }
 };

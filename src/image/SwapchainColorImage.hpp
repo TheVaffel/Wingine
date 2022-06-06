@@ -26,7 +26,7 @@ namespace wg::internal {
         virtual const vk::Image getImage() const;
         virtual const vk::DeviceMemory getMemory() const;
         virtual const vk::ImageView getView() const;
-        virtual const vk::Extent2D getDimensions() const;
+        virtual vk::Extent2D getDimensions() const;
 
         virtual const vk::ImageAspectFlagBits getDefaultAspect() const;
 

@@ -2,6 +2,9 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "./CopyImageAuxillaryData.hpp"
+#include "./IImage.hpp"
+
 namespace wg::internal::imageUtil {
 
     const vk::Format DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT = vk::Format::eB8G8R8A8Unorm;
@@ -20,9 +23,17 @@ namespace wg::internal::imageUtil {
                                           const vk::Format& format,
                                           const vk::Device& device);
 
+    vk::Image createFramebufferTextureColorImage(const vk::Extent2D& dimensions,
+                                                 const vk::Format& format,
+                                                 const vk::Device& device);
+
     vk::Image createFramebufferDepthImage(const vk::Extent2D& dimensions,
                                           const vk::Format& format,
                                           const vk::Device& device);
+
+    vk::Image createFramebufferTextureDepthImage(const vk::Extent2D& dimensions,
+                                                 const vk::Format& format,
+                                                 const vk::Device& device);
 
     vk::Image createHostAccessibleColorImage(const vk::Extent2D& dimensions,
                                              const vk::Format& format,
@@ -40,4 +51,13 @@ namespace wg::internal::imageUtil {
                                        const vk::Format& format,
                                        const vk::Device& device);
 
+    /*
+     * Recording
+     */
+
+    void recordSetLayout(CommandLayoutTransitionData& data,
+                         const vk::CommandBuffer& command_buffer,
+                         const vk::ImageLayout& old_layout,
+                         const vk::ImageLayout& new_layout,
+                         IImage& image);
 };

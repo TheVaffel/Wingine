@@ -20,6 +20,7 @@ namespace wg::internal {
                               device_manager,
                               queue_manager,
                               dst_image->getDimensions(),
+                              BasicFramebufferSetup(),
                               device_manager,
                               render_pass_registry)
     {
@@ -56,9 +57,11 @@ namespace wg::internal {
 
     void HostCopyingFramebufferChain::swapFramebuffer() {
         this->inner_framebuffer_chain.swapFramebuffer();
-        this->image_copier->runCopy();
+        this->image_copier->runAndAwaitCopy();
+
         this->dst_image->setReadyForCopyFence(image_copier->getLastImageCopyCompleteFence());
-    }
+        inner_framebuffer_index_counter.incrementIndex();
+        }
 
 
     void HostCopyingFramebufferChain::setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) {

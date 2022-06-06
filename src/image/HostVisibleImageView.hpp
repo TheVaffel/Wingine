@@ -5,10 +5,13 @@
 #include "../DeviceManager.hpp"
 #include "../util/IndexCounter.hpp"
 
+#include "./IImage.hpp"
+
 namespace wg::internal {
     class HostVisibleImageView {
         vk::Extent2D dimensions;
         std::vector<std::unique_ptr<IBuffer>> buffers;
+        std::shared_ptr<IImage> debug_image;
 
         IndexCounter current_buffer_counter;
 
@@ -25,6 +28,8 @@ namespace wg::internal {
 
         IBuffer& getBuffer(uint32_t index);
         IBuffer& getCurrentBuffer();
+
+        IImage& getImage();
 
         vk::Extent2D getDimensions() const;
         uint32_t getNumBuffers() const;

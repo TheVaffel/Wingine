@@ -1,0 +1,24 @@
+#pragma once
+
+#include "./BasicResourceChain.hpp"
+
+namespace wg::internal {
+    template<CResource T>
+    template<typename ...Args>
+    BasicResourceChain::BasicResourceChain(uint32_t count,
+                                           Args&&... arguments) {
+        for (uint32_t i = 0; i < count; i++) {
+            this->resources.push_back(std::make_shared<T>(arguments...));
+        }
+    }
+
+    template<CResource T>
+    uint32_t BasicResourceChain::getNumResources() const {
+        return this->resources.size();
+    }
+
+    template<CResource T>
+    std::shared_ptr<IResource> BasicResourceChain::getResource(uint32_t index) {
+        return this->resources[index];
+    }
+};

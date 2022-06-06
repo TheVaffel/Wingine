@@ -142,6 +142,11 @@ namespace wg::internal::memoryUtil {
 
     void unmapMemory(const vk::DeviceMemory& memory,
                      const vk::Device& device) {
+        vk::MappedMemoryRange range;
+        range.setOffset(0)
+            .setSize(VK_WHOLE_SIZE)
+            .setMemory(memory);
+        device.flushMappedMemoryRanges({ range });
         device.unmapMemory(memory);
     }
 };

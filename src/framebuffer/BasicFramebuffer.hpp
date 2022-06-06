@@ -1,5 +1,7 @@
 #pragma once
 
+
+#include "./BasicFramebufferSetup.hpp"
 #include "./IFramebuffer.hpp"
 
 #include "../image/IImage.hpp"
@@ -17,6 +19,7 @@ namespace wg::internal {
 
     public:
         BasicFramebuffer(const vk::Extent2D& dimensions,
+                         const BasicFramebufferSetup& setup,
                          std::shared_ptr<const DeviceManager> device_manager,
                          CompatibleRenderPassRegistry& render_pass_registry);
 
@@ -27,11 +30,9 @@ namespace wg::internal {
 
         virtual bool hasColorImage() const;
         virtual const IImage& getColorImage() const;
-        virtual IImage& getColorImage();
 
         virtual bool hasDepthImage() const;
         virtual const IImage& getDepthImage() const;
-        virtual IImage& getDepthImage();
 
         ~BasicFramebuffer();
     };

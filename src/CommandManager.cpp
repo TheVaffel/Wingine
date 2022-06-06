@@ -142,7 +142,7 @@ namespace wg::internal {
         const vk::Device& device = this->device_manager->getDevice();
 
         device.freeCommandBuffers(this->graphics_command_pool,
-                                        1, &this->general_command.buffer);
+                                  1, &this->general_command.buffer);
 
         device.destroyCommandPool(this->graphics_command_pool);
 

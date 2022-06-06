@@ -6,12 +6,15 @@
 namespace wg::internal {
 
     BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
+                                       const BasicFramebufferSetup& setup,
                                        std::shared_ptr<const DeviceManager> device_manager,
                                        CompatibleRenderPassRegistry& render_pass_registry)
         : device_manager(device_manager) {
 
-        this->color_image = BasicImage::createFramebufferColorImage(dimensions,
-                                                                    device_manager);
+        if (!setup.getDepthOnly()) {
+            this->color_image = BasicImage::createFramebufferColorImage(dimensions,
+                                                                        device_manager);
+        }
 
         this->depth_image = BasicImage::createFramebufferDepthImage(dimensions,
                                                                     device_manager);
@@ -27,14 +30,13 @@ namespace wg::internal {
     }
 
     bool BasicFramebuffer::hasColorImage() const {
-        return true;
+        return !!this->color_image;
     }
 
     const IImage& BasicFramebuffer::getColorImage() const {
-        return *this->color_image;
-    }
-
-    IImage& BasicFramebuffer::getColorImage() {
+        if (!this->color_image) {
+            throw std::runtime_error("[BasicFramebuffer] Not created with color image");
+        }
         return *this->color_image;
     }
 
@@ -43,10 +45,6 @@ namespace wg::internal {
     }
 
     const IImage& BasicFramebuffer::getDepthImage() const {
-        return *this->depth_image;
-    }
-
-    IImage& BasicFramebuffer::getDepthImage() {
         return *this->depth_image;
     }
 

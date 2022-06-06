@@ -39,7 +39,7 @@ namespace wg::internal {
         virtual const vk::Image getImage() const;
         virtual const vk::DeviceMemory getMemory() const;
         virtual const vk::ImageView getView() const;
-        virtual const vk::Extent2D getDimensions() const;
+        virtual vk::Extent2D getDimensions() const;
 
         virtual const vk::ImageAspectFlagBits getDefaultAspect() const;
 
@@ -54,8 +54,16 @@ namespace wg::internal {
                                     std::shared_ptr<const DeviceManager> device_manager);
 
         static std::unique_ptr<BasicImage>
+        createFramebufferTextureColorImage(const vk::Extent2D& dimensions,
+                                           std::shared_ptr<const DeviceManager> device_manager);
+
+        static std::unique_ptr<BasicImage>
         createFramebufferDepthImage(const vk::Extent2D& dimensions,
                                     std::shared_ptr<const DeviceManager> device_manager);
+
+        static std::unique_ptr<BasicImage>
+        createFramebufferTextureDepthImage(const vk::Extent2D& dimensions,
+                                           std::shared_ptr<const DeviceManager> device_manager);
 
         static std::unique_ptr<BasicImage>
         createHostAccessibleColorImage(const vk::Extent2D& dimensions,

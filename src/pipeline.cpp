@@ -38,13 +38,13 @@ namespace wg {
     }
 
     ComputePipeline::ComputePipeline(Wingine& wing,
-                                     const std::vector<ResourceSetLayout>& resourceSetLayouts,
+                                     const std::vector<vk::DescriptorSetLayout>& resourceSetLayouts,
                                      Shader* shader) {
         vk::Device device = wing.getDevice();
 
         std::vector<vk::DescriptorSetLayout> layouts(resourceSetLayouts.size());
         for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
-            layouts[i] = resourceSetLayouts[i].layout;
+            layouts[i] = resourceSetLayouts[i];
         }
 
         vk::PipelineLayoutCreateInfo layoutCreateInfo;
@@ -101,7 +101,7 @@ namespace wg {
 
     Pipeline::Pipeline(Wingine& wing,
                        const std::vector<VertexAttribDesc>& descriptions,
-                       const std::vector<ResourceSetLayout>& resourceSetLayouts,
+                       const std::vector<vk::DescriptorSetLayout>& resourceSetLayouts,
                        const std::vector<Shader*>& shaders,
                        const PipelineSetup& setup) {
 
@@ -264,16 +264,9 @@ namespace wg {
             .setAlphaToOneEnable(false)
             .setMinSampleShading(0.0f);
 
-
-        std::vector<vk::DescriptorSetLayout> layouts(resourceSetLayouts.size());
-        for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
-            layouts[i] = resourceSetLayouts[i].layout;
-        }
-
         layoutCreateInfo.setPushConstantRangeCount(0)
             .setPPushConstantRanges(nullptr)
-            .setSetLayoutCount(layouts.size())
-            .setPSetLayouts(layouts.data());
+            .setSetLayouts(resourceSetLayouts);
 
         this->layout = device.createPipelineLayout(layoutCreateInfo);
 

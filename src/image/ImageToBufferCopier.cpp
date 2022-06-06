@@ -4,6 +4,7 @@
 #include "../sync/fenceUtil.hpp"
 #include "../sync/semaphoreUtil.hpp"
 #include "../util/log.hpp"
+#include "./BasicImage.hpp"
 
 #include <iostream>
 
@@ -74,8 +75,8 @@ namespace wg::internal {
     }
 
     void ImageToBufferCopier::awaitPreviousCopy() {
-        fenceUtil::awaitAndResetFence(this->commands[this->current_image_counter.getPreviousIndex()].fence,
-                                      this->device_manager->getDevice());
+        fenceUtil::awaitFence(this->commands[this->current_image_counter.getPreviousIndex()].fence,
+                              this->device_manager->getDevice());
     }
 
     void ImageToBufferCopier::runAndAwaitCopy() {

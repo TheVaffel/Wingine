@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./IImage.hpp"
+#include "./ImageCopier.hpp"
 #include "../CommandManager.hpp"
 #include "../sync/WaitSemaphoreSet.hpp"
 #include "../sync/SignalSemaphoreSet.hpp"
@@ -23,6 +24,10 @@ namespace wg::internal {
         SignalSemaphoreSet signal_semaphore_set;
 
         CopyImageToBufferAuxillaryData auxillary_data;
+
+        // std::shared_ptr<IImage> debug_image;
+        // ImageCopier debug_copier;
+        // std::vector<IImage*> debug_srcs;
 
     public:
 

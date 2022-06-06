@@ -8,7 +8,6 @@
 
 namespace wg::internal {
 
-
     /*
      * BasicDrawPass - a draw pass that has one color attachment and one
      * depth/stencil attachment in the framebuffer
@@ -35,9 +34,8 @@ namespace wg::internal {
         uint32_t num_framebuffers;
         uint32_t current_framebuffer_index;
 
-        std::vector<Command> commands;
-
         vk::RenderPass render_pass;
+        CommandChainController command_chain;
 
         bool is_recording;
 
@@ -56,12 +54,9 @@ namespace wg::internal {
                       std::shared_ptr<const QueueManager> queue_manager,
                       std::shared_ptr<const DeviceManager> device_manager);
 
-        virtual void startRecording(std::shared_ptr<IFramebufferChain> framebufferChain);
-        virtual void recordDraw(const std::vector<const Buffer*>& buffers, const IndexBuffer* ind_buf,
-                                const std::vector<ResourceSet*>& sets, uint32_t instanceCount = 1);
-        virtual void endRecording();
+        virtual CommandChainController& getCommandChain() override;
 
-        virtual void render();
+        virtual void render() override;
 
         virtual ~BasicDrawPass();
     };

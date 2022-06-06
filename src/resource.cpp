@@ -5,7 +5,7 @@
 
 namespace wg {
 
-    ResourceSetLayout::ResourceSetLayout(Wingine& wing, const std::vector<uint64_t>& flags) {
+    /* ResourceSetLayout::ResourceSetLayout(Wingine& wing, const std::vector<uint64_t>& flags) {
         std::vector<vk::DescriptorSetLayoutBinding> lbs(flags.size());
 
         this->wing = &wing;
@@ -30,14 +30,11 @@ namespace wg {
 
     }
 
-    ResourceSetLayout::ResourceSetLayout() { }
+    ResourceSetLayout::ResourceSetLayout() { } */
 
-    ResourceSet* Wingine::createResourceSet(const std::vector<uint64_t>& flags) {
-
-        this->ensure_resource_set_layout_exists(flags);
-
-        return new ResourceSet(*this, this->resourceSetLayoutMap[flags].layout);
-    }
+    /* ResourceSet* Wingine::createResourceSet(const std::vector<uint64_t>& flags) {
+        return new ResourceSet(*this, this->resource_set_layout_registry->ensureAndGet(flags));
+        } */
 
     ResourceSet::ResourceSet(Wingine& wing, vk::DescriptorSetLayout layout) {
         vk::DescriptorSetAllocateInfo dsai;

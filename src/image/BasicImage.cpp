@@ -79,6 +79,30 @@ namespace wg::internal {
     }
 
     std::unique_ptr<BasicImage>
+    BasicImage::createFramebufferTextureColorImage(const vk::Extent2D& dimensions,
+                                                   std::shared_ptr<const DeviceManager> device_manager) {
+        std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(
+            new BasicImage(dimensions,
+                           vk::ImageAspectFlagBits::eColor,
+                           vk::ImageLayout::eShaderReadOnlyOptimal,
+                           device_manager));
+
+        im->image = imageUtil::createFramebufferTextureColorImage(dimensions,
+                                                                  imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT,
+                                                                  device_manager->getDevice());
+
+        im->memory = memoryUtil::createAndBindMemoryForImage(im->image,
+                                                             device_manager->getDevice(),
+                                                             device_manager->getDeviceMemoryProperties());
+
+        im->view = imageUtil::createColorImageView(im->image,
+                                                   imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT,
+                                                   device_manager->getDevice());
+
+        return im;
+    }
+
+    std::unique_ptr<BasicImage>
     BasicImage::createFramebufferDepthImage(const vk::Extent2D& dimensions,
                                             std::shared_ptr<const DeviceManager> device_manager) {
 
@@ -104,10 +128,35 @@ namespace wg::internal {
     }
 
     std::unique_ptr<BasicImage>
+    BasicImage::createFramebufferTextureDepthImage(const vk::Extent2D& dimensions,
+                                                   std::shared_ptr<const DeviceManager> device_manager) {
+
+        std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(
+            new BasicImage(dimensions,
+                           vk::ImageAspectFlagBits::eDepth,
+                           vk::ImageLayout::eShaderReadOnlyOptimal,
+                           device_manager));
+
+        im->image = imageUtil::createFramebufferTextureDepthImage(dimensions,
+                                                                  imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT,
+                                                                  device_manager->getDevice());
+
+        im->memory = memoryUtil::createAndBindMemoryForImage(im->image,
+                                                             device_manager->getDevice(),
+                                                             device_manager->getDeviceMemoryProperties());
+
+        im->view = imageUtil::createDepthImageView(im->image,
+                                                   imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT,
+                                                   device_manager->getDevice());
+
+        return im;
+    }
+
+    std::unique_ptr<BasicImage>
     BasicImage::createHostAccessibleColorImage(const vk::Extent2D& dimensions,
                                                std::shared_ptr<const DeviceManager> device_manager) {
 
-        vk::Format host_accessible_color_image_format = vk::Format::eB8G8R8A8Sint;
+        vk::Format host_accessible_color_image_format = vk::Format::eB8G8R8A8Unorm;
         std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(
             new BasicImage(dimensions,
                            vk::ImageAspectFlagBits::eColor,
@@ -122,10 +171,6 @@ namespace wg::internal {
             memoryUtil::createAndBindHostAccessibleMemoryForImage(im->image,
                                                                   device_manager->getDevice(),
                                                                   device_manager->getDeviceMemoryProperties());
-
-        im->view = imageUtil::createColorImageView(im->image,
-                                                   host_accessible_color_image_format,
-                                                   device_manager->getDevice());
 
         return im;
     }
@@ -142,7 +187,7 @@ namespace wg::internal {
         return this->view;
     }
 
-    const vk::Extent2D BasicImage::getDimensions() const {
+    vk::Extent2D BasicImage::getDimensions() const {
         return this->dimensions;
     }
 

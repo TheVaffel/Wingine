@@ -88,7 +88,6 @@ namespace wg {
         Wingine* wing;
         vk::DescriptorSetLayout layout;
 
-
         ResourceSetLayout(Wingine& wing,
                           const std::vector<uint64_t>& ll);
 

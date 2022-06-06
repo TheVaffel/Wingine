@@ -2,15 +2,20 @@
 #include "../include/Wingine.hpp"
 #include "../include/WgUtils.hpp"
 
-#include "HGraf/improc_io.hpp"
+#include <HGraf/improc_io.hpp>
 
 #include <spurv.hpp>
 
+#include "./renderdoc_util.hpp"
+
 int main() {
+
+    renderdoc::API* rdapi = renderdoc::init();
+
 
     const int width = 480, height = 360;
 
-    wg::Wingine wing(width, height, "Test2");
+    wg::Wingine wing(width, height, "Offscreen");
 
     const int num_points = 3;
     const int num_triangles = 1;
@@ -44,12 +49,12 @@ int main() {
 
     wgut::Model model({position_buffer, color_buffer}, index_buffer);
 
-    wg::Uniform<falg::Mat4> cameraUniform = wing.createUniform<falg::Mat4>();
+    wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
 
-    wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
-    resourceSet->set({cameraUniform});
+    wg::ResourceSetChainPtr resourceSetChain = wing.createResourceSetChain(resourceSetLayout);
+    resourceSetChain->set({cameraUniform});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
@@ -98,12 +103,12 @@ int main() {
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
     wg::BasicDrawPassSettings draw_pass_settings;
-    draw_pass_settings.setShouldClear(true);
+    draw_pass_settings.render_pass_settings.setShouldClear(true);
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
-    draw_pass->startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    draw_pass->endRecording();
+    draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSetChain});
+    draw_pass->getCommandChain().endRecording();
 
     draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
 
@@ -116,9 +121,12 @@ int main() {
     const uint32_t num_images = 3;
 
     for (uint32_t i = 0; i < num_images; i++) {
+        renderdoc::start_capture(rdapi);
+
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-        cameraUniform->set(renderMatrix);
+        cameraUniform->setCurrentUniform(renderMatrix);
+
 
         draw_pass->render();
 
@@ -130,6 +138,12 @@ int main() {
 
         hg::writeImage(image, file_name_oss.str());
         std::cout << "Wrote file " << file_name_oss.str() << std::endl;
+
+        cameraUniform->swap();
+        resourceSetChain->swap();
+
+        renderdoc::end_capture(rdapi);
+
     }
 
     wing.waitIdle();

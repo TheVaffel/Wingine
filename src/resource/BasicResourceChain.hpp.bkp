@@ -1,0 +1,26 @@
+#pragma once
+
+#include "./IResourceChain.hpp"
+
+#include <concepts>
+
+namespace wg::internal {
+
+    template<CResource T>
+    class BasicResourceChain : IResourceChain<T> {
+
+        std::vector<std::shared_ptr<T>> resources;
+
+    public:
+
+        template<typename ...Args>
+        BasicResourceChain(uint32_t count,
+                           Args&&... arguments);
+
+        virtual const uint32_t getNumResources() const override;
+
+        virtual std::shared_ptr<T> getResource(uint32_t index) override;
+    };
+};
+
+#include "./BasicResourceChain.impl.hpp"

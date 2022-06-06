@@ -1,0 +1,21 @@
+#pragma once
+
+#include <cstdint>
+
+#include "./IResource.hpp"
+
+namespace wg::internal {
+
+    template<typename T>
+    concept CResource = std::derived_from<T, IResource>;
+
+    template<CResource T>
+    class IResourceChain {
+    public:
+        virtual const uint32_t getNumResources() const = 0;
+
+        virtual std::shared_ptr<T> getResource(uint32_t index) = 0;
+
+        virtual ~IResourceChain() = default;
+    };
+};

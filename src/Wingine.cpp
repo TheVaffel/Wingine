@@ -3,13 +3,15 @@
 #include "./constants.hpp"
 
 #include "./framebuffer/BasicFramebuffer.hpp"
-#include "./framebuffer/DepthOnlyFramebuffer.hpp"
 #include "./framebuffer/HostCopyingFramebufferChain.hpp"
 
 #include "./image/BasicImage.hpp"
 #include "./image/ImageCopier.hpp"
 
 #include "./draw_pass/BasicDrawPass.hpp"
+
+#include "./resource/BasicResourceSetChain.hpp"
+#include "./image/BasicTextureChain.hpp"
 
 #include <exception>
 
@@ -509,10 +511,13 @@ namespace wg {
                     *this->compatibleRenderPassRegistry);
         }
 
-        this->staging_buffer_manager =
+        this->resource_set_layout_registry =
+            std::make_shared<internal::ResourceSetLayoutRegistry>(this->device_manager);
+
+        /* this->staging_buffer_manager =
             std::make_shared<internal::StagingBufferManager>(this->command_manager,
                                                              this->queue_manager,
-                                                             const_device_manager);
+                                                             const_device_manager); */
 
         // General purpose fence for the moving stage
         vk::FenceCreateInfo fence_create_info;
@@ -668,21 +673,13 @@ namespace wg {
                           spirv);
     }
 
-    void Wingine::ensure_resource_set_layout_exists(const std::vector<uint64_t>& resourceSetLayout) {
-        if(this->resourceSetLayoutMap.find(resourceSetLayout) ==
-           this->resourceSetLayoutMap.end()) {
-            this->resourceSetLayoutMap[resourceSetLayout] = ResourceSetLayout(*this, resourceSetLayout);
-        }
-    }
-
     Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
                                       const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                       const std::vector<Shader*>& shaders,
                                       const PipelineSetup& setup) {
-        std::vector<ResourceSetLayout> rsl;
+        std::vector<vk::DescriptorSetLayout> rsl;
         for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
-            this->ensure_resource_set_layout_exists(resourceSetLayout[i]);
-            rsl.push_back(this->resourceSetLayoutMap[resourceSetLayout[i]]);
+            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resourceSetLayout[i]));
         }
 
         return new Pipeline(*this,
@@ -694,10 +691,9 @@ namespace wg {
 
     ComputePipeline* Wingine::createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayouts,
                                                     Shader* shader) {
-        std::vector<ResourceSetLayout> rsl;
+        std::vector<vk::DescriptorSetLayout> rsl;
         for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
-            this->ensure_resource_set_layout_exists(resourceSetLayouts[i]);
-            rsl.push_back(this->resourceSetLayoutMap[resourceSetLayouts[i]]);
+            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resourceSetLayouts[i]));
         }
 
         return new ComputePipeline(*this,
@@ -707,38 +703,27 @@ namespace wg {
 
     Framebuffer Wingine::createFramebuffer(uint32_t width, uint32_t height,
                                            bool depthOnly) {
-        if (depthOnly) {
-            return std::make_unique<internal::DepthOnlyFramebuffer>(vk::Extent2D(width, height),
-                                                                    this->device_manager,
-                                                                    *this->compatibleRenderPassRegistry);
-        } else {
-            return std::make_unique<internal::BasicFramebuffer>(vk::Extent2D(width, height),
-                                                                this->device_manager,
-                                                                *this->compatibleRenderPassRegistry);
-        }
+        internal::BasicFramebufferSetup setup;
+        setup.setDepthOnly(depthOnly);
+        return std::make_unique<internal::BasicFramebuffer>(vk::Extent2D(width, height),
+                                                            setup,
+                                                            this->device_manager,
+                                                            *this->compatibleRenderPassRegistry);
     }
 
     FramebufferChain Wingine::createFramebufferChain(uint32_t width, uint32_t height,
                                                      bool depthOnly, uint32_t num_framebuffers) {
-        if (depthOnly) {
-            return std::make_shared<
-                internal::BasicFramebufferChain<
-                    internal::DepthOnlyFramebuffer>>(num_framebuffers,
-                                                     this->device_manager,
-                                                     this->queue_manager,
-                                                     vk::Extent2D(width, height),
-                                                     this->device_manager,
-                                                     *this->compatibleRenderPassRegistry);
-        } else {
-            return std::make_shared<
-                internal::BasicFramebufferChain<
-                    internal::BasicFramebuffer>>(num_framebuffers,
-                                                 this->device_manager,
-                                                 this->queue_manager,
-                                                 vk::Extent2D(width, height),
-                                                 this->device_manager,
-                                                 *this->compatibleRenderPassRegistry);
-        }
+        internal::BasicFramebufferSetup setup;
+        setup.setDepthOnly(depthOnly);
+        return std::make_shared<
+            internal::BasicFramebufferChain<
+                internal::BasicFramebuffer>>(num_framebuffers,
+                                             this->device_manager,
+                                             this->queue_manager,
+                                             vk::Extent2D(width, height),
+                                             setup,
+                                             this->device_manager,
+                                             *this->compatibleRenderPassRegistry);
     }
 
     FramebufferChain Wingine::getDefaultFramebufferChain() {
@@ -751,6 +736,13 @@ namespace wg {
                                                        this->device_manager);
     }
 
+    ImageChainCopierPtr Wingine::createImageChainCopier() {
+        return std::make_unique<internal::ImageChainCopier>(this->getNumFramebuffers(),
+                                                            this->queue_manager->getGraphicsQueue(),
+                                                            this->command_manager,
+                                                            this->device_manager);
+    }
+
     ResourceImage* Wingine::createResourceImage(uint32_t width, uint32_t height) {
         ResourceImage* image = new ResourceImage(*this, width, height);
 
@@ -761,6 +753,23 @@ namespace wg {
         return std::make_shared<internal::BasicTexture>(vk::Extent2D(width, height),
                                                         setup,
                                                         this->device_manager);
+    }
+
+    TextureChainPtr Wingine::createBasicTextureChain(uint32_t width,
+                                                     uint32_t height,
+                                                     const BasicTextureSetup& setup) {
+        return std::make_shared<internal::BasicTextureChain>(this->getNumFramebuffers(),
+                                                             vk::Extent2D(width, height),
+                                                             setup,
+                                                             this->device_manager);
+    }
+
+    ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<uint64_t>& resourceLayout) {
+        return std::make_shared<internal::BasicResourceSetChain>(
+            this->getNumFramebuffers(),
+            this->resource_set_layout_registry->ensureAndGet(resourceLayout),
+            this->descriptor_pool,
+            this->device_manager);
     }
 
     SemaphoreChain* Wingine::createSemaphoreChain() {
@@ -951,14 +960,9 @@ namespace wg {
         } */
 
     Wingine::~Wingine() {
-
         this->device.destroy(this->descriptor_pool, nullptr);
         this->device.destroy(this->pipeline_cache, nullptr);
 
         this->device.destroyFence(this->general_purpose_fence);
-
-        for (auto it : this->resourceSetLayoutMap) {
-            this->device.destroy(it.second.layout, nullptr);
-        }
     }
 };

@@ -15,10 +15,10 @@
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
-#include "./buffer/StagingBufferManager.hpp"
 #include "./image/HostVisibleImageView.hpp"
 #include "./draw_pass/BasicDrawPassSettings.hpp"
 #include "./framebuffer/SwapchainFramebufferChain.hpp"
+#include "./resource/ResourceSetLayoutRegistry.hpp"
 
 #include "buffer.hpp"
 #include "image.hpp"
@@ -45,10 +45,13 @@ namespace wg {
 
         std::shared_ptr<internal::QueueManager> queue_manager;
         std::shared_ptr<internal::CommandManager> command_manager;
-        std::shared_ptr<internal::StagingBufferManager> staging_buffer_manager;
+        // std::shared_ptr<internal::StagingBufferManager> staging_buffer_manager;
         std::shared_ptr<internal::IFramebufferChain> default_framebuffer_chain;
+
         std::shared_ptr<internal::HostVisibleImageView> host_visible_image;
         std::shared_ptr<internal::IImage> host_accessible_image;
+
+        std::shared_ptr<internal::ResourceSetLayoutRegistry> resource_set_layout_registry;
 
         // General purpose fence for the moving phase
         vk::Fence general_purpose_fence;
@@ -59,10 +62,7 @@ namespace wg {
 
         uint32_t window_width, window_height;
 
-        std::map<std::vector<uint64_t>, ResourceSetLayout> resourceSetLayoutMap;
-
         std::shared_ptr<internal::CompatibleRenderPassRegistry> compatibleRenderPassRegistry;
-
 
         class VulkanInitInfo {
             vk::Extent2D dimensions;
@@ -127,8 +127,6 @@ namespace wg {
                             vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
                             vk::ImageLayout finalLayout);
 
-        void ensure_resource_set_layout_exists(const std::vector<uint64_t>& resourceSetLayout);
-
         // Don't delete color images, those are handled by swapchain
         void destroySwapchainImage(Image& image);
 
@@ -162,12 +160,15 @@ namespace wg {
         IndexBuffer* createIndexBuffer(uint32_t num_indices);
 
         template<typename T>
-        Uniform<T> createUniform();
+        UniformPtr<T> createUniform();
+
+        template<typename T>
+        UniformChainPtr<T> createUniformChain();
 
         RenderFamily* createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers = 0);
         DrawPassPtr createBasicDrawPass(const Pipeline* pipeline, const internal::BasicDrawPassSettings& settings);
 
-        ResourceSet* createResourceSet(const std::vector<uint64_t>& resourceLayout);
+        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout);
 
         Shader* createShader(uint64_t stage_bit, std::vector<uint32_t>& spirv);
 
@@ -188,12 +189,14 @@ namespace wg {
                                                 uint32_t count = 3);
 
         ImageCopierPtr createImageCopier();
+        ImageChainCopierPtr createImageChainCopier();
 
         FramebufferChain getDefaultFramebufferChain();
 
         ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
         TexturePtr createBasicTexture(uint32_t width, uint32_t height, const BasicTextureSetup& setup = {});
+        TextureChainPtr createBasicTextureChain(uint32_t width, uint32_t height, const BasicTextureSetup& setup = {});
 
         SemaphoreChain* createSemaphoreChain();
 

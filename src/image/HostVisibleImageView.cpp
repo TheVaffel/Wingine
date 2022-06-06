@@ -4,6 +4,8 @@
 #include "../memory/memoryUtil.hpp"
 #include "../sync/fenceUtil.hpp"
 
+#include "./BasicImage.hpp"
+
 #include <iostream>
 
 namespace wg::internal {
@@ -19,6 +21,8 @@ namespace wg::internal {
           device_manager(device_manager) {
 
         this->initBuffers(dimensions);
+        this->debug_image = BasicImage::createHostAccessibleColorImage(vk::Extent2D(480, 360),
+                                                                       device_manager);
     }
 
     void HostVisibleImageView::initBuffers(const vk::Extent2D& dimensions) {
@@ -35,6 +39,10 @@ namespace wg::internal {
 
     IBuffer& HostVisibleImageView::getBuffer(uint32_t index) {
         return *this->buffers[index];
+    }
+
+    IImage& HostVisibleImageView::getImage() {
+        return *this->debug_image;
     }
 
     uint32_t HostVisibleImageView::getNumBuffers() const {
@@ -62,15 +70,17 @@ namespace wg::internal {
         fenceUtil::awaitFence(this->ready_for_copy_fence,
                               this->device_manager->getDevice());
 
+
+
         uint32_t* src =
             memoryUtil::mapMemory<uint32_t>(this->buffers[current_buffer_counter.getCurrentIndex()]->getMemory(),
                                             this->device_manager->getDevice());
 
         uint32_t num_bytes_to_copy = this->getByteStride() * this->getDimensions().height;
+
         memcpy(dst, src, num_bytes_to_copy);
 
         memoryUtil::unmapMemory(this->buffers[current_buffer_counter.getCurrentIndex()]->getMemory(),
                                 this->device_manager->getDevice());
-
     }
 };

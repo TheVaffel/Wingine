@@ -43,7 +43,7 @@ namespace wg::internal {
         return this->view;
     }
 
-    const vk::Extent2D SwapchainColorImage::getDimensions() const {
+    vk::Extent2D SwapchainColorImage::getDimensions() const {
         return this->dimensions;
     }
 

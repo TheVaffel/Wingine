@@ -51,7 +51,7 @@ namespace wg {
 
         Pipeline(Wingine& wing,
                  const std::vector<VertexAttribDesc>& descriptions,
-                 const std::vector<ResourceSetLayout>& resourceSetLayout,
+                 const std::vector<vk::DescriptorSetLayout>& resourceSetLayout,
                  const std::vector<Shader*>& shaders,
                  const PipelineSetup& setup);
 
@@ -70,7 +70,7 @@ namespace wg {
         internal::Command command;
 
         ComputePipeline(Wingine& wing,
-                        const std::vector<ResourceSetLayout>& resourceSetLayout,
+                        const std::vector<vk::DescriptorSetLayout>& resourceSetLayout,
                         Shader* shaders);
 
         friend class ComputeFamily;

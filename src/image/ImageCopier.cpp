@@ -50,8 +50,8 @@ namespace wg::internal {
 
 
     void ImageCopier::awaitCopy() {
-        fenceUtil::awaitAndResetFence(this->command.fence,
-                                      this->device_manager->getDevice());
+        fenceUtil::awaitFence(this->command.fence,
+                              this->device_manager->getDevice());
     }
 
     void ImageCopier::runAndAwaitCopy() {

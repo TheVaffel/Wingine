@@ -25,15 +25,21 @@ set(BUFFER_SOURCES
   IBuffer.cpp
   BasicBuffer.cpp
   BasicStorageBuffer.cpp
-  StagingBufferManager.cpp
+  # StagingBufferManager.cpp
   copyBuffer.cpp)
+set(RESOURCE_SOURCES
+  descriptorUtil.cpp
+  BasicResourceSet.cpp
+  BasicResourceSetChain.cpp
+  ResourceSetLayoutRegistry.cpp)
 set(FRAMEBUFFER_SOURCES
   framebufferUtil.cpp
   IFramebuffer.cpp
   BasicFramebuffer.cpp
+  BasicFramebufferSetup.cpp
   SwapchainFramebuffer.cpp
   IFramebufferChain.cpp
-  DepthOnlyFramebuffer.cpp
+  # DepthOnlyFramebuffer.cpp
   HostCopyingFramebufferChain.cpp
   SwapchainFramebufferChain.cpp
   FramebufferChainBase.cpp)
@@ -44,9 +50,11 @@ set(IMAGE_SOURCES
   SwapchainColorImage.cpp
   HostVisibleImageView.cpp
   ImageCopier.cpp
+  ImageChainCopier.cpp
   ImageToBufferCopier.cpp
   copyImage.cpp
   BasicTexture.cpp
+  BasicTextureChain.cpp
   samplerUtil.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
 set(SYNC_SOURCES
@@ -58,7 +66,11 @@ set(SYNC_SOURCES
   WaitSemaphoreSet.cpp
   SignalSemaphoreSet.cpp
   fenceUtil.cpp)
-set(DRAW_PASS_SOURCES BasicDrawPass.cpp BasicDrawPassSettings.cpp DrawPassBase.cpp)
+set(COMMAND_SOURCES
+  CommandChainController.cpp
+  recordUtil.cpp
+  CommandControllerSettings.cpp)
+set(DRAW_PASS_SOURCES BasicDrawPass.cpp DrawPassBase.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)
@@ -70,6 +82,8 @@ list(TRANSFORM RENDER_PASS_SOURCES PREPEND "render_pass/")
 list(TRANSFORM MEMORY_SOURCES PREPEND "memory/")
 list(TRANSFORM SYNC_SOURCES PREPEND "sync/")
 list(TRANSFORM DRAW_PASS_SOURCES PREPEND "draw_pass/")
+list(TRANSFORM RESOURCE_SOURCES PREPEND "resource/")
+list(TRANSFORM COMMAND_SOURCES PREPEND "command/")
 list(TRANSFORM UTIL_SOURCES PREPEND "util/")
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
 
@@ -96,6 +110,8 @@ set(WINGINE_SOURCES
   ${MEMORY_SOURCES}
   ${SYNC_SOURCES}
   ${DRAW_PASS_SOURCES}
+  ${RESOURCE_SOURCES}
+  ${COMMAND_SOURCES}
   ${UTIL_SOURCES}
   ${WGUTIL_SOURCES})
 
@@ -140,7 +156,7 @@ add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
 add_executable(model_viewer ${WINGINE_EXAMPLES_DIR}/model_viewer.cpp)
 add_executable(instance_test ${WINGINE_EXAMPLES_DIR}/instance_test.cpp)
 add_executable(frag ${WINGINE_EXAMPLES_DIR}/frag.cpp)
-add_executable(offscreen ${WINGINE_EXAMPLES_DIR}/offscreen.cpp)
+add_executable(offscreen ${WINGINE_EXAMPLES_DIR}/offscreen.cpp ${WINGINE_EXAMPLES_DIR}/renderdoc_util.cpp)
 
 target_compile_definitions(offscreen PUBLIC HEADLESS)
 

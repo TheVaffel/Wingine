@@ -42,11 +42,11 @@ int main() {
 
     wgut::Model model({position_buffer, color_buffer}, index_buffer);
 
-    wg::Uniform<falg::Mat4> cameraUniform = wing.createUniform<falg::Mat4>();
+    wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
 
-    wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
     resourceSet->set({cameraUniform});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
@@ -105,14 +105,14 @@ int main() {
                        {vertex_shader, fragment_shader});
 
     wg::BasicDrawPassSettings draw_pass_settings;
-    draw_pass_settings.setShouldClear(true);
+    draw_pass_settings.render_pass_settings.setShouldClear(true);
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
-    draw_pass->startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    draw_pass->endRecording();
+    draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    draw_pass->getCommandChain().endRecording();
 
     draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
     wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
@@ -120,7 +120,7 @@ int main() {
     while (win.isOpen()) {
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-        cameraUniform->set(renderMatrix);
+        cameraUniform->setCurrentUniform(renderMatrix);
 
         draw_pass->render();
 
@@ -132,6 +132,9 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
+
+        cameraUniform->swap();
+        resourceSet->swap();
     }
 
     wing.waitIdle();

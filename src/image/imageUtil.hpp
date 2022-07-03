@@ -59,5 +59,5 @@ namespace wg::internal::imageUtil {
                          const vk::CommandBuffer& command_buffer,
                          const vk::ImageLayout& old_layout,
                          const vk::ImageLayout& new_layout,
-                         IImage& image);
+                         const IImage& image);
 };

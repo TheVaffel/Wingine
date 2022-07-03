@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <map>
+#include <limits>
 
 #ifndef HEADLESS
 #include <Winval.hpp>
@@ -188,6 +189,11 @@ namespace wg {
                                                 bool depthOnly = false,
                                                 uint32_t count = 3);
 
+        FramebufferTextureChainPtr createFramebufferTextureChain(uint32_t width,
+                                                                 uint32_t height,
+                                                                 bool depth_only = false,
+                                                                 uint32_t count = std::numeric_limits<uint32_t>::max());
+
         ImageCopierPtr createImageCopier();
         ImageChainCopierPtr createImageChainCopier();
 
@@ -207,6 +213,8 @@ namespace wg {
         void setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores);
         Semaphore createAndAddImageReadySemaphore();
         void setImageReadySemaphores(internal::SignalSemaphoreSet&& semaphores);
+
+        EventChainPtr createEventChain();
 
         void present();
 

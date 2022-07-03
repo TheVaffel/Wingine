@@ -13,6 +13,9 @@ namespace wg::internal {
         vk::Sampler sampler;
         std::shared_ptr<IFramebuffer> framebuffer;
 
+        const IImage& getRelevantFramebufferImage() const;
+        IImage& getRelevantFramebufferImage();
+
     public:
 
         FramebufferTexture(const vk::Extent2D& dimensions,
@@ -28,6 +31,23 @@ namespace wg::internal {
         virtual bool hasDepthImage() const override;
         virtual const IImage& getDepthImage() const override;
 
+        virtual vk::Sampler getSampler() const override;
+
         virtual const vk::Framebuffer& getFramebuffer() const override;
+
+        virtual const vk::Image getImage() const override;
+        virtual const vk::DeviceMemory getMemory() const override;
+        virtual const vk::ImageView getView() const override;
+
+        virtual const vk::ImageAspectFlagBits getDefaultAspect() const override;
+
+        virtual const vk::ImageLayout getIntendedLayout() const override;
+        virtual void setCurrentLayout(const vk::ImageLayout& layout) override;
+
+        [[nodiscard]]
+        virtual std::unique_ptr<IResourceWriteAuxillaryData>
+        writeDescriptorUpdate(vk::WriteDescriptorSet& write_info) const override;
+
+        ~FramebufferTexture();
     };
 };

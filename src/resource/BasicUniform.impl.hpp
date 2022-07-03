@@ -21,10 +21,18 @@ namespace wg::internal {
 
     template<typename T>
     void BasicUniform<T>::set(const T& val) {
+        vk::MappedMemoryRange range;
+        range.setMemory(this->uniform_buffer->getMemory())
+            .setOffset(0)
+            .setSize(VK_WHOLE_SIZE);
+
         T* dst = memoryUtil::mapMemory<T>(this->uniform_buffer->getMemory(),
                                           this->device_manager->getDevice());
 
         memcpy(dst, &val, sizeof(T));
+
+        this->device_manager->getDevice().flushMappedMemoryRanges({range});
+
         memoryUtil::unmapMemory(this->uniform_buffer->getMemory(),
                                 this->device_manager->getDevice());
     }

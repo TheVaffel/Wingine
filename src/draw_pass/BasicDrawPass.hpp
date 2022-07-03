@@ -54,9 +54,10 @@ namespace wg::internal {
                       std::shared_ptr<const QueueManager> queue_manager,
                       std::shared_ptr<const DeviceManager> device_manager);
 
-        virtual CommandChainController& getCommandChain() override;
+        virtual CommandChainController& getCommandChain() final;
 
-        virtual void render() override;
+        virtual void awaitCurrentCommand() final;
+        virtual void render() final;
 
         virtual ~BasicDrawPass();
     };

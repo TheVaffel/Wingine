@@ -25,7 +25,7 @@ namespace wg::internal {
 
     CommandRenderPassSettings& CommandRenderPassSettings::setDepthOnly() {
         this->num_depth_attachments = 1;
-        return this->setNumColorAttachments(this->num_depth_attachments);
+        return this->setNumColorAttachments(0);
     }
 
     CommandRenderPassSettings& CommandRenderPassSettings::setClearColor(const std::array<float, 4>& clear_color) {
@@ -35,6 +35,11 @@ namespace wg::internal {
 
     CommandRenderPassSettings& CommandRenderPassSettings::setClearDepth(float clear_depth) {
         this->clear_depth = clear_depth;
+        return *this;
+    }
+
+    CommandRenderPassSettings& CommandRenderPassSettings::setFinalizeAsTexture(bool enable) {
+        this->finalize_as_texture = enable;
         return *this;
     }
 
@@ -62,4 +67,7 @@ namespace wg::internal {
         return this->clear_color;
     }
 
+    bool CommandRenderPassSettings::getFinalizeAsTexture() const {
+        return this->finalize_as_texture;
+    }
 };

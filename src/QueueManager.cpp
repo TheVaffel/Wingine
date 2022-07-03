@@ -2,6 +2,8 @@
 
 #include "./util/log.hpp"
 
+#include <iostream>
+
 namespace wg::internal {
 
     namespace {

@@ -10,11 +10,21 @@
 #include "../resource/IResourceSetChain.hpp"
 
 namespace wg::internal::recordUtil {
-    void beginGraphicsCommand(const CommandControllerSettings& settings,
+    /* void beginGraphicsCommand(const CommandControllerSettings& settings,
                               const vk::CommandBuffer& command,
                               const vk::RenderPass& render_pass,
                               const IFramebuffer& framebuffer,
-                              const Pipeline* pipeline);
+                              const Pipeline* pipeline); */
+
+    void beginRecording(const vk::CommandBuffer& command);
+    void beginRenderPass(const CommandControllerSettings& settings,
+                         const vk::CommandBuffer& command,
+                         const vk::RenderPass& render_pass,
+                         const IFramebuffer& framebuffer,
+                         const Pipeline* pipeline);
+
+    void endRenderPass(const vk::CommandBuffer& command_buffer);
+    void endRecording(const vk::CommandBuffer& command_buffer);
 
 
     void recordDrawForCommand(const vk::CommandBuffer& command_buffer,
@@ -24,4 +34,12 @@ namespace wg::internal::recordUtil {
                               const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
                               uint32_t index,
                               uint32_t instance_count);
+
+    void recordMakeFramebufferIntoTexture(const vk::CommandBuffer& command,
+                                          const IImage& image,
+                                          const vk::Device& device);
+
+    void recordMakeTextureIntoFramebufferAndClear(const vk::CommandBuffer& command,
+                                                  const IImage& image,
+                                                  const vk::Device& device);
 };

@@ -726,6 +726,21 @@ namespace wg {
                                              *this->compatibleRenderPassRegistry);
     }
 
+
+    FramebufferTextureChainPtr Wingine::createFramebufferTextureChain(uint32_t width,
+                                                                      uint32_t height,
+                                                                      bool depth_only,
+                                                                      uint32_t count) {
+        count = count == std::numeric_limits<uint32_t>::max() ? this->getNumFramebuffers() : count;
+        return std::make_shared<internal::FramebufferTextureChain>(
+            count,
+            vk::Extent2D(width, height),
+            depth_only,
+            this->device_manager,
+            this->queue_manager,
+            *this->compatibleRenderPassRegistry);
+    }
+
     FramebufferChain Wingine::getDefaultFramebufferChain() {
         return this->default_framebuffer_chain;
     }
@@ -775,6 +790,12 @@ namespace wg {
     SemaphoreChain* Wingine::createSemaphoreChain() {
         SemaphoreChain* semaphore_chain = new SemaphoreChain(*this);
         return semaphore_chain;
+    }
+
+    EventChainPtr Wingine::createEventChain() {
+        EventChainPtr events = std::make_shared<internal::EventChain>(this->getNumFramebuffers(),
+                                                                      this->device_manager);
+        return events;
     }
 
     /* StorageBuffer* Wingine::createStorageBuffer(uint32_t num_bytes, bool host_updatable) {

@@ -5,28 +5,53 @@
 
 namespace wg::internal {
 
-    BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
+BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
                                        const BasicFramebufferSetup& setup,
                                        std::shared_ptr<const DeviceManager> device_manager,
                                        CompatibleRenderPassRegistry& render_pass_registry)
         : device_manager(device_manager) {
 
-        if (!setup.getDepthOnly()) {
-            this->color_image = BasicImage::createFramebufferColorImage(dimensions,
-                                                                        device_manager);
+        this->initializeColorImage(dimensions, setup);
+        this->initializeDepthImage(dimensions, setup);
+
+        if (setup.getDepthOnly()) {
+            this->framebuffer = framebufferUtil::createDepthOnlyFramebuffer(*this->depth_image,
+                                                                            render_pass_registry,
+                                                                            device_manager->getDevice());
+        } else {
+            this->framebuffer = framebufferUtil::createBasicFramebuffer(*this->color_image,
+                                                                        *this->depth_image,
+                                                                        render_pass_registry,
+                                                                        device_manager->getDevice());
         }
+    }
 
-        this->depth_image = BasicImage::createFramebufferDepthImage(dimensions,
-                                                                    device_manager);
+    void BasicFramebuffer::initializeColorImage(const vk::Extent2D& dimensions,
+                                                const BasicFramebufferSetup& setup) {
+        if (!setup.getDepthOnly()) {
+            if (setup.getSamplable()) {
+                this->color_image = BasicImage::createFramebufferTextureColorImage(dimensions,
+                                                                                   this->device_manager);
+            } else {
+                this->color_image = BasicImage::createFramebufferColorImage(dimensions,
+                                                                            this->device_manager);
+            }
+        }
+    }
 
-        this->framebuffer = framebufferUtil::createBasicFramebuffer(*this->color_image,
-                                                                    *this->depth_image,
-                                                                    render_pass_registry,
-                                                                    device_manager->getDevice());
+    void BasicFramebuffer::initializeDepthImage(const vk::Extent2D& dimensions,
+                                                const BasicFramebufferSetup& setup) {
+        if (setup.getSamplable()) {
+            this->depth_image = BasicImage::createFramebufferTextureDepthImage(dimensions,
+                                                                               this->device_manager);
+        } else {
+            this->depth_image = BasicImage::createFramebufferDepthImage(dimensions,
+                                                                        this->device_manager);
+        }
     }
 
     vk::Extent2D BasicFramebuffer::getDimensions() const {
-        return this->color_image->getDimensions();
+        return this->hasColorImage() ? this->color_image->getDimensions() : this->depth_image->getDimensions();
     }
 
     bool BasicFramebuffer::hasColorImage() const {

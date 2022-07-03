@@ -12,6 +12,7 @@ namespace wg::internal {
 
         virtual CommandChainController& getCommandChain() = 0;
 
+        virtual void awaitCurrentCommand() = 0;
         virtual void render() = 0;
 
         virtual ~IDrawPass() = default;

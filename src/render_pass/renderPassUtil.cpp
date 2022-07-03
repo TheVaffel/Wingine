@@ -10,7 +10,8 @@ namespace wg::internal::renderPassUtil {
 
     namespace {
         vk::AttachmentDescription getAttachmentDescription(bool clear_on_load,
-                                                           vk::ImageLayout layout,
+                                                           vk::ImageLayout input_layout,
+                                                           vk::ImageLayout final_layout,
                                                            vk::Format format) {
             vk::AttachmentDescription desc;
             desc.setLoadOp(clear_on_load ?
@@ -19,32 +20,40 @@ namespace wg::internal::renderPassUtil {
                 .setStoreOp(vk::AttachmentStoreOp::eStore)
                 .setStencilLoadOp(vk::AttachmentLoadOp::eLoad)
                 .setStencilStoreOp(vk::AttachmentStoreOp::eStore)
-                .setInitialLayout(clear_on_load ?
-                                  vk::ImageLayout::eUndefined :
-                                  layout)
-                .setFinalLayout(layout)
+                .setInitialLayout(input_layout)
+                .setFinalLayout(final_layout)
                 .setFormat(format);
 
             return desc;
         }
 
-        vk::AttachmentDescription getColorAttachmentDescription(bool clear_on_load) {
+        vk::AttachmentDescription getColorAttachmentDescription(bool clear_on_load, bool finalize_as_texture) {
             return getAttachmentDescription(clear_on_load,
+                                            clear_on_load ?
+                                            vk::ImageLayout::eUndefined :
+                                            vk::ImageLayout::ePresentSrcKHR,
+                                            finalize_as_texture ?
+                                            vk::ImageLayout::eShaderReadOnlyOptimal :
                                             vk::ImageLayout::ePresentSrcKHR,
                                             imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT);
         }
 
-        vk::AttachmentDescription getDepthAttachmentDescription(bool clear_on_load) {
+        vk::AttachmentDescription getDepthAttachmentDescription(bool clear_on_load, bool finalize_as_texture) {
             return getAttachmentDescription(clear_on_load,
+                                            clear_on_load ?
+                                            vk::ImageLayout::eUndefined :
                                             vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                            finalize_as_texture ?
+                                            vk::ImageLayout::eShaderReadOnlyOptimal : vk::ImageLayout::eDepthStencilAttachmentOptimal,
                                             imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT);
         }
 
-        std::vector<vk::AttachmentDescription> getColorAttachmentDescriptions(const std::vector<bool>& clears) {
+        std::vector<vk::AttachmentDescription> getColorAttachmentDescriptions(const std::vector<bool>& clears,
+                                                                              bool finalize_as_texture) {
             std::vector<vk::AttachmentDescription> descriptions(clears.size());
 
             for (uint32_t i = 0; i < descriptions.size(); i++) {
-                descriptions[i] = getColorAttachmentDescription(clears[i]);
+                descriptions[i] = getColorAttachmentDescription(clears[i], finalize_as_texture);
             }
 
             return descriptions;
@@ -133,6 +142,10 @@ namespace wg::internal::renderPassUtil {
         return *this->depth_clear;
     }
 
+    bool RenderPassSetup::getFinalizeAsTexture() const {
+        return this->finalize_as_texture;
+    }
+
     RenderPassSetup& RenderPassSetup::setNumColorAttachments(uint32_t num_color_attachments) {
         this->color_clears = std::vector<bool>(num_color_attachments, true);
         return *this;
@@ -158,13 +171,18 @@ namespace wg::internal::renderPassUtil {
         return *this;
     }
 
+    RenderPassSetup& RenderPassSetup::setFinalizeAsTexture(bool enable) {
+        this->finalize_as_texture = enable;
+        return *this;
+    }
+
     /*
      * Generic create function
      */
 
     vk::RenderPass createRenderPass(const RenderPassSetup& setup, const vk::Device& device) {
         std::vector<vk::AttachmentDescription> attachment_descriptions =
-            getColorAttachmentDescriptions(setup.getColorClears());
+            getColorAttachmentDescriptions(setup.getColorClears(), setup.getFinalizeAsTexture());
 
         std::vector<vk::AttachmentReference> color_references =
             getColorAttachmentReferences(setup.getNumColorAttachments());
@@ -172,7 +190,8 @@ namespace wg::internal::renderPassUtil {
         std::optional<vk::AttachmentReference> depth_reference;
 
         if (setup.hasDepthAttachment()) {
-            attachment_descriptions.push_back(getDepthAttachmentDescription(setup.getDepthClear()));
+            attachment_descriptions.push_back(getDepthAttachmentDescription(setup.getDepthClear(),
+                                                                            setup.getFinalizeAsTexture()));
             depth_reference = getDepthAttachmentReference(color_references.size());
         }
 

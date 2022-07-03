@@ -22,6 +22,7 @@ namespace wg::internal {
         render_pass_setup.setColorClears({ settings.render_pass_settings.getShouldClearColor() });
         render_pass_setup.setDepthClear(settings.render_pass_settings.getShouldClearDepth());
         render_pass_setup.setNumColorAttachments(settings.render_pass_settings.getNumColorAttachments());
+        render_pass_setup.setFinalizeAsTexture(settings.render_pass_settings.getFinalizeAsTexture());
 
         return renderPassUtil::createRenderPass(render_pass_setup, device);
 
@@ -69,10 +70,7 @@ namespace wg::internal {
 
     void BasicDrawPass::applySignalSemaphoresToSubmitInfo(SubmitInfoData& construction_data) {
         construction_data.submit_info
-            .setPSignalSemaphores(this->getSignalSemaphores()
-                                  .getCurrentRawSemaphores().data())
-            .setSignalSemaphoreCount(this->getSignalSemaphores()
-                                     .getCurrentRawSemaphores().size());
+            .setSignalSemaphores(this->getSignalSemaphores().getCurrentRawSemaphores());
 
         this->getSignalSemaphores().swapSemaphores();
     }
@@ -83,17 +81,22 @@ namespace wg::internal {
 
         this->applyWaitSemaphoresToSubmitInfo(construction_data);
         this->applySignalSemaphoresToSubmitInfo(construction_data);
-        }
+    }
+
+    void BasicDrawPass::awaitCurrentCommand() {
+        fenceUtil::awaitFence(this->command_chain.getCurrentCommand().fence,
+                              this->device_manager->getDevice());
+    }
 
     void BasicDrawPass::render() {
-
         this->command_chain.sanityCheckRecordedResourceSets();
 
         SubmitInfoData submit_info_data;
         this->createSubmitInfo(submit_info_data);
 
-        fenceUtil::awaitAndResetFence(this->command_chain.getCurrentCommand().fence,
-                                      this->device_manager->getDevice());
+        this->awaitCurrentCommand();
+        fenceUtil::resetFence(this->command_chain.getCurrentCommand().fence,
+                              this->device_manager->getDevice());
 
         _wassert_result(this->queue_manager->getGraphicsQueue()
                         .submit(1,

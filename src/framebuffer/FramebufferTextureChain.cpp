@@ -2,6 +2,8 @@
 
 #include "../sync/semaphoreUtil.hpp"
 
+#include <iostream>
+
 namespace wg::internal {
     FramebufferTextureChain::FramebufferTextureChain(uint32_t count,
                                                      const vk::Extent2D& dimensions,
@@ -19,7 +21,6 @@ namespace wg::internal {
         }
     }
 
-
     ITexture& FramebufferTextureChain::getTextureAt(uint32_t index) {
         return *this->framebuffer_textures[index];
     }
@@ -33,7 +34,7 @@ namespace wg::internal {
     }
 
     const IFramebuffer& FramebufferTextureChain::getCurrentFramebuffer() const {
-        return *this->framebuffer_textures[framebuffer_index.getCurrentIndex()];
+        return *this->framebuffer_textures[this->framebuffer_index.getCurrentIndex()];
     }
 
     void FramebufferTextureChain::swapFramebuffer() {
@@ -44,7 +45,26 @@ namespace wg::internal {
         this->semaphores.getWaitSemaphores().swapSemaphores();
         this->semaphores.getSignalSemaphores().swapSemaphores();
         this->framebuffer_index.incrementIndex();
+    }
 
+    void FramebufferTextureChain::swap() {
+        throw std::runtime_error("[FramebufferTextureChain] Should not use swap() on FramebufferTextureChain");
+    }
+
+    uint32_t FramebufferTextureChain::getCurrentIndex() const {
+        return this->framebuffer_index.getCurrentIndex();
+    }
+
+    uint32_t FramebufferTextureChain::getNumResources() const {
+        return this->framebuffer_textures.size();
+    }
+
+    IResource& FramebufferTextureChain::getResourceAt(uint32_t index) {
+        return *this->framebuffer_textures[index];
+    }
+
+    SignalAndWaitSemaphores& FramebufferTextureChain::getSemaphores() {
+        return this->semaphores;
     }
 
     void FramebufferTextureChain::setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) {

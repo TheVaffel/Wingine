@@ -1,7 +1,8 @@
 #include "./recordUtil.hpp"
 
-namespace wg::internal::recordUtil {
+#include "../image/imageUtil.hpp"
 
+namespace wg::internal::recordUtil {
 
     struct RenderPassBeginInfoData {
         vk::RenderPassBeginInfo begin_info;
@@ -93,11 +94,10 @@ namespace wg::internal::recordUtil {
                                                   0,
                                                   nullptr);
             }
-
         }
     };
 
-    void beginGraphicsCommand(const CommandControllerSettings& settings,
+    /* void beginGraphicsCommand(const CommandControllerSettings& settings,
                               const vk::CommandBuffer& command_buffer,
                               const vk::RenderPass& render_pass,
                               const IFramebuffer& framebuffer,
@@ -114,6 +114,41 @@ namespace wg::internal::recordUtil {
             command_buffer.beginRenderPass(begin_info_data.begin_info, vk::SubpassContents::eInline);
             command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
                                         pipeline->getPipeline());
+                                        } */
+
+    void beginRecording(const vk::CommandBuffer& command_buffer) {
+        vk::CommandBufferBeginInfo begin;
+        command_buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+        command_buffer.begin(begin);
+
+    }
+
+    void beginRenderPass(const CommandControllerSettings& settings,
+                         const vk::CommandBuffer& command_buffer,
+                         const vk::RenderPass& render_pass,
+                         const IFramebuffer& framebuffer,
+                         const Pipeline* pipeline) {
+        RenderPassBeginInfoData begin_info_data;
+        createRenderPassBeginInfo(begin_info_data,
+                                  settings,
+                                  render_pass,
+                                  framebuffer);
+
+        vk::CommandBufferBeginInfo begin;
+        command_buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+        command_buffer.begin(begin);
+        command_buffer.beginRenderPass(begin_info_data.begin_info, vk::SubpassContents::eInline);
+        command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
+                                    pipeline->getPipeline());
+
+    }
+
+    void endRenderPass(const vk::CommandBuffer& command_buffer) {
+        command_buffer.endRenderPass();
+    }
+
+    void endRecording(const vk::CommandBuffer& command_buffer) {
+        command_buffer.end();
     }
 
     void recordDrawForCommand(const vk::CommandBuffer& command_buffer,
@@ -130,5 +165,29 @@ namespace wg::internal::recordUtil {
                                        vertex_buffers,
                                        index_buffer,
                                        instance_count);
+    }
+
+
+    void recordMakeTextureIntoFramebufferAndClear(const vk::CommandBuffer& command,
+                                                  const IImage& image,
+                                                  const vk::Device& device) {
+        CommandLayoutTransitionData data;
+        imageUtil::recordSetLayout(data,
+                                   command,
+                                   vk::ImageLayout::eUndefined,
+                                   image.getIntendedLayout(),
+                                   image);
+
+    }
+
+    void recordMakeFramebufferIntoTexture(const vk::CommandBuffer& command,
+                                          const IImage& image,
+                                          const vk::Device& device) {
+        CommandLayoutTransitionData data;
+        imageUtil::recordSetLayout(data,
+                                   command,
+                                   image.getIntendedLayout(),
+                                   vk::ImageLayout::eShaderReadOnlyOptimal,
+                                   image);
     }
 };

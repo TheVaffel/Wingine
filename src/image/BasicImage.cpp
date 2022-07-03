@@ -84,7 +84,7 @@ namespace wg::internal {
         std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(
             new BasicImage(dimensions,
                            vk::ImageAspectFlagBits::eColor,
-                           vk::ImageLayout::eShaderReadOnlyOptimal,
+                           vk::ImageLayout::eColorAttachmentOptimal,
                            device_manager));
 
         im->image = imageUtil::createFramebufferTextureColorImage(dimensions,
@@ -134,7 +134,7 @@ namespace wg::internal {
         std::unique_ptr<BasicImage> im = std::unique_ptr<BasicImage>(
             new BasicImage(dimensions,
                            vk::ImageAspectFlagBits::eDepth,
-                           vk::ImageLayout::eShaderReadOnlyOptimal,
+                           vk::ImageLayout::eDepthStencilAttachmentOptimal,
                            device_manager));
 
         im->image = imageUtil::createFramebufferTextureDepthImage(dimensions,

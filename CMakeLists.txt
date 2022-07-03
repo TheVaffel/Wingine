@@ -42,7 +42,9 @@ set(FRAMEBUFFER_SOURCES
   # DepthOnlyFramebuffer.cpp
   HostCopyingFramebufferChain.cpp
   SwapchainFramebufferChain.cpp
-  FramebufferChainBase.cpp)
+  FramebufferChainBase.cpp
+  FramebufferTexture.cpp
+  FramebufferTextureChain.cpp)
 set(IMAGE_SOURCES
   imageUtil.cpp
   IImage.cpp
@@ -65,7 +67,8 @@ set(SYNC_SOURCES
   SynchronizedQueueOperationBase.cpp
   WaitSemaphoreSet.cpp
   SignalSemaphoreSet.cpp
-  fenceUtil.cpp)
+  fenceUtil.cpp
+  EventChain.cpp)
 set(COMMAND_SOURCES
   CommandChainController.cpp
   recordUtil.cpp

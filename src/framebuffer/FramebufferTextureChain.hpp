@@ -41,8 +41,16 @@ namespace wg::internal {
 
         virtual void swapFramebuffer() override;
 
+        virtual void swap() override;
+        virtual uint32_t getCurrentIndex() const override;
+        virtual uint32_t getNumResources() const override;
+
+        virtual IResource& getResourceAt(uint32_t index) override;
+
         virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) override;
         virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() override;
         virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) override;
+
+        virtual SignalAndWaitSemaphores& getSemaphores() override;
     };
 };

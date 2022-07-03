@@ -9,17 +9,16 @@ namespace wg::internal::fenceUtil {
     void awaitFence(const vk::Fence& fence,
                     const vk::Device& device) {
 
-        if (device.getFenceStatus(fence) == vk::Result::eSuccess) {
-            _wassert_result(device.waitForFences(1,
-                                                 &fence,
-                                                 true,
-                                                 (uint64_t)1e9),
-                            "wait for fence");
-            }
+        _wassert_result(device.waitForFences(1,
+                                             &fence,
+                                             true,
+                                             (uint64_t)1e9),
+                        "wait for fence");
     }
 
     void resetFence(const vk::Fence& fence,
                     const vk::Device& device) {
+
         _wassert_result(device.resetFences(1, &fence),
                         "reset fence");
     }

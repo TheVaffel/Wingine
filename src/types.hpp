@@ -27,6 +27,7 @@ namespace wg {
     typedef internal::BasicDrawPassSettings BasicDrawPassSettings;
 
     typedef std::shared_ptr<internal::ManagedSemaphoreChain> Semaphore;
+    typedef std::shared_ptr<internal::EventChain> EventChainPtr;
 
     typedef std::unique_ptr<internal::ImageCopier> ImageCopierPtr;
     typedef std::shared_ptr<internal::ImageChainCopier> ImageChainCopierPtr;
@@ -41,5 +42,7 @@ namespace wg {
 
     typedef std::shared_ptr<internal::ITexture> TexturePtr;
     typedef std::shared_ptr<internal::ITextureChain> TextureChainPtr;
+    typedef std::shared_ptr<internal::FramebufferTextureChain> FramebufferTextureChainPtr;
+
     typedef internal::BasicTextureSetup BasicTextureSetup;
 }

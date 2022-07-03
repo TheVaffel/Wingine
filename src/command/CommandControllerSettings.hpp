@@ -11,6 +11,8 @@ namespace wg::internal {
         bool should_clear_color = true;
         bool should_clear_depth = true;
 
+        bool finalize_as_texture = false;
+
         float clear_depth;
         std::array<float, 4> clear_color;
     public:
@@ -22,7 +24,7 @@ namespace wg::internal {
         CommandRenderPassSettings& setDepthOnly();
         CommandRenderPassSettings& setClearColor(const std::array<float, 4>& clear_color);
         CommandRenderPassSettings& setClearDepth(float clear_depth);
-
+        CommandRenderPassSettings& setFinalizeAsTexture(bool enable);
 
         const std::array<float, 4>& getClearColor() const;
         const float& getClearDepth() const;
@@ -30,6 +32,7 @@ namespace wg::internal {
         bool getShouldClearDepth() const;
         uint32_t getNumColorAttachments() const;
         uint32_t getNumDepthAttachments() const;
+        bool getFinalizeAsTexture() const;
     };
 
     struct CommandControllerSettings {

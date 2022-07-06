@@ -22,6 +22,8 @@ namespace wg::internal {
 
         void copySync(const void *src, const IBuffer& dst, uint32_t byte_count);
 
+        std::shared_ptr<StagingBufferCopyOperation> createCopyOperation(uint32_t byteSize);
+
         ~StagingBufferManager();
     };
 };

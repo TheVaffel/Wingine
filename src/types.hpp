@@ -19,6 +19,13 @@
 
 #include "./resource/IResourceSetChain.hpp"
 
+#include "./pipeline/IShader.hpp"
+#include "./pipeline/IPipeline.hpp"
+#include "./pipeline/ShaderStage.hpp"
+#include "./pipeline/VertexAttribDesc.hpp"
+#include "./pipeline/ComponentType.hpp"
+#include "./pipeline/BasicPipelineSetup.hpp"
+
 namespace wg {
     typedef std::unique_ptr<internal::IFramebuffer> Framebuffer;
     typedef std::shared_ptr<internal::IFramebufferChain> FramebufferChain;
@@ -44,5 +51,14 @@ namespace wg {
     typedef std::shared_ptr<internal::ITextureChain> TextureChainPtr;
     typedef std::shared_ptr<internal::FramebufferTextureChain> FramebufferTextureChainPtr;
 
+    typedef std::shared_ptr<internal::IShader> ShaderPtr;
+    typedef std::shared_ptr<internal::IPipeline> PipelinePtr;
+
     typedef internal::BasicTextureSetup BasicTextureSetup;
-}
+    typedef internal::BasicPipelineSetup BasicPipelineSetup;
+
+    typedef internal::ShaderStage ShaderStage;
+
+    typedef internal::VertexAttribDesc VertexAttribDesc;
+    typedef internal::ComponentType ComponentType;
+};

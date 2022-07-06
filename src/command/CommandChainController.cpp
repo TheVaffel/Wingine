@@ -9,7 +9,7 @@ namespace wg::internal {
     CommandChainController::CommandChainController(uint32_t num_commands,
                                                    const CommandControllerSettings& settings,
                                                    const vk::RenderPass& render_pass,
-                                                   const Pipeline* pipeline,
+                                                   std::shared_ptr<IPipeline> pipeline,
                                                    std::shared_ptr<const CommandManager> command_manager,
 
                                                    std::shared_ptr<const DeviceManager> device_manager)

@@ -7,13 +7,14 @@
 #include "../resource/IResourceSetChain.hpp"
 
 #include "../buffer.hpp"
-#include "../pipeline.hpp"
 
 #include "../util/IndexCounter.hpp"
 
 #include "./CommandControllerSettings.hpp"
 
 #include "../sync/EventChain.hpp"
+
+#include "../pipeline/IPipeline.hpp"
 
 namespace wg::internal {
     class CommandChainController {
@@ -28,7 +29,7 @@ namespace wg::internal {
         std::vector<std::shared_ptr<IResourceSetChain>> recorded_resource_sets;
 
         vk::RenderPass render_pass;
-        const Pipeline* pipeline;
+        std::shared_ptr<IPipeline> pipeline;
 
         CommandControllerSettings settings;
 
@@ -45,7 +46,7 @@ namespace wg::internal {
         CommandChainController(uint32_t num_commands,
                                const CommandControllerSettings& settings,
                                const vk::RenderPass& render_pass,
-                               const Pipeline* pipeline,
+                               std::shared_ptr<IPipeline> pipeline,
                                std::shared_ptr<const CommandManager> command_manager,
                                std::shared_ptr<const DeviceManager> device_manager);
 

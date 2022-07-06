@@ -37,7 +37,7 @@ int main() {
         wing.createVertexBuffer<float>(num_points * 4);
     color_buffer->set(colors, num_points * 4);
 
-    wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
+    wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3);
     index_buffer->set(indices, num_triangles * 3);
 
     wgut::Model model({position_buffer, color_buffer}, index_buffer);
@@ -50,12 +50,10 @@ int main() {
     resourceSet->set({cameraUniform});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
-        std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
-                                            0, // Binding no.
-                                            4, // Number of elements
-                                            4 * sizeof(float), // Stride (in bytes)
-                                            0}, // Offset (bytes)
-                                           {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
+        {
+            wg::VertexAttribDesc(0, wg::ComponentType::tFloat32, 4, 4 * sizeof(float), 0),
+            wg::VertexAttribDesc(1, wg::ComponentType::tFloat32, 4, 4 * sizeof(float), 0)
+        };
 
     std::vector<uint32_t> vertex_spirv;
     {
@@ -80,7 +78,7 @@ int main() {
        std::cout << vertex_spirv[i] << std::endl;
        } */
 
-    wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+    wg::ShaderPtr vertex_shader = wing.createShader(wg::ShaderStage::Vertex, vertex_spirv);
 
     std::vector<uint32_t> fragment_spirv;
     {
@@ -97,12 +95,12 @@ int main() {
        std::cout << fragment_spirv[i] << std::endl;
        } */
 
-    wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+    wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
 
-    wg::Pipeline* pipeline = wing.
-        createPipeline(vertAttrDesc,
-                       {resourceSetLayout},
-                       {vertex_shader, fragment_shader});
+    wg::PipelinePtr pipeline = wing.
+        createBasicPipeline(vertAttrDesc,
+                            { resourceSetLayout },
+                            { vertex_shader, fragment_shader });
 
     wg::BasicDrawPassSettings draw_pass_settings;
     draw_pass_settings.render_pass_settings.setShouldClear(true);
@@ -138,11 +136,6 @@ int main() {
     }
 
     wing.waitIdle();
-
-    wing.destroy(vertex_shader);
-    wing.destroy(fragment_shader);
-
-    wing.destroy(pipeline);
 
     wing.destroy(position_buffer);
     wing.destroy(color_buffer);

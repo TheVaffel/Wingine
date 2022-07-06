@@ -39,7 +39,6 @@ set(FRAMEBUFFER_SOURCES
   BasicFramebufferSetup.cpp
   SwapchainFramebuffer.cpp
   IFramebufferChain.cpp
-  # DepthOnlyFramebuffer.cpp
   HostCopyingFramebufferChain.cpp
   SwapchainFramebufferChain.cpp
   FramebufferChainBase.cpp
@@ -73,6 +72,13 @@ set(COMMAND_SOURCES
   CommandChainController.cpp
   recordUtil.cpp
   CommandControllerSettings.cpp)
+set(PIPELINE_SOURCES
+  BasicPipeline.cpp
+  BasicPipelineSetup.cpp
+  BasicShader.cpp
+  pipelineUtil.cpp
+  shaderUtil.cpp
+  VertexAttribDesc.cpp)
 set(DRAW_PASS_SOURCES BasicDrawPass.cpp DrawPassBase.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp)
@@ -87,15 +93,16 @@ list(TRANSFORM SYNC_SOURCES PREPEND "sync/")
 list(TRANSFORM DRAW_PASS_SOURCES PREPEND "draw_pass/")
 list(TRANSFORM RESOURCE_SOURCES PREPEND "resource/")
 list(TRANSFORM COMMAND_SOURCES PREPEND "command/")
+list(TRANSFORM PIPELINE_SOURCES PREPEND "pipeline/")
 list(TRANSFORM UTIL_SOURCES PREPEND "util/")
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
 
 set(WINGINE_SOURCES
   buffer.cpp
   image.cpp
-  renderfamily.cpp
+  # renderfamily.cpp
+  compute_pipeline.cpp
   Wingine.cpp
-  pipeline.cpp
   resource.cpp
   util.cpp
   semaphore.cpp
@@ -115,6 +122,7 @@ set(WINGINE_SOURCES
   ${DRAW_PASS_SOURCES}
   ${RESOURCE_SOURCES}
   ${COMMAND_SOURCES}
+  ${PIPELINE_SOURCES}
   ${UTIL_SOURCES}
   ${WGUTIL_SOURCES})
 

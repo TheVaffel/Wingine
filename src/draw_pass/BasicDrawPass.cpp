@@ -29,7 +29,7 @@ namespace wg::internal {
         }
     };
 
-    BasicDrawPass::BasicDrawPass(const Pipeline* pipeline,
+    BasicDrawPass::BasicDrawPass(std::shared_ptr<IPipeline> pipeline,
                                  uint32_t num_framebuffers,
                                  const BasicDrawPassSettings& settings,
                                  std::shared_ptr<const CommandManager> command_manager,

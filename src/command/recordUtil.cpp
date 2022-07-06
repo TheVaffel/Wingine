@@ -78,7 +78,7 @@ namespace wg::internal::recordUtil {
         void recordBindDescriptorSets(const vk::CommandBuffer& command_buffer,
                                       const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
                                       uint32_t index,
-                                      const Pipeline* pipeline) {
+                                      std::shared_ptr<IPipeline> pipeline) {
 
             std::vector<vk::DescriptorSet> descriptor_sets(resource_sets.size());
             for (uint32_t i = 0; i < resource_sets.size(); i++) {
@@ -87,7 +87,7 @@ namespace wg::internal::recordUtil {
 
             if (resource_sets.size()) {
                 command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                                  pipeline->getLayout(),
+                                                  pipeline->getPipelineLayout(),
                                                   0,
                                                   descriptor_sets.size(),
                                                   descriptor_sets.data(),
@@ -96,25 +96,6 @@ namespace wg::internal::recordUtil {
             }
         }
     };
-
-    /* void beginGraphicsCommand(const CommandControllerSettings& settings,
-                              const vk::CommandBuffer& command_buffer,
-                              const vk::RenderPass& render_pass,
-                              const IFramebuffer& framebuffer,
-                              const Pipeline* pipeline) {
-        RenderPassBeginInfoData begin_info_data;
-            createRenderPassBeginInfo(begin_info_data,
-                                      settings,
-                                      render_pass,
-                                      framebuffer);
-
-            vk::CommandBufferBeginInfo begin;
-            command_buffer.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-            command_buffer.begin(begin);
-            command_buffer.beginRenderPass(begin_info_data.begin_info, vk::SubpassContents::eInline);
-            command_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
-                                        pipeline->getPipeline());
-                                        } */
 
     void beginRecording(const vk::CommandBuffer& command_buffer) {
         vk::CommandBufferBeginInfo begin;
@@ -127,7 +108,7 @@ namespace wg::internal::recordUtil {
                          const vk::CommandBuffer& command_buffer,
                          const vk::RenderPass& render_pass,
                          const IFramebuffer& framebuffer,
-                         const Pipeline* pipeline) {
+                         std::shared_ptr<IPipeline> pipeline) {
         RenderPassBeginInfoData begin_info_data;
         createRenderPassBeginInfo(begin_info_data,
                                   settings,
@@ -152,7 +133,7 @@ namespace wg::internal::recordUtil {
     }
 
     void recordDrawForCommand(const vk::CommandBuffer& command_buffer,
-                              const Pipeline* pipeline,
+                              std::shared_ptr<IPipeline> pipeline,
                               const std::vector<const Buffer*>& vertex_buffers,
                               const IndexBuffer* index_buffer,
                               const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,

@@ -21,11 +21,13 @@
 #include "./framebuffer/SwapchainFramebufferChain.hpp"
 #include "./resource/ResourceSetLayoutRegistry.hpp"
 
+#include "./pipeline/BasicPipelineSetup.hpp"
+#include "./pipeline/ShaderStage.hpp"
+
 #include "buffer.hpp"
 #include "image.hpp"
 #include "resource.hpp"
-#include "pipeline.hpp"
-#include "renderfamily.hpp"
+#include "compute_pipeline.hpp"
 #include "semaphore.hpp"
 #include "util.hpp"
 
@@ -63,7 +65,7 @@ namespace wg {
 
         uint32_t window_width, window_height;
 
-        std::shared_ptr<internal::CompatibleRenderPassRegistry> compatibleRenderPassRegistry;
+        std::shared_ptr<internal::CompatibleRenderPassRegistry> compatible_render_pass_registry;
 
         class VulkanInitInfo {
             vk::Extent2D dimensions;
@@ -166,17 +168,16 @@ namespace wg {
         template<typename T>
         UniformChainPtr<T> createUniformChain();
 
-        RenderFamily* createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers = 0);
-        DrawPassPtr createBasicDrawPass(const Pipeline* pipeline, const internal::BasicDrawPassSettings& settings);
+        // RenderFamily* createRenderFamily(PipelinePtr pipeline, bool clear, int num_framebuffers = 0);
+        DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
 
         ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout);
 
-        Shader* createShader(uint64_t stage_bit, std::vector<uint32_t>& spirv);
-
-        Pipeline* createPipeline(const std::vector<VertexAttribDesc>& descriptions,
-                                 const std::vector<std::vector<uint64_t> >& resourceSetLayout,
-                                 const std::vector<Shader*>& shaders,
-                                 const PipelineSetup& setup = PipelineSetup());
+        ShaderPtr createShader(internal::ShaderStage shader_stage, const std::vector<uint32_t>& spirv);
+        PipelinePtr createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,
+                                        const std::vector<std::vector<uint64_t>>& resource_set_layout,
+                                        const std::vector<ShaderPtr>& shaders,
+                                        internal::BasicPipelineSetup setup = internal::BasicPipelineSetup());
 
         ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
                                                Shader* shaders);
@@ -221,10 +222,7 @@ namespace wg {
         uint32_t getRenderedImageRowByteStride() const;
         void copyLastRenderedImage(uint32_t* dst);
 
-        void destroy(Pipeline* pipeline);
-        void destroy(RenderFamily* family);
         void destroy(Buffer* buffer);
-        void destroy(Shader* shader);
         void destroy(SemaphoreChain* semaphore_chain);
         void destroy(ResourceImage* resource_image);
         void destroy(ResourceSet* resource_set);
@@ -244,7 +242,6 @@ namespace wg {
         ~Wingine();
 
         friend class Buffer;
-        friend class Pipeline;
         friend class RenderFamily;
         friend class ResourceSetLayout;
         friend class ResourceSet;

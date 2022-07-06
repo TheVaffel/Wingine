@@ -3,7 +3,6 @@
 
 #include "declarations.hpp"
 
-#include "pipeline.hpp"
 #include "resource.hpp"
 
 #include "./framebuffer/IFramebufferChain.hpp"

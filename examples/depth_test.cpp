@@ -73,12 +73,10 @@ int main() {
     lightSet->set({lightUniform});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
-        std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
-                                            0, // Binding no.
-                                            4, // Number of elements
-                                            4 * sizeof(float), // Stride (in bytes)
-                                            0}, // Offset (bytes)
-                                           {wg::tFloat32, 1, 4, 4 * sizeof(float), 0}};
+    {
+        wg::VertexAttribDesc(0, wg::ComponentType::tFloat32, 4, 4 * sizeof(float), 0),
+        wg::VertexAttribDesc(1, wg::ComponentType::tFloat32, 4, 4 * sizeof(float), 0)
+    };
 
     // Some texture size
     const uint32_t shadow_buffer_width = 2000,
@@ -110,16 +108,16 @@ int main() {
 
     }
 
-    wg::Shader* depth_shader = wing.createShader(wg::shaVertex, depth_vertex_shader);
+    wg::ShaderPtr depth_shader = wing.createShader(wg::ShaderStage::Vertex, depth_vertex_shader);
 
-    wg::PipelineSetup shadow_pipeline_setup;
+    wg::BasicPipelineSetup shadow_pipeline_setup;
     shadow_pipeline_setup.setWidth(shadow_buffer_width)
         .setHeight(shadow_buffer_height)
         .setDepthOnly(true);
-    wg::Pipeline* depth_pipeline = wing.createPipeline({vertAttrDesc[0]},
-                                                       {resourceSetLayout},
-                                                       {depth_shader},
-                                                       shadow_pipeline_setup);
+    wg::PipelinePtr depth_pipeline = wing.createBasicPipeline({vertAttrDesc[0]},
+                                                              {resourceSetLayout},
+                                                              {depth_shader},
+                                                              shadow_pipeline_setup);
 
     wg::EventChainPtr shadow_finish_event = wing.createEventChain();
 
@@ -153,8 +151,7 @@ int main() {
         shader.compile(vertex_spirv, s_col, world_pos);
     }
 
-    wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
-
+    wg::ShaderPtr vertex_shader = wing.createShader(wg::ShaderStage::Vertex, vertex_spirv);
 
     std::vector<uint32_t> fragment_spirv;
     {
@@ -190,12 +187,12 @@ int main() {
         shader.compile(fragment_spirv, res);
     }
 
-    wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+    wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
 
-    wg::Pipeline* pipeline = wing.
-        createPipeline(vertAttrDesc,
-                       {resourceSetLayout, lightTextureSetLayout},
-                       {vertex_shader, fragment_shader});
+    wg::PipelinePtr pipeline = wing.
+        createBasicPipeline(vertAttrDesc,
+                            {resourceSetLayout, lightTextureSetLayout},
+                            {vertex_shader, fragment_shader});
 
     wg::BasicDrawPassSettings draw_pass_settings;
     draw_pass_settings.render_pass_settings.setShouldClear(true);
@@ -280,14 +277,6 @@ int main() {
     }
 
     wing.waitIdle();
-
-    wing.destroy(depth_shader);
-    wing.destroy(depth_pipeline);
-
-    wing.destroy(vertex_shader);
-    wing.destroy(fragment_shader);
-
-    wing.destroy(pipeline);
 
     wing.destroy(position_buffer);
     wing.destroy(color_buffer);

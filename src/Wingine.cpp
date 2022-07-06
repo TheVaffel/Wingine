@@ -11,7 +11,11 @@
 #include "./draw_pass/BasicDrawPass.hpp"
 
 #include "./resource/BasicResourceSetChain.hpp"
+
 #include "./image/BasicTextureChain.hpp"
+
+#include "./pipeline/BasicShader.hpp"
+#include "./pipeline/BasicPipeline.hpp"
 
 #include <exception>
 
@@ -360,7 +364,7 @@ namespace wg {
     }
 
     void Wingine::register_compatible_render_pass(internal::renderPassUtil::RenderPassType type) {
-        this->compatibleRenderPassRegistry->ensureAndGetRenderPass(type);
+        this->compatible_render_pass_registry->ensureAndGetRenderPass(type);
     }
 
     void Wingine::setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores) {
@@ -477,7 +481,7 @@ namespace wg {
         std::shared_ptr<const internal::QueueManager> const_queue_manager =
             const_pointer_cast<const internal::QueueManager>(this->queue_manager);
 
-        this->compatibleRenderPassRegistry =
+        this->compatible_render_pass_registry =
             std::make_shared<internal::CompatibleRenderPassRegistry>(const_device_manager);
 
         this->command_manager =
@@ -500,7 +504,7 @@ namespace wg {
                     const_queue_manager,
                     const_command_manager,
                     const_device_manager,
-                    *this->compatibleRenderPassRegistry);
+                    *this->compatible_render_pass_registry);
         } else {
             this->default_framebuffer_chain =
                 std::make_shared<internal::SwapchainFramebufferChain>(
@@ -508,7 +512,7 @@ namespace wg {
                     this->vulkan_instance_manager->getSurface(),
                     const_device_manager,
                     const_queue_manager,
-                    *this->compatibleRenderPassRegistry);
+                    *this->compatible_render_pass_registry);
         }
 
         this->resource_set_layout_registry =
@@ -666,27 +670,33 @@ namespace wg {
         return new IndexBuffer(*this, numIndices);
     }
 
-    Shader* Wingine::createShader(uint64_t shader_bit,
-                                  std::vector<uint32_t>& spirv) {
-        return new Shader(this->device,
-                          shader_bit,
-                          spirv);
+
+    ShaderPtr Wingine::createShader(internal::ShaderStage stage_bit, const std::vector<uint32_t>& spirv) {
+        return std::make_shared<internal::BasicShader>(stage_bit, std::move(spirv), this->device_manager);
     }
 
-    Pipeline* Wingine::createPipeline(const std::vector<VertexAttribDesc>& descriptions,
-                                      const std::vector<std::vector<uint64_t> >& resourceSetLayout,
-                                      const std::vector<Shader*>& shaders,
-                                      const PipelineSetup& setup) {
-        std::vector<vk::DescriptorSetLayout> rsl;
-        for(unsigned int i = 0; i < resourceSetLayout.size(); i++) {
-            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resourceSetLayout[i]));
+    PipelinePtr Wingine::createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,
+                                             const std::vector<std::vector<uint64_t>>& resource_set_layout,
+                                             const std::vector<ShaderPtr>& shaders,
+                                             internal::BasicPipelineSetup setup) {
+        if (setup.width == 0 || setup.height == 0) {
+            vk::Extent2D dims = this->default_framebuffer_chain->getFramebuffer(0).getDimensions();
+            setup.width = dims.width;
+            setup.height = dims.height;
         }
 
-        return new Pipeline(*this,
-                            descriptions,
-                            rsl,
-                            shaders,
-                            setup);
+        std::vector<vk::DescriptorSetLayout> rsl;
+        for(unsigned int i = 0; i < resource_set_layout.size(); i++) {
+            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resource_set_layout[i]));
+        }
+
+        return std::make_shared<internal::BasicPipeline>(setup,
+                                                         descriptions,
+                                                         rsl,
+                                                         shaders,
+                                                         this->device_manager,
+                                                         this->compatible_render_pass_registry,
+                                                         this->pipeline_cache);
     }
 
     ComputePipeline* Wingine::createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayouts,
@@ -708,7 +718,7 @@ namespace wg {
         return std::make_unique<internal::BasicFramebuffer>(vk::Extent2D(width, height),
                                                             setup,
                                                             this->device_manager,
-                                                            *this->compatibleRenderPassRegistry);
+                                                            *this->compatible_render_pass_registry);
     }
 
     FramebufferChain Wingine::createFramebufferChain(uint32_t width, uint32_t height,
@@ -723,7 +733,7 @@ namespace wg {
                                              vk::Extent2D(width, height),
                                              setup,
                                              this->device_manager,
-                                             *this->compatibleRenderPassRegistry);
+                                             *this->compatible_render_pass_registry);
     }
 
 
@@ -738,7 +748,7 @@ namespace wg {
             depth_only,
             this->device_manager,
             this->queue_manager,
-            *this->compatibleRenderPassRegistry);
+            *this->compatible_render_pass_registry);
     }
 
     FramebufferChain Wingine::getDefaultFramebufferChain() {
@@ -803,12 +813,7 @@ namespace wg {
                                  num_bytes, host_updatable);
                                  } */
 
-    RenderFamily* Wingine::createRenderFamily(const Pipeline* pipeline, bool clear, int num_framebuffers) {
-        return new RenderFamily(*this, this->compatibleRenderPassRegistry,
-                                pipeline, clear, num_framebuffers);
-    }
-
-    DrawPassPtr Wingine::createBasicDrawPass(const Pipeline* pipeline,
+    DrawPassPtr Wingine::createBasicDrawPass(PipelinePtr pipeline,
                                              const internal::BasicDrawPassSettings& settings) {
         return std::make_shared<internal::BasicDrawPass>(pipeline,
                                                          this->getDefaultFramebufferChain()->getNumFramebuffers(),
@@ -915,30 +920,6 @@ namespace wg {
         delete compute_pipeline;
     }
 
-
-
-    void Wingine::destroy(RenderFamily* family) {
-        for(uint32_t i = 0; i < family->num_buffers; i++) {
-            _wassert_result(this->device.waitForFences(1, &family->commands[i].fence, true, UINT64_MAX),
-                            "wait for command finish");
-            this->device.destroy(family->commands[i].fence, nullptr);
-
-            this->device.freeCommandBuffers(this->command_manager->getGraphicsCommandPool(),
-                                            1, &family->commands[i].buffer);
-
-            if(family->render_passes[i] != this->compatibleRenderPassRegistry->getRenderPass(family->render_pass_type)) {
-                this->device.destroy(family->render_passes[i], nullptr);
-            }
-        }
-
-        delete family;
-    }
-
-    void Wingine::destroy(Shader* shader) {
-        this->device.destroy(shader->shader_info.module, nullptr);
-        delete shader;
-    }
-
     void Wingine::destroy(SemaphoreChain* semaphore_chain) {
         this->waitIdle();
         _wassert_result(this->device.resetFences(1, &this->general_purpose_fence),
@@ -948,12 +929,6 @@ namespace wg {
         this->device.destroy(semaphore_chain->semaphore, nullptr);
 
         delete semaphore_chain;
-    }
-
-    void Wingine::destroy(Pipeline* pipeline) {
-        this->device.destroy(pipeline->layout, nullptr);
-        this->device.destroy(pipeline->pipeline, nullptr);
-        delete pipeline;
     }
 
     void Wingine::destroy(Buffer* buffer) {

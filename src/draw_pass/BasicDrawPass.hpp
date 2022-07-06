@@ -4,7 +4,7 @@
 
 #include "./BasicDrawPassSettings.hpp"
 
-#include "../pipeline.hpp"
+#include "../pipeline/IPipeline.hpp"
 
 namespace wg::internal {
 
@@ -29,7 +29,7 @@ namespace wg::internal {
 
         BasicDrawPassSettings settings;
 
-        const Pipeline* pipeline;
+        std::shared_ptr<IPipeline> pipeline;
 
         uint32_t num_framebuffers;
         uint32_t current_framebuffer_index;
@@ -47,7 +47,7 @@ namespace wg::internal {
         void applySignalSemaphoresToSubmitInfo(SubmitInfoData& construction_data);
 
     public:
-        BasicDrawPass(const Pipeline* pipeline,
+        BasicDrawPass(std::shared_ptr<IPipeline> pipeline,
                       uint32_t num_framebuffers,
                       const BasicDrawPassSettings& settings,
                       std::shared_ptr<const CommandManager> command_manager,

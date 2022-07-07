@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 
+#include "../types.hpp"
+
 namespace wgut {
 
     // NB: Remember to update this whenever a new attribute is added
@@ -28,12 +30,11 @@ namespace wgut {
     };
 
     class Model {
-        std::vector<wg::Buffer*> vertex_buffers;
-        std::vector<const wg::Buffer*> const_vertex_buffers;
+        std::vector<std::shared_ptr<wg::internal::IBuffer>> vertex_buffers;
         wg::IndexBuffer* index_buffer;
 
     public:
-        Model(const std::vector<wg::Buffer*>& _vertex_buffer,
+        Model(const std::vector<std::shared_ptr<wg::internal::IBuffer>>& _vertex_buffer,
               wg::IndexBuffer* _index_buffer);
 
         static Model fromFile(wg::Wingine& wing,
@@ -43,7 +44,7 @@ namespace wgut {
                                     const std::vector<uint32_t>& index_data);
 
 
-        const std::vector<const wg::Buffer*>& getVertexBuffers();
+        const std::vector<std::shared_ptr<wg::internal::IBuffer>>& getVertexBuffers();
         const wg::IndexBuffer* getIndexBuffer();
 
 

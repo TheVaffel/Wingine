@@ -157,8 +157,8 @@ namespace wg {
         int getWindowWidth();
         int getWindowHeight();
 
-        template<typename Type>
-        VertexBuffer<Type>* createVertexBuffer(uint32_t num, bool host_updatable = true);
+        template<typename T>
+        VertexBufferPtr<T> createVertexBuffer(uint32_t element_count);
 
         IndexBuffer* createIndexBuffer(uint32_t num_indices);
 
@@ -168,7 +168,6 @@ namespace wg {
         template<typename T>
         UniformChainPtr<T> createUniformChain();
 
-        // RenderFamily* createRenderFamily(PipelinePtr pipeline, bool clear, int num_framebuffers = 0);
         DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
 
         ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout);
@@ -251,14 +250,6 @@ namespace wg {
         friend class ComputePipeline;
         friend class ResourceImage;
     };
-
-
-    // Template things
-
-    template<typename Type>
-    VertexBuffer<Type>* Wingine::createVertexBuffer(uint32_t num, bool host_updatable) {
-        return new VertexBuffer<Type>(*this, num, host_updatable);
-    }
 };
 
 

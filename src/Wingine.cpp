@@ -277,7 +277,6 @@ namespace wg {
 
         SemaphoreChain::resetModifiers(std::begin(semaphores), semaphores.size());
 
-
         _wassert_result(this->queue_manager->getGraphicsQueue().submit(1, &si, command_fence),
                         "command submission to graphics queue in copy_image");
 

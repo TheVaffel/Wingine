@@ -7,6 +7,7 @@
 #include "../resource/IResourceSetChain.hpp"
 
 #include "../buffer.hpp"
+#include "../buffer/IBuffer.hpp"
 
 #include "../util/IndexCounter.hpp"
 
@@ -54,7 +55,7 @@ namespace wg::internal {
 
         void recordMakeFramebufferIntoTexture(std::shared_ptr<FramebufferTextureChain> framebuffer_texture);
         void recordMakeTextureIntoFramebuffer(std::shared_ptr<FramebufferTextureChain> framebuffer_texture);
-        void recordDraw(const std::vector<const Buffer*>& vertex_buffers,
+        void recordDraw(const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                         const IndexBuffer* ind_buf,
                         const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
                         uint32_t instanceCount = 1);

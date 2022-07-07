@@ -4,7 +4,7 @@
 #include "../DeviceManager.hpp"
 
 namespace wg::internal {
-    class BasicBuffer : public IBuffer {
+    class BasicBuffer : public virtual IBuffer {
         vk::Buffer buffer;
         vk::DeviceMemory memory;
 

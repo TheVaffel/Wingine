@@ -29,13 +29,13 @@ int main() {
         0, 1, 2,
     };
 
-    wg::VertexBuffer<float>* position_buffer =
+    wg::VertexBufferPtr<float> position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
-    position_buffer->set(positions, num_points * 4);
+    position_buffer->set(positions, 0, num_points * 4);
 
-    wg::VertexBuffer<float>* color_buffer =
+    wg::VertexBufferPtr<float> color_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
-    color_buffer->set(colors, num_points * 4);
+    color_buffer->set(colors, 0, num_points * 4);
 
     wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3);
     index_buffer->set(indices, num_triangles * 3);
@@ -137,7 +137,5 @@ int main() {
 
     wing.waitIdle();
 
-    wing.destroy(position_buffer);
-    wing.destroy(color_buffer);
     wing.destroy(index_buffer);
 }

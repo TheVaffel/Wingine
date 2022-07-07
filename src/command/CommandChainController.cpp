@@ -96,7 +96,7 @@ namespace wg::internal {
 
     }
 
-    void CommandChainController::recordDraw(const std::vector<const Buffer*>& vertex_buffers,
+    void CommandChainController::recordDraw(const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                                             const IndexBuffer* ind_buf,
                                             const std::vector<std::shared_ptr<IResourceSetChain>>& sets,
                                             uint32_t instance_count) {

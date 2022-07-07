@@ -38,15 +38,11 @@ namespace wgut {
         }
     }
 
-    Model::Model(const std::vector<wg::Buffer*>& _vertex_buffer,
+    Model::Model(const std::vector<std::shared_ptr<wg::internal::IBuffer>>& _vertex_buffer,
                  wg::IndexBuffer* _index_buffer) :
         vertex_buffers(_vertex_buffer),
         index_buffer(_index_buffer)
-    {
-        this->const_vertex_buffers =
-            std::vector<const wg::Buffer*>(this->vertex_buffers.begin(),
-                                           this->vertex_buffers.end());
-    }
+    { }
 
     Model Model::fromFile(wg::Wingine& wing,
                           const std::string& file_name,
@@ -161,11 +157,11 @@ namespace wgut {
 
     Model Model::constructModel(wg::Wingine& wing, const std::vector<std::vector<float>>& data_buffers,
                                 const std::vector<uint32_t>& index_data) {
-        std::vector<wg::Buffer*> buffers;
-        wg::VertexBuffer<float> *buf;
+        std::vector<std::shared_ptr<wg::internal::IBuffer>> buffers;
+        wg::VertexBufferPtr<float> buf;
         for(unsigned int i = 0; i < data_buffers.size(); i++) {
-            buf = new wg::VertexBuffer<float>(wing, data_buffers[i].size());
-            buf->set(data_buffers[i].data(), data_buffers[i].size());
+            buf = wing.createVertexBuffer<float>(data_buffers[i].size()); // new wg::VertexBuffer<float>(wing, data_buffers[i].size());
+            buf->set(data_buffers[i].data(), 0, data_buffers[i].size());
             buffers.push_back(buf);
         }
 
@@ -175,8 +171,8 @@ namespace wgut {
         return Model(buffers, index_buffer);
     }
 
-    const std::vector<const wg::Buffer*>& Model::getVertexBuffers() {
-        return this->const_vertex_buffers;
+    const std::vector<std::shared_ptr<wg::internal::IBuffer>>& Model::getVertexBuffers() {
+        return this->vertex_buffers;
     }
 
     const wg::IndexBuffer* Model::getIndexBuffer() {
@@ -184,12 +180,8 @@ namespace wgut {
     }
 
     void Model::destroy(wg::Wingine& wing) {
-        for(unsigned int i = 0; i < this->vertex_buffers.size(); i++) {
-            wing.destroy(this->vertex_buffers[i]);
-        }
         wing.destroy(this->index_buffer);
     }
-
 
     namespace SimpleModels {
 

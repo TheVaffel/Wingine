@@ -16,7 +16,6 @@
 
 #include "./resource/IUniform.hpp"
 #include "./resource/IUniformChain.hpp"
-
 #include "./resource/IResourceSetChain.hpp"
 
 #include "./pipeline/IShader.hpp"
@@ -25,6 +24,8 @@
 #include "./pipeline/VertexAttribDesc.hpp"
 #include "./pipeline/ComponentType.hpp"
 #include "./pipeline/BasicPipelineSetup.hpp"
+
+#include "./buffer/IVertexBuffer.hpp"
 
 namespace wg {
     typedef std::unique_ptr<internal::IFramebuffer> Framebuffer;
@@ -61,4 +62,7 @@ namespace wg {
 
     typedef internal::VertexAttribDesc VertexAttribDesc;
     typedef internal::ComponentType ComponentType;
+
+    template<typename T>
+    using VertexBufferPtr = std::shared_ptr<internal::IVertexBuffer<T>>;
 };

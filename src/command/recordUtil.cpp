@@ -56,7 +56,7 @@ namespace wg::internal::recordUtil {
 
 
         void recordBindAndDrawVertexBuffers(const vk::CommandBuffer& command_buffer,
-                                            const std::vector<const Buffer*>& vertex_buffers,
+                                            const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                                             const IndexBuffer* index_buffer,
                                             uint32_t instance_count) {
 
@@ -134,7 +134,7 @@ namespace wg::internal::recordUtil {
 
     void recordDrawForCommand(const vk::CommandBuffer& command_buffer,
                               std::shared_ptr<IPipeline> pipeline,
-                              const std::vector<const Buffer*>& vertex_buffers,
+                              const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                               const IndexBuffer* index_buffer,
                               const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
                               uint32_t index,

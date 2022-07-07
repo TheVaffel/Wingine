@@ -4,6 +4,7 @@
 
 #include "./resource/BasicUniform.hpp"
 #include "./resource/BasicUniformChain.hpp"
+#include "./buffer/InternallyStagedVertexBuffer.hpp"
 
 namespace wg {
     template<typename T>
@@ -15,5 +16,14 @@ namespace wg {
     UniformChainPtr<T> Wingine::createUniformChain() {
         return std::make_shared<internal::BasicUniformChain<T>>(this->getNumFramebuffers(),
                                                                 this->device_manager);
+    }
+
+    template<typename T>
+    VertexBufferPtr<T> Wingine::createVertexBuffer(uint32_t element_count) {
+        return std::make_shared<internal::InternallyStagedVertexBuffer<T>>(element_count,
+                                                                           this->device_manager,
+                                                                           this->queue_manager,
+                                                                           this->command_manager);
+
     }
 };

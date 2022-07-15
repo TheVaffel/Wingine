@@ -6,8 +6,12 @@
 #include "../sync/fenceUtil.hpp"
 
 #include "../util/log.hpp"
+#include "../util/math.hpp"
+
+#include "./bufferUtil.hpp"
 
 namespace wg::internal {
+
     template<typename T>
     InternallyStagedVertexBuffer<T>::InternallyStagedVertexBuffer(uint32_t num_elements,
                                                                   std::shared_ptr<DeviceManager> device_manager,
@@ -30,10 +34,17 @@ namespace wg::internal {
 
     template<typename T>
     void InternallyStagedVertexBuffer<T>::set(const T* data, uint32_t first_element, uint32_t element_count) {
-        vk::MappedMemoryRange range;
-        range.setMemory(this->staging_buffer.getMemory())
-            .setOffset(first_element * sizeof(T))
-            .setSize(element_count * sizeof(T));
+
+        uint32_t copy_size = element_count * sizeof(T);
+        uint32_t offset = first_element * sizeof(T);
+
+        uint32_t required_size_multiple = this->device_manager->getDeviceProperties().limits.nonCoherentAtomSize;
+
+        vk::MappedMemoryRange range = bufferUtil::getMappedMemoryRangeForCopy(copy_size,
+                                                                              offset,
+                                                                              required_size_multiple,
+                                                                              this->getAllocatedByteSize(),
+                                                                              this->staging_buffer.getMemory());
 
         T* dst = memoryUtil::mapMemory<T>(this->staging_buffer.getMemory(),
                                           this->device_manager->getDevice());

@@ -47,13 +47,13 @@ namespace wg::internal {
             }
         }
 
-
         if (max_score == 0) {
             _wlog_error("Could not find device supporting both presenting and graphics");
         }
 
         this->physical_device = best_device;
         this->device_memory_props = best_device.getMemoryProperties();
+        this->device_props = best_device.getProperties();
 
         QueueIndices queue_indices;
         if (vulkan_instance_manager->hasSurface()) {
@@ -90,21 +90,22 @@ namespace wg::internal {
     }
 
     DeviceManager::~DeviceManager() {
-
-
-
         this->device.destroy();
     }
 
-    const vk::Device DeviceManager::getDevice() const {
+    const vk::Device& DeviceManager::getDevice() const {
         return this->device;
     }
 
-    const vk::PhysicalDevice DeviceManager::getPhysicalDevice() const {
+    const vk::PhysicalDevice& DeviceManager::getPhysicalDevice() const {
         return this->physical_device;
     }
 
-    const vk::PhysicalDeviceMemoryProperties DeviceManager::getDeviceMemoryProperties() const {
+    const vk::PhysicalDeviceMemoryProperties& DeviceManager::getDeviceMemoryProperties() const {
         return this->device_memory_props;
+    }
+
+    const vk::PhysicalDeviceProperties& DeviceManager::getDeviceProperties() const {
+        return this->device_props;
     }
 };

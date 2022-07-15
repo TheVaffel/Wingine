@@ -101,7 +101,6 @@ namespace wg::internal::memoryUtil {
         device.bindImageMemory(image, memory, 0);
 
         return memory;
-
     }
 
     vk::DeviceMemory createAndBindMemoryForBuffer(

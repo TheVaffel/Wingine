@@ -81,7 +81,7 @@ set(PIPELINE_SOURCES
   VertexAttribDesc.cpp)
 set(DRAW_PASS_SOURCES BasicDrawPass.cpp DrawPassBase.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
-set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp)
+set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp math.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 
 list(TRANSFORM BUFFER_SOURCES PREPEND "buffer/")

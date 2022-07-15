@@ -28,6 +28,7 @@ namespace wg::internal {
                                 std::shared_ptr<const DeviceManager> device_manager);
 
         virtual uint32_t getByteSize() const;
+        virtual uint32_t getAllocatedByteSize() const;
         virtual vk::Buffer getBuffer() const;
         virtual vk::DeviceMemory getMemory() const;
 

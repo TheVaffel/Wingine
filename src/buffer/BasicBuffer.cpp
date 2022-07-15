@@ -41,6 +41,10 @@ namespace wg::internal {
                                                 device_manager));
     }
 
+    uint32_t BasicBuffer::getAllocatedByteSize() const {
+        return this->device_manager->getDevice().getBufferMemoryRequirements(this->buffer).size;
+    }
+
     uint32_t BasicBuffer::getByteSize() const {
         return this->byte_size;
     }

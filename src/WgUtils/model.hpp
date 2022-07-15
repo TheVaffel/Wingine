@@ -31,11 +31,11 @@ namespace wgut {
 
     class Model {
         std::vector<std::shared_ptr<wg::internal::IBuffer>> vertex_buffers;
-        wg::IndexBuffer* index_buffer;
+        wg::IndexBufferPtr index_buffer;
 
     public:
         Model(const std::vector<std::shared_ptr<wg::internal::IBuffer>>& _vertex_buffer,
-              wg::IndexBuffer* _index_buffer);
+              wg::IndexBufferPtr _index_buffer);
 
         static Model fromFile(wg::Wingine& wing,
                               const std::string& file_name,
@@ -45,7 +45,7 @@ namespace wgut {
 
 
         const std::vector<std::shared_ptr<wg::internal::IBuffer>>& getVertexBuffers();
-        const wg::IndexBuffer* getIndexBuffer();
+        const wg::IndexBufferPtr getIndexBuffer();
 
 
         void destroy(wg::Wingine& wing);

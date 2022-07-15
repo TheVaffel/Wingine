@@ -1,27 +1,23 @@
-#pragma once
+#include "./InternallyStagedIndexBuffer.hpp"
 
-#include "./InternallyStagedVertexBuffer.hpp"
 #include "../memory/memoryUtil.hpp"
-#include "./copyBuffer.hpp"
 #include "../sync/fenceUtil.hpp"
+#include "./bufferUtil.hpp"
+#include "./copyBuffer.hpp"
 
 #include "../util/log.hpp"
-#include "../util/math.hpp"
-
-#include "./bufferUtil.hpp"
 
 namespace wg::internal {
 
-    template<typename T>
-    InternallyStagedVertexBuffer<T>::InternallyStagedVertexBuffer(uint32_t num_elements,
-                                                                  std::shared_ptr<DeviceManager> device_manager,
-                                                                  std::shared_ptr<QueueManager> queue_manager,
-                                                                  std::shared_ptr<CommandManager> command_manager)
-        : BasicBuffer(num_elements * sizeof(T),
-                      vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+    InternallyStagedIndexBuffer::InternallyStagedIndexBuffer(uint32_t num_indices,
+                                                             std::shared_ptr<DeviceManager> device_manager,
+                                                             std::shared_ptr<QueueManager> queue_manager,
+                                                             std::shared_ptr<CommandManager> command_manager)
+        : BasicBuffer(num_indices * sizeof(uint32_t),
+                      vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst,
                       vk::MemoryPropertyFlagBits::eDeviceLocal,
                       device_manager),
-          staging_buffer(num_elements * sizeof(T),
+          staging_buffer(num_indices * sizeof(uint32_t),
                          vk::BufferUsageFlagBits::eTransferSrc,
                          vk::MemoryPropertyFlagBits::eHostVisible,
                          device_manager),
@@ -31,25 +27,24 @@ namespace wg::internal {
         this->graphics_queue = queue_manager->getGraphicsQueue();
     }
 
+    void InternallyStagedIndexBuffer::set(const uint32_t* data, uint32_t first_index, uint32_t num_indices) {
 
-    template<typename T>
-    void InternallyStagedVertexBuffer<T>::set(const T* data, uint32_t first_element, uint32_t element_count) {
-        uint32_t copy_size = element_count * sizeof(T);
-        uint32_t offset = first_element * sizeof(T);
+        uint32_t copy_size = num_indices * sizeof(uint32_t);
+        uint32_t offset = first_index * sizeof(uint32_t);
 
         uint32_t required_size_multiple = this->device_manager->getDeviceProperties().limits.nonCoherentAtomSize;
+
+        uint32_t* dst = memoryUtil::mapMemory<uint32_t>(this->staging_buffer.getMemory(),
+                                          this->device_manager->getDevice());
+
+        memcpy(dst, data, sizeof(uint32_t) * num_indices);
+
 
         vk::MappedMemoryRange range = bufferUtil::getMappedMemoryRangeForCopy(copy_size,
                                                                               offset,
                                                                               required_size_multiple,
                                                                               this->getAllocatedByteSize(),
                                                                               this->staging_buffer.getMemory());
-
-        T* dst = memoryUtil::mapMemory<T>(this->staging_buffer.getMemory(),
-                                          this->device_manager->getDevice());
-
-        memcpy(dst, data, sizeof(T) * element_count);
-
         this->device_manager->getDevice().flushMappedMemoryRanges({range});
 
         memoryUtil::unmapMemory(this->staging_buffer.getMemory(),
@@ -70,8 +65,7 @@ namespace wg::internal {
         fenceUtil::awaitFence(this->command.fence, this->device_manager->getDevice());
     }
 
-    template<typename T>
-    InternallyStagedVertexBuffer<T>::~InternallyStagedVertexBuffer() {
+    InternallyStagedIndexBuffer::~InternallyStagedIndexBuffer() {
         this->command_manager->destroyGraphicsCommands({this->command});
     }
 };

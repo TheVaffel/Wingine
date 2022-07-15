@@ -39,7 +39,7 @@ namespace wgut {
     }
 
     Model::Model(const std::vector<std::shared_ptr<wg::internal::IBuffer>>& _vertex_buffer,
-                 wg::IndexBuffer* _index_buffer) :
+                 wg::IndexBufferPtr _index_buffer) :
         vertex_buffers(_vertex_buffer),
         index_buffer(_index_buffer)
     { }
@@ -165,8 +165,8 @@ namespace wgut {
             buffers.push_back(buf);
         }
 
-        wg::IndexBuffer* index_buffer = new wg::IndexBuffer(wing, index_data.size());
-        index_buffer->set(index_data.data(), index_data.size(), 0);
+        wg::IndexBufferPtr index_buffer = wing.createIndexBuffer(index_data.size());
+        index_buffer->set(index_data.data(), 0, index_data.size());
 
         return Model(buffers, index_buffer);
     }
@@ -175,12 +175,8 @@ namespace wgut {
         return this->vertex_buffers;
     }
 
-    const wg::IndexBuffer* Model::getIndexBuffer() {
+    const wg::IndexBufferPtr Model::getIndexBuffer() {
         return this->index_buffer;
-    }
-
-    void Model::destroy(wg::Wingine& wing) {
-        wing.destroy(this->index_buffer);
     }
 
     namespace SimpleModels {

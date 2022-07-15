@@ -6,8 +6,8 @@
 #include "../framebuffer/IFramebufferChain.hpp"
 #include "../resource/IResourceSetChain.hpp"
 
-#include "../buffer.hpp"
 #include "../buffer/IBuffer.hpp"
+#include "../buffer/IIndexBuffer.hpp"
 
 #include "../util/IndexCounter.hpp"
 
@@ -56,12 +56,11 @@ namespace wg::internal {
         void recordMakeFramebufferIntoTexture(std::shared_ptr<FramebufferTextureChain> framebuffer_texture);
         void recordMakeTextureIntoFramebuffer(std::shared_ptr<FramebufferTextureChain> framebuffer_texture);
         void recordDraw(const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
-                        const IndexBuffer* ind_buf,
+                        const std::shared_ptr<IIndexBuffer> ind_buf,
                         const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
                         uint32_t instanceCount = 1);
 
-
-        /* NB: Event synchronization is not generalized properly, usage is discouraged before cleanup */
+        /* NB: Syncrhonization using events is not generalized properly, usage is discouraged before cleanup */
         void recordSetEvent(std::shared_ptr<EventChain> event);
         void recordWaitEvent(std::shared_ptr<EventChain> event, std::shared_ptr<IFramebufferChain> framebuffer_chain);
         void recordResetEvent(std::shared_ptr<EventChain> event);

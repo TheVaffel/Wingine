@@ -37,8 +37,8 @@ int main() {
         wing.createVertexBuffer<float>(num_points * 4);
     color_buffer->set(colors, 0, num_points * 4);
 
-    wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3);
-    index_buffer->set(indices, num_triangles * 3);
+    wg::IndexBufferPtr index_buffer = wing.createIndexBuffer(num_triangles * 3);
+    index_buffer->set(indices, 0, num_triangles * 3);
 
     wgut::Model model({position_buffer, color_buffer}, index_buffer);
 
@@ -136,6 +136,4 @@ int main() {
     }
 
     wing.waitIdle();
-
-    wing.destroy(index_buffer);
 }

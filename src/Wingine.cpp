@@ -17,6 +17,8 @@
 #include "./pipeline/BasicShader.hpp"
 #include "./pipeline/BasicPipeline.hpp"
 
+#include "./buffer/InternallyStagedIndexBuffer.hpp"
+
 #include <exception>
 
 
@@ -665,8 +667,11 @@ namespace wg {
         return this->default_framebuffer_chain->getCurrentFramebuffer();
     }
 
-    IndexBuffer* Wingine::createIndexBuffer(uint32_t numIndices) {
-        return new IndexBuffer(*this, numIndices);
+    IndexBufferPtr Wingine::createIndexBuffer(uint32_t num_indices) {
+        return std::make_shared<internal::InternallyStagedIndexBuffer>(num_indices,
+                                                                       this->device_manager,
+                                                                       this->queue_manager,
+                                                                       this->command_manager);
     }
 
 

@@ -160,7 +160,7 @@ namespace wg {
         template<typename T>
         VertexBufferPtr<T> createVertexBuffer(uint32_t element_count);
 
-        IndexBuffer* createIndexBuffer(uint32_t num_indices);
+        IndexBufferPtr createIndexBuffer(uint32_t num_indices);
 
         template<typename T>
         UniformPtr<T> createUniform();

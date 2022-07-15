@@ -25,6 +25,8 @@ set(BUFFER_SOURCES
   IBuffer.cpp
   BasicBuffer.cpp
   BasicStorageBuffer.cpp
+  InternallyStagedIndexBuffer.cpp
+  IIndexBuffer.cpp
   # StagingBufferManager.cpp
   copyBuffer.cpp)
 set(RESOURCE_SOURCES

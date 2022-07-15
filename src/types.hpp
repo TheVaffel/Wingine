@@ -26,6 +26,7 @@
 #include "./pipeline/BasicPipelineSetup.hpp"
 
 #include "./buffer/IVertexBuffer.hpp"
+#include "./buffer/IIndexBuffer.hpp"
 
 namespace wg {
     typedef std::unique_ptr<internal::IFramebuffer> Framebuffer;
@@ -65,4 +66,6 @@ namespace wg {
 
     template<typename T>
     using VertexBufferPtr = std::shared_ptr<internal::IVertexBuffer<T>>;
+
+    typedef std::shared_ptr<internal::IIndexBuffer> IndexBufferPtr;
 };

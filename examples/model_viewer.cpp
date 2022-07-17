@@ -49,20 +49,18 @@ int main() {
     wgut::Model model2 = wgut::Model::constructModel(wing, {positions2, normals2}, mesh2.indices);
 
 
-    wg::Uniform<falg::Mat4>* cameraUniform = wing.createUniform<falg::Mat4>();
+    wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
 
-    wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
     resourceSet->set({cameraUniform});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
-        std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
-                                            0, // Binding no.
-                                            3, // Number of elements
-                                            3 * sizeof(float), // Stride (in bytes)
-                                            0}, // Offset (bytes)
-                                           {wg::tFloat32, 1, 3, 3 * sizeof(float), 0}};
+        std::vector<wg::VertexAttribDesc> {
+        wg::VertexAttribDesc(0, wg::ComponentType::Float32, 3, 3 * sizeof(float), 0), // Offset (bytes)
+        wg::VertexAttribDesc(1, wg::ComponentType::Float32, 3, 3 * sizeof(float), 0)
+    };
 
     std::vector<uint32_t> vertex_spirv;
     {
@@ -87,7 +85,7 @@ int main() {
         shader.compile(vertex_spirv, hcol);
     }
 
-    wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+    wg::ShaderPtr vertex_shader = wing.createShader(wg::ShaderStage::Vertex, vertex_spirv);
 
     std::vector<uint32_t> fragment_spirv;
     {
@@ -95,49 +93,52 @@ int main() {
 
         SShader<SShaderType::SHADER_FRAGMENT, vec4_s> shader;
         vec4_v in_col = shader.input<0>();
+        vec4_v final_col = (in_col + vec4_s::cons(1.0f, 1.0f, 1.0f, 1.0f)) * 0.5;
 
-        shader.compile(fragment_spirv, in_col);
+        shader.compile(fragment_spirv, final_col);
     }
 
     std::vector<uint32_t> black_fragment_spirv;
     {
         using namespace spurv;
         FragmentShader<vec4_s> shader;
-        vec4_v in_shader = shader.input<0>();
+        shader.input<0>(); // Avoids runtime problem, since we don't use input here
         vec4_v in_col = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f);
         shader.compile(black_fragment_spirv, in_col);
     }
 
-    wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-    wg::Shader* black_fragment_shader = wing.createShader(wg::shaFragment, black_fragment_spirv);
+    wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
+    wg::ShaderPtr black_fragment_shader = wing.createShader(wg::ShaderStage::Fragment, black_fragment_spirv);
 
-    wg::PipelineSetup pipelineSetup;
+    wg::BasicPipelineSetup pipelineSetup;
     pipelineSetup.setPolygonMode(wg::PolygonMode::Fill);
-    wg::Pipeline* pipeline = wing.
-        createPipeline(vertAttrDesc,
+    wg::PipelinePtr pipeline = wing.
+        createBasicPipeline(vertAttrDesc,
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader}, pipelineSetup);
 
     pipelineSetup.setPolygonMode(wg::PolygonMode::Line);
-    wg::Pipeline* line_pipeline = wing.
-        createPipeline(vertAttrDesc,
+    wg::PipelinePtr line_pipeline = wing.
+        createBasicPipeline(vertAttrDesc,
                        {resourceSetLayout},
                        {vertex_shader, black_fragment_shader}, pipelineSetup);
 
-    wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
-    wg::RenderFamily* line_family = wing.createRenderFamily(line_pipeline, false);
+    wg::BasicDrawPassSettings draw_settings;
+    draw_settings.render_pass_settings.setShouldClear(true);
+    wg::DrawPassPtr polygon_draw_pass = wing.createBasicDrawPass(pipeline, draw_settings);
+
+    draw_settings.render_pass_settings.setShouldClear(false);
+    wg::DrawPassPtr line_draw_pass = wing.createBasicDrawPass(line_pipeline, draw_settings);
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
 
-    family->startRecording();
-    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    family->endRecording();
+    polygon_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+    polygon_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    polygon_draw_pass->getCommandChain().endRecording();
 
-    line_family->startRecording();
-    line_family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
-    line_family->endRecording();
-
-    wg::SemaphoreChain* chain = wing.createSemaphoreChain();
+    line_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+    line_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    line_draw_pass->getCommandChain().endRecording();
 
     int lock_x = width / 2, lock_y = height / 2;
 
@@ -154,6 +155,12 @@ int main() {
     bool is_switch = false;
     int switch_state = 0;
 
+    polygon_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
+
+    line_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
+    wing.setPresentWaitForSemaphores({ polygon_draw_pass->getSemaphores().createOnFinishSemaphore(),
+            line_draw_pass->getSemaphores().createOnFinishSemaphore() });
+
     while (win.isOpen()) {
 
         phi = phi + diff_x * pointer_speed;
@@ -166,19 +173,17 @@ int main() {
 
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-        cameraUniform->set(renderMatrix);
+        polygon_draw_pass->awaitCurrentCommand();
+        line_draw_pass->awaitCurrentCommand();
 
-        family->submit({chain});
-        line_family->submit({chain});
+        cameraUniform->setCurrent(renderMatrix);
 
-        wing.present({chain});
+        polygon_draw_pass->render();
+        line_draw_pass->render();
 
-        win.sleepMilliseconds(40);
-
-        wing.waitForLastPresent();
+        wing.present();
 
         win.flushEvents();
-
         win.getPointerPosition(&diff_x, &diff_y);
 
         diff_x -= lock_x;
@@ -186,17 +191,19 @@ int main() {
         scroll = win.getScroll();
         bool new_is_switch = win.isKeyPressed(WK_B);
         if (new_is_switch && !is_switch) {
+            wing.waitIdle();
+
             switch_state = switch_state ^ 1;
 
             wgut::Model& curr_model = switch_state == 0 ? model : model2;
 
-            family->startRecording();
-            family->recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
-            family->endRecording();
+            polygon_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+            polygon_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
+            polygon_draw_pass->getCommandChain().endRecording();
 
-            line_family->startRecording();
-            line_family->recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
-            line_family->endRecording();
+            line_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+            line_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
+            line_draw_pass->getCommandChain().endRecording();
         }
 
         is_switch = new_is_switch;
@@ -204,21 +211,10 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
+
+        cameraUniform->swap();
+        resourceSet->swap();
     }
 
-    wing.destroy(chain);
-    wing.destroy(family);
-    wing.destroy(line_family);
-
-    wing.destroy(vertex_shader);
-    wing.destroy(fragment_shader);
-    wing.destroy(black_fragment_shader);
-
-    wing.destroy(pipeline);
-    wing.destroy(line_pipeline);
-
-    model.destroy(wing);
-    model2.destroy(wing);
-    wing.destroy(cameraUniform);
-
+    wing.waitIdle();
 }

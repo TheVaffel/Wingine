@@ -1,6 +1,6 @@
 #pragma once
 
-namespace wg::internal {
+namespace wg {
     enum class PolygonMode {
         Point,
         Line,

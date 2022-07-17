@@ -119,8 +119,6 @@ int main() {
                                                               {depth_shader},
                                                               shadow_pipeline_setup);
 
-    wg::EventChainPtr shadow_finish_event = wing.createEventChain();
-
     wg::BasicDrawPassSettings shadow_draw_pass_settings;
     shadow_draw_pass_settings.render_pass_settings
         .setDepthOnly()
@@ -130,7 +128,6 @@ int main() {
 
     shadow_draw_pass->getCommandChain().startRecording(shadow_framebuffer_chain);
     shadow_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer, { lightSet });
-    shadow_draw_pass->getCommandChain().recordSetEvent(shadow_finish_event);
     shadow_draw_pass->getCommandChain().endRecording();
 
     std::vector<uint32_t> vertex_spirv;
@@ -200,9 +197,7 @@ int main() {
     wg::DrawPassPtr real_draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     real_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    real_draw_pass->getCommandChain().recordWaitEvent(shadow_finish_event, shadow_framebuffer_chain);
     real_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer, { resourceSet, lightTextureSet });
-    real_draw_pass->getCommandChain().recordResetEvent(shadow_finish_event);
     real_draw_pass->getCommandChain().endRecording();
 
     shadow_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
@@ -266,7 +261,6 @@ int main() {
         }
 
         shadow_framebuffer_chain->swapFramebuffer();
-        shadow_finish_event->swap();
 
         lightSet->swap();
         lightTextureSet->swap();

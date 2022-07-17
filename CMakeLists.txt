@@ -169,7 +169,7 @@ add_executable(texture_test ${WINGINE_EXAMPLES_DIR}/texture_test.cpp)
 add_executable(model_viewer ${WINGINE_EXAMPLES_DIR}/model_viewer.cpp)
 add_executable(instance_test ${WINGINE_EXAMPLES_DIR}/instance_test.cpp)
 add_executable(frag ${WINGINE_EXAMPLES_DIR}/frag.cpp)
-add_executable(offscreen ${WINGINE_EXAMPLES_DIR}/offscreen.cpp ${WINGINE_EXAMPLES_DIR}/renderdoc_util.cpp)
+add_executable(offscreen ${WINGINE_EXAMPLES_DIR}/offscreen.cpp ${WINGINE_EXAMPLES_DIR}/util/renderdoc_util.cpp)
 
 target_compile_definitions(offscreen PUBLIC HEADLESS)
 

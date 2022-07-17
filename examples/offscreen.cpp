@@ -6,7 +6,7 @@
 
 #include <spurv.hpp>
 
-#include "./renderdoc_util.hpp"
+#include "./util/renderdoc_util.hpp"
 
 int main() {
 

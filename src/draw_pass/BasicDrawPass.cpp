@@ -19,9 +19,10 @@ namespace wg::internal {
                                         const vk::Device& device) {
 
         renderPassUtil::RenderPassSetup render_pass_setup;
-        render_pass_setup.setColorClears({ settings.render_pass_settings.getShouldClearColor() });
-        render_pass_setup.setDepthClear(settings.render_pass_settings.getShouldClearDepth());
         render_pass_setup.setNumColorAttachments(settings.render_pass_settings.getNumColorAttachments());
+        render_pass_setup.setColorClears(std::vector<bool>(settings.render_pass_settings.getNumColorAttachments(),
+                                                           settings.render_pass_settings.getShouldClearColor()));
+        render_pass_setup.setDepthClear(settings.render_pass_settings.getShouldClearDepth());
         render_pass_setup.setFinalizeAsTexture(settings.render_pass_settings.getFinalizeAsTexture());
 
         return renderPassUtil::createRenderPass(render_pass_setup, device);

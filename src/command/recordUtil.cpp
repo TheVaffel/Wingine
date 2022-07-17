@@ -20,22 +20,20 @@ namespace wg::internal::recordUtil {
         }
 
         std::vector<vk::ClearValue> getColorAndDepthClearValues(const CommandControllerSettings& settings) {
-            std::vector<vk::ClearValue> clear_values(2);
+            std::vector<vk::ClearValue> clear_values;
 
-            if (settings.command_render_pass_settings.getNumColorAttachments() > 0) {
-                if (settings.command_render_pass_settings.getShouldClearColor()) {
-                    clear_values[0].color.setFloat32({ 0.2f, 0.2f, 0.2f, 1.0f });
-                }
-                if (settings.command_render_pass_settings.getShouldClearDepth()) {
-                    clear_values[1].depthStencil.depth = 1.0f;
-                    clear_values[1].depthStencil.stencil = 0.0f;
-                }
-            } else {
-                if (settings.command_render_pass_settings.getShouldClearDepth()) {
-                    clear_values[0].depthStencil.depth = 1.0f;
-                    clear_values[0].depthStencil.stencil = 0.0f;
-                }
+            // Color
+            for (uint32_t i = 0; i < settings.command_render_pass_settings.getNumColorAttachments(); i++) {
+                vk::ClearValue clear_value;
+                clear_value.color.setFloat32({ 0.2f, 0.2f, 0.2f, 1.0f });
+                clear_values.push_back(clear_value);
             }
+
+            // Depth
+            vk::ClearValue clear_value;
+            clear_value.depthStencil.depth = 1.0f;
+            clear_value.depthStencil.stencil = 0.0f;
+            clear_values.push_back(clear_value);
 
             return clear_values;
         }

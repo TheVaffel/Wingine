@@ -147,7 +147,12 @@ namespace wg::internal::renderPassUtil {
     }
 
     RenderPassSetup& RenderPassSetup::setNumColorAttachments(uint32_t num_color_attachments) {
-        this->color_clears = std::vector<bool>(num_color_attachments, true);
+        std::vector<bool> new_color_clears = std::vector<bool>(num_color_attachments, true);
+        for (uint32_t i = 0; i < std::min(this->color_clears.size(), new_color_clears.size()); i++) {
+            new_color_clears[i] = this->color_clears[i];
+        }
+
+        this->color_clears = new_color_clears;
         return *this;
     }
 

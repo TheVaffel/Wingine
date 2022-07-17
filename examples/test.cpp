@@ -118,8 +118,9 @@ int main() {
     while (win.isOpen()) {
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-        cameraUniform->setCurrentUniform(renderMatrix);
+        draw_pass->awaitCurrentCommand();
 
+        cameraUniform->setCurrent(renderMatrix);
         draw_pass->render();
 
         wing.present();

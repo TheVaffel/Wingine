@@ -19,8 +19,8 @@ namespace wg::internal {
         BasicUniformChain(uint32_t count,
                           std::shared_ptr<const DeviceManager> device_manager);
 
-        virtual void setAllUniforms(const T& value) override;
-        virtual void setCurrentUniform(const T& value) override;
+        virtual void setAll(const T& value) override;
+        virtual void setCurrent(const T& value) override;
         virtual IUniform<T>& getCurrentUniform() override;
 
         virtual uint32_t getCurrentIndex() const override;

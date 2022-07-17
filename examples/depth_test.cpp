@@ -232,14 +232,13 @@ int main() {
         shadow_draw_pass->awaitCurrentCommand();
         real_draw_pass->awaitCurrentCommand();
 
-        lightUniform->setCurrentUniform(light_camera.getRenderMatrix());
+        lightUniform->setCurrent(light_camera.getRenderMatrix());
 
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
         shadow_draw_pass->render();
 
-
-        cameraUniform->setCurrentUniform(renderMatrix);
+        cameraUniform->setCurrent(renderMatrix);
 
         real_draw_pass->render();
 

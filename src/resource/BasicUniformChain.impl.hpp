@@ -13,19 +13,14 @@ namespace wg::internal {
     }
 
     template<typename T>
-    void BasicUniformChain<T>::setAllUniforms(const T& value) {
+    void BasicUniformChain<T>::setAll(const T& value) {
         for (uint32_t i = 0; i < this->uniforms.size(); i++) {
             this->uniforms[i]->set(value);
         }
     }
 
-    /* template<typename T>
-    void BasicUniformChain<T>::setNextUniformAndSwap(const T& value) {
-        this->uniform_index.incrementIndex();
-        this->uniforms[this->uniform_index.getCurrentIndex()]->set(value);
-        } */
     template<typename T>
-    void BasicUniformChain<T>::setCurrentUniform(const T& value) {
+    void BasicUniformChain<T>::setCurrent(const T& value) {
         this->uniforms[this->uniform_index.getCurrentIndex()]->set(value);
     }
 

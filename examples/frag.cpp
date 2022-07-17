@@ -27,27 +27,25 @@ int main() {
         1, 3, 2
     };
 
-    wg::VertexBuffer<float>* position_buffer =
+    wg::VertexBufferPtr<float> position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
-    position_buffer->set(positions, num_points * 4);
+    position_buffer->set(positions, 0, num_points * 4);
 
-    wg::IndexBuffer* index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
-    index_buffer->set(indices, num_triangles * 3);
+    wg::IndexBufferPtr index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
+    index_buffer->set(indices, 0, num_triangles * 3);
 
     wgut::Model model({position_buffer}, index_buffer);
 
-    wg::Uniform<float>* time_uniform = wing.createUniform<float>();
+    wg::UniformChainPtr<float> time_uniform = wing.createUniformChain<float>();
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-    wg::ResourceSet* time_set = wing.createResourceSet(resourceSetLayout);
+    wg::ResourceSetChainPtr time_set = wing.createResourceSetChain(resourceSetLayout);
     time_set->set({time_uniform});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
-        std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
-                                            0, // Binding no.
-                                            4, // Number of elements
-                                            4 * sizeof(float), // Stride (in bytes)
-                                            0}, // Offset (bytes)
-    };
+        std::vector<wg::VertexAttribDesc>
+        {
+            wg::VertexAttribDesc(0, wg::ComponentType::Float32, 4, 4 * sizeof(float), 0)
+        };
 
 
     float scale = 0.001f;
@@ -61,20 +59,20 @@ int main() {
         SShader<SShaderType::SHADER_VERTEX, vec4_s> shader;
         vec4_v s_pos = shader.input<0>();
         uint_v vi = shader.getBuiltin<BUILTIN_VERTEX_INDEX>();
-        // SUniformBinding<float_s> un1 = shader.uniformBinding<float_s>(0, 0);
+        float_v time = shader.uniformBinding<float_s>(0, 0).member<0>().load();
 
         // Compute corners, (-1, -1) to (1, 1)
         float_v pv0 = cast<float_s>(vi % 2) * 2.f - 1.f;
         float_v pv1 = cast<float_s>(vi / 2) * 2.f - 1.f;
 
-        vec2_v coord = vec2_s::cons(pv0, pv1) * scale + vec2_s::cons(offx, offy);
+        vec2_v coord = vec2_s::cons(pv0, pv1) * exp((- time - 1) / 2 * 10) + vec2_s::cons(offx, offy);
 
         shader.setBuiltin<BUILTIN_POSITION>(s_pos);
         shader.compile(vertex_spirv, coord);
 
     }
 
-    wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+    wg::ShaderPtr vertex_shader = wing.createShader(wg::ShaderStage::Vertex, vertex_spirv);
 
     int mandelbrot_iterations = 1000;
     float max_rad = 4.f;
@@ -133,57 +131,50 @@ int main() {
        printf("%d\n", fragment_spirv[i]);
        } */
 
-    wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
-    wg::Pipeline* pipeline = wing.
-        createPipeline(vertAttrDesc,
+    wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
+    wg::PipelinePtr pipeline = wing.
+        createBasicPipeline(vertAttrDesc,
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
-    wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
+    wg::BasicDrawPassSettings draw_pass_settings;
+    draw_pass_settings.render_pass_settings.setShouldClear(true);
+    wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
-    family->startRecording();
-    family->recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
-    family->endRecording();
+    draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {time_set});
+    draw_pass->getCommandChain().endRecording();
+
+    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
+    wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
 
     float f = 0.0;
-    float inc = 0.05f;
-
-    wg::SemaphoreChain* main_chain = wing.createSemaphoreChain();
+    float inc = 0.01f;
 
     while (win.isOpen()) {
-        if(f > 1) {
-            inc = -0.05f;
-        } else if(f < 0) {
-            inc = 0.05f;
+        /* if(f >= 0.01f || f <= 0.01f) {
+            inc *= -1.0f;
         }
+        f += inc; */
         f += inc;
-        time_uniform->set(f);
 
-        family->submit({main_chain});
+        draw_pass->awaitCurrentCommand();
 
-        wing.present({main_chain});
+        // win.sleepMilliseconds(10);
+        time_uniform->setCurrent(sin(f));
 
-        win.sleepMilliseconds(16);
+        draw_pass->render();
 
-        wing.waitForLastPresent();
+        wing.present();
 
         win.flushEvents();
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
+
+        time_uniform->swap();
+        time_set->swap();
     }
 
-    wing.destroy(main_chain);
-
-    wing.destroy(family);
-
-    wing.destroy(vertex_shader);
-    wing.destroy(fragment_shader);
-
-    wing.destroy(pipeline);
-
-    wing.destroy(position_buffer);
-    wing.destroy(index_buffer);
-
-    wing.destroy(time_uniform);
+    wing.waitIdle();
 }

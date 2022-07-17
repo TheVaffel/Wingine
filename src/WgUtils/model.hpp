@@ -43,12 +43,8 @@ namespace wgut {
         static Model constructModel(wg::Wingine& wing, const std::vector<std::vector<float>>& data_buffers,
                                     const std::vector<uint32_t>& index_data);
 
-
         const std::vector<std::shared_ptr<wg::internal::IBuffer>>& getVertexBuffers();
         const wg::IndexBufferPtr getIndexBuffer();
-
-
-        void destroy(wg::Wingine& wing);
     };
 
     namespace SimpleModels {

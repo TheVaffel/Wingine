@@ -14,13 +14,13 @@ namespace wg::internal::pipelineUtil {
         // VK_FORMAT_R32_SFLOAT = 100 etc.. are defined in vulkan_core.h
 
         switch(type) {
-        case ComponentType::tFloat32:
+        case ComponentType::Float32:
             return vk::Format(97 + num_components * 3);
-        case ComponentType::tFloat64:
+        case ComponentType::Float64:
             return vk::Format(109 + num_components * 3);
-        case ComponentType::tInt32:
+        case ComponentType::Int32:
             return vk::Format(96 + num_components * 3);
-        case ComponentType::tInt64:
+        case ComponentType::Int64:
             return vk::Format(95 + num_components * 3);
         }
         throw std::runtime_error("[pipelineUtil] Unrecognized component type + format combination");

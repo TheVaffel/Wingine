@@ -51,8 +51,8 @@ int main() {
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         {
-            wg::VertexAttribDesc(0, wg::ComponentType::tFloat32, 4, 4 * sizeof(float), 0),
-            wg::VertexAttribDesc(1, wg::ComponentType::tFloat32, 4, 4 * sizeof(float), 0)
+            wg::VertexAttribDesc(0, wg::ComponentType::Float32, 4, 4 * sizeof(float), 0),
+            wg::VertexAttribDesc(1, wg::ComponentType::Float32, 4, 4 * sizeof(float), 0)
         };
 
     std::vector<uint32_t> vertex_spirv;

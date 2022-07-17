@@ -3,9 +3,9 @@
 namespace wg::internal {
     enum class ComponentType
     {
-        tFloat32,
-        tFloat64,
-        tInt32,
-        tInt64
+        Float32,
+        Float64,
+        Int32,
+        Int64
     };
 };

@@ -22,56 +22,14 @@ namespace wg::internal {
                       vk::MemoryPropertyFlagBits::eDeviceLocal,
                       device_manager),
           staging_buffer(num_elements * sizeof(T),
-                         vk::BufferUsageFlagBits::eTransferSrc,
-                         vk::MemoryPropertyFlagBits::eHostVisible,
-                         device_manager),
-          device_manager(device_manager),
-          command_manager(command_manager) {
-        this->command = this->command_manager->createGraphicsCommands(1)[0];
-        this->graphics_queue = queue_manager->getGraphicsQueue();
-    }
-
+                         device_manager,
+                         queue_manager,
+                         command_manager) { }
 
     template<typename T>
     void InternallyStagedVertexBuffer<T>::set(const T* data, uint32_t first_element, uint32_t element_count) {
         uint32_t copy_size = element_count * sizeof(T);
         uint32_t offset = first_element * sizeof(T);
-
-        uint32_t required_size_multiple = this->device_manager->getDeviceProperties().limits.nonCoherentAtomSize;
-
-        vk::MappedMemoryRange range = bufferUtil::getMappedMemoryRangeForCopy(copy_size,
-                                                                              offset,
-                                                                              required_size_multiple,
-                                                                              this->getAllocatedByteSize(),
-                                                                              this->staging_buffer.getMemory());
-
-        T* dst = memoryUtil::mapMemory<T>(this->staging_buffer.getMemory(),
-                                          this->device_manager->getDevice());
-
-        memcpy(dst, data, sizeof(T) * element_count);
-
-        this->device_manager->getDevice().flushMappedMemoryRanges({range});
-
-        memoryUtil::unmapMemory(this->staging_buffer.getMemory(),
-                                this->device_manager->getDevice());
-
-
-        copyBuffer::recordCopyBuffer(this->command.buffer, this->staging_buffer, *this);
-
-        vk::SubmitInfo si;
-        si.setCommandBufferCount(1)
-            .setPCommandBuffers(&this->command.buffer);
-
-        fenceUtil::resetFence(this->command.fence, this->device_manager->getDevice());
-
-        _wassert_result(this->graphics_queue.submit(1, &si, this->command.fence),
-                        "submitting vertex buffer copy command");
-
-        fenceUtil::awaitFence(this->command.fence, this->device_manager->getDevice());
-    }
-
-    template<typename T>
-    InternallyStagedVertexBuffer<T>::~InternallyStagedVertexBuffer() {
-        this->command_manager->destroyGraphicsCommands({this->command});
+        this->staging_buffer.set(data, *this, copy_size, offset);
     }
 };

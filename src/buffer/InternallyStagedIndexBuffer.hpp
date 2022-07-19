@@ -2,18 +2,13 @@
 
 #include "./IIndexBuffer.hpp"
 #include "./BasicBuffer.hpp"
+#include "./StagingBuffer.hpp"
 
 #include "../CommandManager.hpp"
 
 namespace wg::internal {
     class InternallyStagedIndexBuffer : public virtual IIndexBuffer, public BasicBuffer {
-        BasicBuffer staging_buffer;
-
-        Command command;
-        vk::Queue graphics_queue;
-
-        std::shared_ptr<DeviceManager> device_manager;
-        std::shared_ptr<CommandManager> command_manager;
+        StagingBuffer staging_buffer;
 
     public:
 
@@ -23,7 +18,5 @@ namespace wg::internal {
                                     std::shared_ptr<CommandManager> command_manager);
 
         virtual void set(const uint32_t* data, uint32_t first_index, uint32_t num_indices) final;
-
-        ~InternallyStagedIndexBuffer();
     };
 };

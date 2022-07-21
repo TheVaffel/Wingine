@@ -24,7 +24,6 @@ set(BUFFER_SOURCES
   bufferUtil.cpp
   IBuffer.cpp
   BasicBuffer.cpp
-  BasicStorageBuffer.cpp
   InternallyStagedIndexBuffer.cpp
   IIndexBuffer.cpp
   StagingBuffer.cpp
@@ -34,7 +33,8 @@ set(RESOURCE_SOURCES
   descriptorUtil.cpp
   BasicResourceSet.cpp
   BasicResourceSetChain.cpp
-  ResourceSetLayoutRegistry.cpp)
+  ResourceSetLayoutRegistry.cpp
+  StaticResourceChain.cpp)
 set(FRAMEBUFFER_SOURCES
   framebufferUtil.cpp
   IFramebuffer.cpp

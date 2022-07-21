@@ -25,9 +25,10 @@ int main() {
     std::uniform_real_distribution<float> dist1(0.0, 1.0);
 
     const int num_instances = 20000;
-    float* offsets = new float[3 * num_instances];
-    float* colors = new float[3 * num_instances];
-    falg::Mat4* inst_mats = new falg::Mat4[num_instances];
+    std::vector<float> offsets = std::vector<float>(3 * num_instances);
+    std::vector<float> colors = std::vector<float>(3 * num_instances);
+    std::vector<falg::Mat4> inst_mats = std::vector<falg::Mat4>(num_instances);
+
     for(int i = 0; i < num_instances; i++) {
         falg::Vec3 off;
         do {
@@ -46,40 +47,42 @@ int main() {
             falg::Mat4(falg::FLATALG_MATRIX_ROTATION_X, theta);
     }
 
-    wg::VertexBuffer<float>* offset_buffer = wing.createVertexBuffer<float>(3 * num_instances);
-    offset_buffer->set(offsets, 3 * num_instances);
+    wg::VertexBufferPtr<float> offset_buffer = wing.createVertexBuffer<float>(3 * num_instances);
+                                                    offset_buffer->set(offsets.data(), 0, 3 * num_instances);
 
-    wg::VertexBuffer<float>* color_buffer = wing.createVertexBuffer<float>(3 * num_instances);
-    color_buffer->set(colors, 3 * num_instances);
+    wg::VertexBufferPtr<float> color_buffer = wing.createVertexBuffer<float>(3 * num_instances);
+                                                    color_buffer->set(colors.data(), 0, 3 * num_instances);
 
-    wg::StorageBuffer* storage_buffer = wing.createStorageBuffer(num_instances * sizeof(falg::Mat4));
-    storage_buffer->set(inst_mats, num_instances * sizeof(falg::Mat4));
+    wg::StorageBufferPtr<falg::Mat4> storage_buffer = wing.createStorageBuffer<falg::Mat4>(num_instances);
+    storage_buffer->set(inst_mats.data(), 0, num_instances);
+
+    wg::StaticResourceChainPtr storage_chain = wing.createStaticResourceChain(storage_buffer);
 
 
     struct CamColl {
         falg::Mat4 cam, view;
     };
 
-    wg::Uniform<CamColl>* cameraUniform = wing.createUniform<CamColl>();
+    wg::UniformChainPtr<CamColl> cameraUniform = wing.createUniformChain<CamColl>();
 
     std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex,
                                                 wg::resStorageBuffer | wg::shaVertex };
 
-    wg::ResourceSet* resourceSet = wing.createResourceSet(resourceSetLayout);
-    resourceSet->set({cameraUniform, storage_buffer});
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
+    resourceSet->set({cameraUniform, storage_chain});
 
     // Positions, color, offset
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
-        std::vector<wg::VertexAttribDesc> {{wg::tFloat32, // Component type
-                                            0, // Binding no.
-                                            3, // Number of elements
-                                            3 * sizeof(float), // Stride (in bytes)
-                                            0}, // Offset (bytes)
-                                           {wg::tFloat32, 1, 3, 3 * sizeof(float), 0}, // Normal
-                                           // Color
-                                           {wg::tFloat32, 2, 3, 3 * sizeof(float), 0, true}, // true - per_instance
-                                           // Offset
-                                           {wg::tFloat32, 3, 3, 3 * sizeof(float), 0, true}
+        std::vector<wg::VertexAttribDesc> {wg::VertexAttribDesc(0, // Binding no.
+                                                                wg::ComponentType::Float32, // Component type
+                                                                3, // Number of elements
+                                                                3 * sizeof(float), // Stride (in bytes)
+                                                                0), // Offset (bytes)
+        wg::VertexAttribDesc(1, wg::ComponentType::Float32, 3, 3 * sizeof(float), 0), // Normal
+        // Color
+        wg::VertexAttribDesc(2, wg::ComponentType::Float32, 3, 3 * sizeof(float), 0, true), // true - per_instance
+        // Offset
+        wg::VertexAttribDesc(3, wg::ComponentType::Float32, 3, 3 * sizeof(float), 0, true)
     };
 
     std::vector<uint32_t> vertex_spirv;
@@ -134,7 +137,7 @@ int main() {
         // prettyprint(vertex_spirv);
     }
 
-    wg::Shader* vertex_shader = wing.createShader(wg::shaVertex, vertex_spirv);
+    wg::ShaderPtr vertex_shader = wing.createShader(wg::ShaderStage::Vertex, vertex_spirv);
 
     std::vector<uint32_t> fragment_spirv;
     {
@@ -163,31 +166,35 @@ int main() {
         // prettyprint(fragment_spirv);
     }
 
-    wg::Shader* fragment_shader = wing.createShader(wg::shaFragment, fragment_spirv);
+    wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
 
-    wg::Pipeline* pipeline = wing.
-        createPipeline(vertAttrDesc,
-                       {resourceSetLayout},
-                       {vertex_shader, fragment_shader});
+    wg::PipelinePtr pipeline = wing.
+        createBasicPipeline(vertAttrDesc,
+                            {resourceSetLayout},
+                            {vertex_shader, fragment_shader});
 
-    wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
+
+    wg::BasicDrawPassSettings draw_pass_settings;
+    draw_pass_settings.render_pass_settings.setShouldClear(true);
+    wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     wgut::Camera camera(F_PI / 3.f, (float)height / (float)width, 0.01f, 1000.0f);
     float phi = 0.0;
 
-    family->startRecording();
-    family->recordDraw({model.getVertexBuffers()[0], model.getVertexBuffers()[1], offset_buffer, color_buffer},
+    draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
+    draw_pass->getCommandChain().recordDraw({model.getVertexBuffers()[0], model.getVertexBuffers()[1], offset_buffer, color_buffer},
                        model.getIndexBuffer(), {resourceSet}, num_instances);
-    family->endRecording();
+    draw_pass->getCommandChain().endRecording();
 
     CamColl camcoll;
-
-    wg::SemaphoreChain* chain = wing.createSemaphoreChain();
 
     int fps = 0;
 
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
+
+    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
+    wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
 
     while (win.isOpen()) {
 
@@ -202,12 +209,13 @@ int main() {
 
         camcoll = {renderMatrix, rViewMatrix};
 
-        cameraUniform->set(camcoll);
+        draw_pass->awaitCurrentCommand();
 
-        family->submit({chain});
+        cameraUniform->setCurrent(camcoll);
 
-        wing.present({chain});
+        draw_pass->render();
 
+        wing.present();
 
         auto now = clock.now();
 
@@ -221,32 +229,16 @@ int main() {
 
         // win.sleepMilliseconds(30);
 
-        wing.waitForLastPresent();
-
         win.flushEvents();
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
+
+        storage_chain->swap();
+        cameraUniform->swap();
+
+        resourceSet->swap();
     }
 
-    delete[] offsets;
-    delete[] colors;
-    delete[] inst_mats;
-
-    wing.destroy(chain);
-
-    wing.destroy(family);
-
-    wing.destroy(color_buffer);
-    wing.destroy(offset_buffer);
-    wing.destroy(storage_buffer);
-
-    wing.destroy(vertex_shader);
-    wing.destroy(fragment_shader);
-
-    wing.destroy(pipeline);
-
-    model.destroy(wing);
-    wing.destroy(cameraUniform);
-
+    wing.waitIdle();
 }

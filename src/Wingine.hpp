@@ -160,6 +160,9 @@ namespace wg {
         template<typename T>
         VertexBufferPtr<T> createVertexBuffer(uint32_t element_count);
 
+        template <typename T>
+        StorageBufferPtr<T> createStorageBuffer(uint32_t element_count);
+
         IndexBufferPtr createIndexBuffer(uint32_t num_indices);
 
         template<typename T>
@@ -171,6 +174,8 @@ namespace wg {
         DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
 
         ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout);
+
+        StaticResourceChainPtr createStaticResourceChain(std::shared_ptr<internal::IResource> resource);
 
         ShaderPtr createShader(internal::ShaderStage shader_stage, const std::vector<uint32_t>& spirv);
         PipelinePtr createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,

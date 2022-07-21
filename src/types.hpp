@@ -17,6 +17,7 @@
 #include "./resource/IUniform.hpp"
 #include "./resource/IUniformChain.hpp"
 #include "./resource/IResourceSetChain.hpp"
+#include "./resource/StaticResourceChain.hpp"
 
 #include "./pipeline/IShader.hpp"
 #include "./pipeline/IPipeline.hpp"
@@ -27,6 +28,7 @@
 
 #include "./buffer/IVertexBuffer.hpp"
 #include "./buffer/IIndexBuffer.hpp"
+#include "./buffer/IStorageBuffer.hpp"
 
 namespace wg {
     typedef std::unique_ptr<internal::IFramebuffer> Framebuffer;
@@ -68,4 +70,9 @@ namespace wg {
     using VertexBufferPtr = std::shared_ptr<internal::IVertexBuffer<T>>;
 
     typedef std::shared_ptr<internal::IIndexBuffer> IndexBufferPtr;
+
+    template<typename T>
+    using StorageBufferPtr = std::shared_ptr<internal::IStorageBuffer<T>>;
+
+    typedef std::shared_ptr<internal::StaticResourceChain> StaticResourceChainPtr;
 };

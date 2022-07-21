@@ -801,6 +801,11 @@ namespace wg {
             this->device_manager);
     }
 
+    StaticResourceChainPtr Wingine::createStaticResourceChain(std::shared_ptr<internal::IResource> resource) {
+        return std::make_shared<internal::StaticResourceChain>(this->getNumFramebuffers(),
+                                                                  resource);
+    }
+
     SemaphoreChain* Wingine::createSemaphoreChain() {
         SemaphoreChain* semaphore_chain = new SemaphoreChain(*this);
         return semaphore_chain;

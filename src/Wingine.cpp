@@ -16,6 +16,7 @@
 
 #include "./pipeline/BasicShader.hpp"
 #include "./pipeline/BasicPipeline.hpp"
+#include "./pipeline/BasicComputePipeline.hpp"
 
 #include "./buffer/InternallyStagedIndexBuffer.hpp"
 
@@ -703,7 +704,7 @@ namespace wg {
                                                          this->pipeline_cache);
     }
 
-    ComputePipeline* Wingine::createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayouts,
+    /* ComputePipeline* Wingine::createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayouts,
                                                     Shader* shader) {
         std::vector<vk::DescriptorSetLayout> rsl;
         for(unsigned int i = 0; i < resourceSetLayouts.size(); i++) {
@@ -713,6 +714,20 @@ namespace wg {
         return new ComputePipeline(*this,
                                    rsl,
                                    shader);
+                                   } */
+
+    ComputePipelinePtr Wingine::createComputePipeline(const std::vector<std::vector<uint64_t>>& resource_set_layouts,
+                                                      ShaderPtr shader) {
+        std::vector<vk::DescriptorSetLayout> rsl;
+        for(unsigned int i = 0; i < resource_set_layouts.size(); i++) {
+            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resource_set_layouts[i]));
+        }
+
+        return std::make_shared<internal::BasicComputePipeline>(rsl,
+                                                               shader,
+                                                               this->device_manager,
+                                                               this->command_manager,
+                                                               this->pipeline_cache);
     }
 
     Framebuffer Wingine::createFramebuffer(uint32_t width, uint32_t height,

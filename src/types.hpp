@@ -25,6 +25,7 @@
 #include "./pipeline/VertexAttribDesc.hpp"
 #include "./pipeline/ComponentType.hpp"
 #include "./pipeline/BasicPipelineSetup.hpp"
+#include "./pipeline/IComputePipeline.hpp"
 
 #include "./buffer/IVertexBuffer.hpp"
 #include "./buffer/IIndexBuffer.hpp"
@@ -57,6 +58,7 @@ namespace wg {
 
     typedef std::shared_ptr<internal::IShader> ShaderPtr;
     typedef std::shared_ptr<internal::IPipeline> PipelinePtr;
+    typedef std::shared_ptr<internal::IComputePipeline> ComputePipelinePtr;
 
     typedef internal::BasicTextureSetup BasicTextureSetup;
     typedef internal::BasicPipelineSetup BasicPipelineSetup;

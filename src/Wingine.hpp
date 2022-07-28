@@ -183,8 +183,10 @@ namespace wg {
                                         const std::vector<ShaderPtr>& shaders,
                                         internal::BasicPipelineSetup setup = internal::BasicPipelineSetup());
 
-        ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
-                                               Shader* shaders);
+        /* ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
+           Shader* shaders); */
+        ComputePipelinePtr createComputePipeline(const std::vector<std::vector<uint64_t>>& resource_set_layout,
+                                                 ShaderPtr shader);
 
         Framebuffer createFramebuffer(uint32_t width, uint32_t height,
                                       bool depthOnly = false);

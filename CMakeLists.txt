@@ -59,7 +59,9 @@ set(IMAGE_SOURCES
   copyImage.cpp
   BasicTexture.cpp
   BasicTextureChain.cpp
-  samplerUtil.cpp)
+  samplerUtil.cpp
+  StagingImage.cpp
+  InternallyStagedTexture.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
 set(SYNC_SOURCES
   semaphoreUtil.cpp

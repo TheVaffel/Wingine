@@ -13,6 +13,7 @@
 #include "./resource/BasicResourceSetChain.hpp"
 
 #include "./image/BasicTextureChain.hpp"
+#include "./image/InternallyStagedTexture.hpp"
 
 #include "./pipeline/BasicShader.hpp"
 #include "./pipeline/BasicPipeline.hpp"
@@ -724,10 +725,11 @@ namespace wg {
         }
 
         return std::make_shared<internal::BasicComputePipeline>(rsl,
-                                                               shader,
-                                                               this->device_manager,
-                                                               this->command_manager,
-                                                               this->pipeline_cache);
+                                                                shader,
+                                                                this->device_manager,
+                                                                this->command_manager,
+                                                                this->queue_manager,
+                                                                this->pipeline_cache);
     }
 
     Framebuffer Wingine::createFramebuffer(uint32_t width, uint32_t height,
@@ -797,6 +799,13 @@ namespace wg {
         return std::make_shared<internal::BasicTexture>(vk::Extent2D(width, height),
                                                         setup,
                                                         this->device_manager);
+    }
+
+    SettableTexturePtr Wingine::createSettableTexture(uint32_t width, uint32_t height) {
+        return std::make_shared<internal::InternallyStagedTexture>(vk::Extent2D(width, height),
+                                                                   this->device_manager,
+                                                                   this->queue_manager,
+                                                                   this->command_manager);
     }
 
     TextureChainPtr Wingine::createBasicTextureChain(uint32_t width,

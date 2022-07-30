@@ -30,21 +30,22 @@ int main() {
     };
 
     const int texture_width = 400, texture_height = 400;
-    std::vector<unsigned char> texture_buffer = std::vector<unsigned char>(texture_width * texture_height * 4);
+    std::vector<uint32_t> texture_buffer = std::vector<uint32_t>(texture_width * texture_height * 4);
+    unsigned char* texture_data = reinterpret_cast<unsigned char*>(texture_buffer.data());
     for(int i = 0; i < texture_height; i++) {
         for(int j = 0; j < texture_width; j++) {
             for(int k = 0; k < 4; k++) {
-                texture_buffer[(i * texture_width + j) * 4 + k] = (((i >> 5) ^ (j >> 5)) & 1) ? 0x00 : 0xff;
+                texture_data[(i * texture_width + j) * 4 + k] = (((i >> 5) ^ (j >> 5)) & 1) ? 0x00 : 0xff;
             }
         }
     }
 
-    wg::ResourceImagePtr tex_im = wing.createResourceImage(texture_width, texture_height);
+    /* wg::ResourceImagePtr tex_im = wing.createResourceImage(texture_width, texture_height);
 
     std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
 
     wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(computeSetLayout);
-    compute_set->set({tex_im});
+       compute_set->set({tex_im});
 
     std::vector<uint32_t> compute_spirv;
     {
@@ -70,10 +71,13 @@ int main() {
                                                                          {compute_shader});
 
     compute_pipeline->execute({ compute_set }, texture_width, texture_height);
-    compute_pipeline->awaitExecution();
+    compute_pipeline->awaitExecution(); */
 
-    wg::Texture* texture = wing.createTexture(texture_width, texture_height);
-    texture->set(tex_im, {chain});
+    wg::SettableTexturePtr texture = wing.createSettableTexture(texture_width, texture_height);
+    texture->set(texture_buffer, 0);
+
+    wg::StaticResourceChainPtr texture_chain = wing.createStaticResourceChain(texture);
+    // texture->set(tex_im, {chain});
 
     wg::VertexBufferPtr<float> position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
@@ -90,15 +94,16 @@ int main() {
     std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
 
     wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
-    resourceSet->set({texture});
+    resourceSet->set({texture_chain});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
-        std::vector<wg::VertexAttribDesc> {{wg::ComponentType::Float32, // Component type
-                                            0, // Binding no.
-                                            4, // Number of elements
-                                            4 * sizeof(float), // Stride (in bytes)
-                                            0}, // Offset (bytes)
-                                           {wg::tFloat32, 1, 2, 2 * sizeof(float), 0}};
+        std::vector<wg::VertexAttribDesc> {
+        wg::VertexAttribDesc(0,
+                             wg::ComponentType::Float32, // Component type
+                             4, // Number of elements
+                             4 * sizeof(float), // Stride (in bytes)
+                             0), // Offset (bytes)
+        wg::VertexAttribDesc(1, wg::ComponentType::Float32, 2, 2 * sizeof(float), 0)};
 
     std::vector<uint32_t> vertex_spirv;
     {
@@ -135,7 +140,6 @@ int main() {
                        {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
-    // wg::RenderFamily* family = wing.createRenderFamily(pipeline, true);
     wg::BasicDrawPassSettings draw_pass_settings;
     draw_pass_settings.render_pass_settings.setShouldClear(true);
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
@@ -158,6 +162,9 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
+
+        resourceSet->swap();
+        texture_chain->swap();
     }
 
     wing.waitIdle();

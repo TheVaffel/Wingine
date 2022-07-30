@@ -2,6 +2,9 @@
 
 #include "./imageUtil.hpp"
 
+#include "../sync/fenceUtil.hpp"
+#include "../util/log.hpp"
+
 #include <iostream>
 
 namespace wg::internal::imageUtil {
@@ -131,7 +134,7 @@ namespace wg::internal::imageUtil {
         parameters.image_tiling = vk::ImageTiling::eLinear;
         return createImageRaw(device,
                               dimensions,
-                              vk::ImageUsageFlagBits::eTransferDst,
+                              vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst,
                               format,
                               parameters);
     }
@@ -172,6 +175,40 @@ namespace wg::internal::imageUtil {
 
         return device.createImageView(ivci);
     }
+
+    /*
+     * Image layout
+     */
+
+    void initializeLayout(const IImage& image,
+                          const vk::ImageLayout& layout,
+                          const Command& command,
+                          const vk::Queue& queue,
+                          const vk::Device& device) {
+        CommandLayoutTransitionData data;
+
+        command.buffer.begin(vk::CommandBufferBeginInfo());
+        imageUtil::recordSetLayout(data,
+                                   command.buffer,
+                                   vk::ImageLayout::eUndefined,
+                                   layout,
+                                   image);
+
+        command.buffer.end();
+
+        std::vector<vk::CommandBuffer> command_buffers = std::vector<vk::CommandBuffer> { command.buffer };
+
+        vk::SubmitInfo si;
+        si.setCommandBuffers(command_buffers);
+
+        fenceUtil::awaitAndResetFence(command.fence, device);
+
+        _wassert_result(queue.submit(1, &si, command.fence),
+                        "submitting set-layout buffer");
+
+        fenceUtil::awaitFence(command.fence, device);
+    }
+
 
     /*
      * Recording

@@ -4,6 +4,7 @@
 
 #include "./CopyImageAuxillaryData.hpp"
 #include "./IImage.hpp"
+#include "../CommandManager.hpp"
 
 namespace wg::internal::imageUtil {
 
@@ -50,6 +51,16 @@ namespace wg::internal::imageUtil {
     vk::ImageView createDepthImageView(const vk::Image& image,
                                        const vk::Format& format,
                                        const vk::Device& device);
+
+    /*
+     * Image layout
+     */
+
+    void initializeLayout(const IImage& image,
+                          const vk::ImageLayout& layout,
+                          const Command& command,
+                          const vk::Queue& queue,
+                          const vk::Device& device);
 
     /*
      * Recording

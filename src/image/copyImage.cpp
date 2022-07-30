@@ -85,7 +85,6 @@ namespace wg::internal::copyImage {
                                    1,
                                    &buffer_image_copy);
         }
-
     };
 
     void recordCopyImage(IImage& src,

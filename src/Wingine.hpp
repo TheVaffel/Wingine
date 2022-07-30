@@ -209,6 +209,7 @@ namespace wg {
         ResourceImage* createResourceImage(uint32_t width, uint32_t height);
 
         TexturePtr createBasicTexture(uint32_t width, uint32_t height, const BasicTextureSetup& setup = {});
+        SettableTexturePtr createSettableTexture(uint32_t width, uint32_t height);
         TextureChainPtr createBasicTextureChain(uint32_t width, uint32_t height, const BasicTextureSetup& setup = {});
 
         SemaphoreChain* createSemaphoreChain();

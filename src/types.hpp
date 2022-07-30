@@ -13,6 +13,7 @@
 #include "./image/ITexture.hpp"
 #include "./image/ITextureChain.hpp"
 #include "./image/BasicTexture.hpp"
+#include "./image/InternallyStagedTexture.hpp"
 
 #include "./resource/IUniform.hpp"
 #include "./resource/IUniformChain.hpp"
@@ -53,6 +54,7 @@ namespace wg {
     using UniformChainPtr = std::shared_ptr<internal::IUniformChain<T>>;
 
     typedef std::shared_ptr<internal::ITexture> TexturePtr;
+    typedef std::shared_ptr<internal::InternallyStagedTexture> SettableTexturePtr;
     typedef std::shared_ptr<internal::ITextureChain> TextureChainPtr;
     typedef std::shared_ptr<internal::FramebufferTextureChain> FramebufferTextureChainPtr;
 

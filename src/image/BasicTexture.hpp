@@ -14,7 +14,7 @@ namespace wg::internal {
         BasicTextureSetup& setDepthOnly(bool enable);
     };
 
-    class BasicTexture : public virtual ITexture, public virtual BasicImage {
+    class BasicTexture : public virtual ITexture, public BasicImage {
 
         vk::Sampler sampler;
     public:

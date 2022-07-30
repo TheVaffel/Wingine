@@ -28,14 +28,14 @@ namespace wg::internal {
 
         uint32_t required_size_multiple = this->device_manager->getDeviceProperties().limits.nonCoherentAtomSize;
 
-        vk::MappedMemoryRange range = bufferUtil::getMappedMemoryRangeForCopy(byte_size,
+        vk::MappedMemoryRange range = memoryUtil::getMappedMemoryRangeForCopy(byte_size,
                                                                               0,
                                                                               required_size_multiple,
                                                                               this->buffer.getAllocatedByteSize(),
                                                                               this->buffer.getMemory());
 
         void* staging_dst = memoryUtil::mapMemory<void>(this->buffer.getMemory(),
-                                                this->device_manager->getDevice());
+                                                        this->device_manager->getDevice());
 
         memcpy(staging_dst, src, byte_size);
 
@@ -54,7 +54,7 @@ namespace wg::internal {
         fenceUtil::resetFence(this->command.fence, this->device_manager->getDevice());
 
         _wassert_result(this->graphics_queue.submit(1, &si, this->command.fence),
-                        "submitting vertex buffer copy command");
+                        "submitting staging buffer copy command");
 
         fenceUtil::awaitFence(this->command.fence, this->device_manager->getDevice());
     }

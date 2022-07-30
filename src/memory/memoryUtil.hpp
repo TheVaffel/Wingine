@@ -23,6 +23,13 @@ namespace wg::internal::memoryUtil {
         const vk::Device& device,
         const vk::PhysicalDeviceMemoryProperties& device_properties);
 
+
+    vk::MappedMemoryRange getMappedMemoryRangeForCopy(uint32_t copy_size,
+                                                      uint32_t offset,
+                                                      uint32_t alignment_requirement,
+                                                      uint32_t allocated_memory_byte_size,
+                                                      const vk::DeviceMemory& memory);
+
     template<typename T>
     T* mapMemory(const vk::DeviceMemory& memory,
                  const vk::Device& device);

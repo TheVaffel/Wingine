@@ -4,15 +4,17 @@
 #include "./BasicFramebufferSetup.hpp"
 #include "./IFramebuffer.hpp"
 
-#include "../image/IImage.hpp"
+#include "../image/BasicImage.hpp"
 #include "../SwapchainManager.hpp"
 
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg::internal {
     class BasicFramebuffer : public IFramebuffer {
-        std::unique_ptr<IImage> color_image;
-        std::unique_ptr<IImage> depth_image;
+
+        std::optional<BasicImage> color_image;
+        BasicImage depth_image;
+
         vk::Framebuffer framebuffer;
 
         std::shared_ptr<const DeviceManager> device_manager;

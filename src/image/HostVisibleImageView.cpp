@@ -17,12 +17,11 @@ namespace wg::internal {
                                                std::shared_ptr<const DeviceManager> device_manager)
         : dimensions(dimensions),
           buffers(num_buffers),
+          debug_image(dimensions, BasicImageSettings::createHostAccessibleColorImageSettings(), device_manager),
           current_buffer_counter(num_buffers),
           device_manager(device_manager) {
 
         this->initBuffers(dimensions);
-        this->debug_image = BasicImage::createHostAccessibleColorImage(vk::Extent2D(480, 360),
-                                                                       device_manager);
     }
 
     void HostVisibleImageView::initBuffers(const vk::Extent2D& dimensions) {
@@ -42,7 +41,7 @@ namespace wg::internal {
     }
 
     IImage& HostVisibleImageView::getImage() {
-        return *this->debug_image;
+        return this->debug_image;
     }
 
     uint32_t HostVisibleImageView::getNumBuffers() const {

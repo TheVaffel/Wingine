@@ -61,7 +61,8 @@ set(IMAGE_SOURCES
   BasicTextureChain.cpp
   samplerUtil.cpp
   StagingImage.cpp
-  InternallyStagedTexture.cpp)
+  InternallyStagedTexture.cpp
+  BasicImageSettings.cpp)
 set(RENDER_PASS_SOURCES renderPassUtil.cpp CompatibleRenderPassRegistry.cpp)
 set(SYNC_SOURCES
   semaphoreUtil.cpp
@@ -83,7 +84,8 @@ set(PIPELINE_SOURCES
   BasicShader.cpp
   pipelineUtil.cpp
   shaderUtil.cpp
-  VertexAttribDesc.cpp)
+  VertexAttribDesc.cpp
+  BasicComputePipeline.cpp)
 set(DRAW_PASS_SOURCES BasicDrawPass.cpp DrawPassBase.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp math.cpp)

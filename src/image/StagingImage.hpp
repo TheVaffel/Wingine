@@ -8,7 +8,7 @@
 
 namespace wg::internal {
     class StagingImage {
-        std::unique_ptr<BasicImage> staging_image;
+        BasicImage staging_image;
 
         Command command;
         vk::Queue graphics_queue;

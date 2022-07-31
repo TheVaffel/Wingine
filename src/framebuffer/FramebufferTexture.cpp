@@ -83,10 +83,6 @@ namespace wg::internal {
         return this->getRelevantFramebufferImage().getIntendedLayout();
     }
 
-    void FramebufferTexture::setCurrentLayout(const vk::ImageLayout& layout) {
-        this->getRelevantFramebufferImage().setCurrentLayout(layout);
-    }
-
     [[nodiscard]]
     std::unique_ptr<IResourceWriteAuxillaryData>
     FramebufferTexture::writeDescriptorUpdate(vk::WriteDescriptorSet& write_info) const {

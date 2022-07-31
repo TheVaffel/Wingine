@@ -2,17 +2,20 @@
 
 #include "../SwapchainManager.hpp"
 
+#include "../image/SwapchainColorImage.hpp"
+#include "../image/BasicImage.hpp"
+
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg::internal {
     class SwapchainFramebuffer : public IFramebuffer {
 
-        std::unique_ptr<IImage> color_image;
-        std::unique_ptr<IImage> depth_image;
+        std::shared_ptr<const SwapchainManager> swapchain_manager;
+
+        SwapchainColorImage color_image;
+        BasicImage depth_image;
 
         vk::Framebuffer framebuffer;
-
-        std::shared_ptr<const SwapchainManager> swapchain_manager;
         std::shared_ptr<const DeviceManager> device_manager;
 
         SwapchainFramebuffer(const vk::Image& image,
@@ -35,10 +38,8 @@ namespace wg::internal {
 
         virtual bool hasColorImage() const;
         virtual const IImage& getColorImage() const;
-        virtual IImage& getColorImage();
 
         virtual bool hasDepthImage() const;
         virtual const IImage& getDepthImage() const;
-        virtual IImage& getDepthImage();
     };
 };

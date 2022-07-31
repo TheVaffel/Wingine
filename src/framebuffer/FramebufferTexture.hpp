@@ -42,7 +42,6 @@ namespace wg::internal {
         virtual const vk::ImageAspectFlagBits getDefaultAspect() const override;
 
         virtual const vk::ImageLayout getIntendedLayout() const override;
-        virtual void setCurrentLayout(const vk::ImageLayout& layout) override;
 
         [[nodiscard]]
         virtual std::unique_ptr<IResourceWriteAuxillaryData>

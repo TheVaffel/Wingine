@@ -14,15 +14,15 @@ namespace wg::internal {
                                std::shared_ptr<DeviceManager> device_manager,
                                std::shared_ptr<QueueManager> queue_manager,
                                std::shared_ptr<CommandManager> command_manager)
-        : device_manager(device_manager),
+        : staging_image(dimensions,
+                        BasicImageSettings::createHostAccessibleColorImageSettings(),
+                        device_manager), device_manager(device_manager),
           command_manager(command_manager)
     {
-        this->staging_image = BasicImage::createHostAccessibleColorImage(dimensions, device_manager);
-
         this->command = this->command_manager->createGraphicsCommands(1)[0];
         this->graphics_queue = queue_manager->getGraphicsQueue();
 
-        imageUtil::initializeLayout(*this->staging_image,
+        imageUtil::initializeLayout(this->staging_image,
                                     vk::ImageLayout::eGeneral,
                                     this->command,
                                     this->graphics_queue,
@@ -48,20 +48,20 @@ namespace wg::internal {
                 0,
                 required_size_multiple,
                 dst.getDimensions().width * dst.getDimensions().height * sizeof(uint32_t), // Guess allocation size
-                this->staging_image->getMemory());
+                this->staging_image.getMemory());
 
-        void* staging_dst = memoryUtil::mapMemory<void>(this->staging_image->getMemory(),
+        void* staging_dst = memoryUtil::mapMemory<void>(this->staging_image.getMemory(),
                                                         this->device_manager->getDevice());
 
         memcpy(staging_dst, src.data(), dst.getDimensions().height * src_byte_stride);
 
         this->device_manager->getDevice().flushMappedMemoryRanges({range});
 
-        memoryUtil::unmapMemory(this->staging_image->getMemory(),
+        memoryUtil::unmapMemory(this->staging_image.getMemory(),
                                 this->device_manager->getDevice());
 
         CopyImageAuxillaryData aux_data;
-        copyImage::recordCopyImage(*this->staging_image,
+        copyImage::recordCopyImage(this->staging_image,
                                    dst,
                                    aux_data,
                                    this->command,

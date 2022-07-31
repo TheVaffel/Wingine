@@ -24,9 +24,7 @@ namespace wg::internal {
                                const BasicTextureSetup& setup,
                                std::shared_ptr<const DeviceManager> device_manager)
         : BasicImage(dimensions,
-                     setup.depth_only ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor,
-                     vk::ImageLayout::eShaderReadOnlyOptimal,
-                     vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst,
+                     BasicImageSettings::createColorTextureImageSettings(),
                      device_manager) {
 
         this->sampler = samplerUtil::createBasicSampler({}, device_manager->getDevice());

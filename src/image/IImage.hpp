@@ -14,7 +14,6 @@ namespace wg::internal {
         virtual const vk::ImageAspectFlagBits getDefaultAspect() const = 0;
 
         virtual const vk::ImageLayout getIntendedLayout() const = 0;
-        virtual void setCurrentLayout(const vk::ImageLayout& layout) = 0;
 
         virtual ~IImage();
     };

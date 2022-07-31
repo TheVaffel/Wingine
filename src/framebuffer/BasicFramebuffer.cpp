@@ -5,53 +5,49 @@
 
 namespace wg::internal {
 
-BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
+    namespace {
+        BasicImageSettings getColorImageSettings(const BasicFramebufferSetup& setup) {
+            if (setup.getSamplable()) {
+                return BasicImageSettings::createFramebufferTextureColorImageSettings();
+            } else {
+                return BasicImageSettings::createFramebufferColorImageSettings();
+            }
+        }
+
+        BasicImageSettings getDepthImageSettings(const BasicFramebufferSetup& setup) {
+            if (setup.getSamplable()) {
+                return BasicImageSettings::createFramebufferTextureDepthImageSettings();
+            } else {
+                return BasicImageSettings::createFramebufferDepthImageSettings();
+            }
+        }
+    };
+
+
+    BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
                                        const BasicFramebufferSetup& setup,
                                        std::shared_ptr<const DeviceManager> device_manager,
                                        CompatibleRenderPassRegistry& render_pass_registry)
-        : device_manager(device_manager) {
-
-        this->initializeColorImage(dimensions, setup);
-        this->initializeDepthImage(dimensions, setup);
+        : depth_image(dimensions, getDepthImageSettings(setup), device_manager),
+          device_manager(device_manager) {
 
         if (setup.getDepthOnly()) {
-            this->framebuffer = framebufferUtil::createDepthOnlyFramebuffer(*this->depth_image,
+            this->framebuffer = framebufferUtil::createDepthOnlyFramebuffer(this->depth_image,
                                                                             render_pass_registry,
                                                                             device_manager->getDevice());
         } else {
+            this->color_image.emplace(dimensions,
+                                      getColorImageSettings(setup),
+                                      device_manager);
             this->framebuffer = framebufferUtil::createBasicFramebuffer(*this->color_image,
-                                                                        *this->depth_image,
+                                                                        this->depth_image,
                                                                         render_pass_registry,
                                                                         device_manager->getDevice());
         }
     }
 
-    void BasicFramebuffer::initializeColorImage(const vk::Extent2D& dimensions,
-                                                const BasicFramebufferSetup& setup) {
-        if (!setup.getDepthOnly()) {
-            if (setup.getSamplable()) {
-                this->color_image = BasicImage::createFramebufferTextureColorImage(dimensions,
-                                                                                   this->device_manager);
-            } else {
-                this->color_image = BasicImage::createFramebufferColorImage(dimensions,
-                                                                            this->device_manager);
-            }
-        }
-    }
-
-    void BasicFramebuffer::initializeDepthImage(const vk::Extent2D& dimensions,
-                                                const BasicFramebufferSetup& setup) {
-        if (setup.getSamplable()) {
-            this->depth_image = BasicImage::createFramebufferTextureDepthImage(dimensions,
-                                                                               this->device_manager);
-        } else {
-            this->depth_image = BasicImage::createFramebufferDepthImage(dimensions,
-                                                                        this->device_manager);
-        }
-    }
-
     vk::Extent2D BasicFramebuffer::getDimensions() const {
-        return this->hasColorImage() ? this->color_image->getDimensions() : this->depth_image->getDimensions();
+        return this->hasColorImage() ? this->color_image->getDimensions() : this->depth_image.getDimensions();
     }
 
     bool BasicFramebuffer::hasColorImage() const {
@@ -70,7 +66,7 @@ BasicFramebuffer::BasicFramebuffer(const vk::Extent2D& dimensions,
     }
 
     const IImage& BasicFramebuffer::getDepthImage() const {
-        return *this->depth_image;
+        return this->depth_image;
     }
 
     const vk::Framebuffer& BasicFramebuffer::getFramebuffer() const {

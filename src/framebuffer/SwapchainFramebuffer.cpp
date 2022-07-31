@@ -10,18 +10,17 @@ namespace wg::internal {
                                                std::shared_ptr<const SwapchainManager> swapchain_manager,
                                                std::shared_ptr<const DeviceManager> device_manager,
                                                CompatibleRenderPassRegistry& render_pass_registry)
-        : swapchain_manager(swapchain_manager), device_manager(device_manager) {
+        : swapchain_manager(swapchain_manager),
+          color_image(swapchain_manager->getDimensions(),
+                      image,
+                      device_manager),
+          depth_image(swapchain_manager->getDimensions(),
+                      BasicImageSettings::createFramebufferDepthImageSettings(),
+                      device_manager),
+          device_manager(device_manager) {
 
-        this->color_image = SwapchainColorImage::createFramebufferColorImageFromSwapchainImage(
-            image,
-            swapchain_manager->getDimensions(),
-            device_manager);
-
-        this->depth_image = BasicImage::createFramebufferDepthImage(swapchain_manager->getDimensions(),
-                                                                    device_manager);
-
-        this->framebuffer = framebufferUtil::createBasicFramebuffer(*this->color_image,
-                                                                    *this->depth_image,
+        this->framebuffer = framebufferUtil::createBasicFramebuffer(this->color_image,
+                                                                    this->depth_image,
                                                                     render_pass_registry,
                                                                     device_manager->getDevice());
 
@@ -43,7 +42,7 @@ namespace wg::internal {
     }
 
     vk::Extent2D SwapchainFramebuffer::getDimensions() const {
-        return this->color_image->getDimensions();
+        return this->color_image.getDimensions();
     }
 
     const vk::Framebuffer& SwapchainFramebuffer::getFramebuffer() const {
@@ -55,11 +54,7 @@ namespace wg::internal {
     }
 
     const IImage& SwapchainFramebuffer::getColorImage() const {
-        return *this->color_image;
-    }
-
-    IImage& SwapchainFramebuffer::getColorImage() {
-        return *this->color_image;
+        return this->color_image;
     }
 
     bool SwapchainFramebuffer::hasDepthImage() const {
@@ -67,15 +62,10 @@ namespace wg::internal {
     }
 
     const IImage& SwapchainFramebuffer::getDepthImage() const {
-        return *this->depth_image;
-    }
-
-    IImage& SwapchainFramebuffer::getDepthImage() {
-        return *this->depth_image;
+        return this->depth_image;
     }
 
     SwapchainFramebuffer::~SwapchainFramebuffer() {
         this->device_manager->getDevice().destroy(this->framebuffer);
     }
-
 };

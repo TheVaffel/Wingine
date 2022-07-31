@@ -18,31 +18,17 @@ namespace wg::internal::imageUtil {
     vk::Image createSimpleImage(const vk::Extent2D& dimensions,
                                 const vk::ImageUsageFlags& usage,
                                 const vk::Format& format,
+                                const vk::ImageTiling& tiling,
                                 const vk::Device& device);
-
-    vk::Image createFramebufferColorImage(const vk::Extent2D& dimensions,
-                                          const vk::Format& format,
-                                          const vk::Device& device);
-
-    vk::Image createFramebufferTextureColorImage(const vk::Extent2D& dimensions,
-                                                 const vk::Format& format,
-                                                 const vk::Device& device);
-
-    vk::Image createFramebufferDepthImage(const vk::Extent2D& dimensions,
-                                          const vk::Format& format,
-                                          const vk::Device& device);
-
-    vk::Image createFramebufferTextureDepthImage(const vk::Extent2D& dimensions,
-                                                 const vk::Format& format,
-                                                 const vk::Device& device);
-
-    vk::Image createHostAccessibleColorImage(const vk::Extent2D& dimensions,
-                                             const vk::Format& format,
-                                             const vk::Device& device);
 
     /*
      * ImageView
      */
+
+    vk::ImageView createImageView(const vk::Image& image,
+                                  const vk::Format& format,
+                                  const vk::ImageAspectFlagBits& aspect,
+                                  const vk::Device& device);
 
     vk::ImageView createColorImageView(const vk::Image& image,
                                        const vk::Format& format,

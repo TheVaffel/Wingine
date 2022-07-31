@@ -5,31 +5,18 @@
 namespace wg::internal {
 
     SwapchainColorImage::SwapchainColorImage(const vk::Extent2D& dimensions,
+                                             const vk::Image& image,
                                              std::shared_ptr<const DeviceManager> device_manager)
-        : dimensions(dimensions),
-          current_layout(vk::ImageLayout::eUndefined),
+        :
+          image(image),
+          view(imageUtil::createColorImageView(image,
+                                               imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT,
+                                               device_manager->getDevice())),
+          dimensions(dimensions),
           intended_layout(vk::ImageLayout::ePresentSrcKHR),
-          device_manager(device_manager) { }
+          device_manager(device_manager) {
 
-
-    std::unique_ptr<SwapchainColorImage>
-    SwapchainColorImage::createFramebufferColorImageFromSwapchainImage(
-        const vk::Image& image,
-        const vk::Extent2D& dimensions,
-        std::shared_ptr<const DeviceManager> device_manager
-        ) {
-
-        std::unique_ptr<SwapchainColorImage> im =
-            std::unique_ptr<SwapchainColorImage>(new SwapchainColorImage(dimensions, device_manager));
-
-        im->image = image;
-        im->view = imageUtil::createColorImageView(im->image,
-                                                   imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT,
-                                                   device_manager->getDevice());
-
-        return im;
     }
-
 
     const vk::Image SwapchainColorImage::getImage() const {
         return this->image;
@@ -51,16 +38,8 @@ namespace wg::internal {
         return vk::ImageAspectFlagBits::eColor;
     }
 
-    const vk::ImageLayout SwapchainColorImage::getCurrentLayout() const {
-        return this->current_layout;
-    }
-
     const vk::ImageLayout SwapchainColorImage::getIntendedLayout() const {
         return this->intended_layout;
-    }
-
-    void SwapchainColorImage::setCurrentLayout(const vk::ImageLayout& layout) {
-        this->current_layout = layout;
     }
 
     SwapchainColorImage::~SwapchainColorImage() {

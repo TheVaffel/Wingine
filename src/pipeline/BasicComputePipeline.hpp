@@ -28,6 +28,7 @@ namespace wg::internal {
             const std::shared_ptr<IShader>& shader,
             std::shared_ptr<DeviceManager> device_manager,
             std::shared_ptr<CommandManager> command_manager,
+            std::shared_ptr<QueueManager> queue_manager,
             const vk::PipelineCache& pipeline_cache);
 
         ~BasicComputePipeline();

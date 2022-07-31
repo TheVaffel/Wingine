@@ -4,6 +4,7 @@
 
 namespace wg::internal::memoryUtil {
     vk::DeviceMemory createAndBindMemoryForImage(const vk::Image& image,
+                                                 const vk::MemoryPropertyFlagBits& memory_properties,
                                                  const vk::Device& device,
                                                  const vk::PhysicalDeviceMemoryProperties& device_properties);
 

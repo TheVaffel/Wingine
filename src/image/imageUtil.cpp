@@ -72,69 +72,13 @@ namespace wg::internal::imageUtil {
     vk::Image createSimpleImage(const vk::Extent2D& dimensions,
                                 const vk::ImageUsageFlags& usage,
                                 const vk::Format& format,
+                                const vk::ImageTiling& tiling,
                                 const vk::Device& device) {
-        const ImageParameters parameters;
+        ImageParameters parameters;
+        parameters.image_tiling = tiling;
         return createImageRaw(device,
                               dimensions,
                               usage,
-                              format,
-                              parameters);
-    }
-
-    vk::Image createFramebufferColorImage(const vk::Extent2D& dimensions,
-                                          const vk::Format& format,
-                                          const vk::Device& device) {
-
-        const ImageParameters parameters;
-        return createImageRaw(device,
-                              dimensions,
-                              vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-                              format,
-                              parameters);
-    }
-
-    vk::Image createFramebufferTextureColorImage(const vk::Extent2D& dimensions,
-                                                 const vk::Format& format,
-                                                 const vk::Device& device) {
-        const ImageParameters parameters;
-        return createImageRaw(device,
-                              dimensions,
-                              vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
-                              format,
-                              parameters);
-    }
-
-    vk::Image createFramebufferDepthImage(const vk::Extent2D& dimensions,
-                                          const vk::Format& format,
-                                          const vk::Device& device) {
-        const ImageParameters parameters;
-        return createImageRaw(device,
-                              dimensions,
-                              vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc,
-                              format,
-                              parameters);
-    }
-
-    vk::Image createFramebufferTextureDepthImage(const vk::Extent2D& dimensions,
-                                                 const vk::Format& format,
-                                                 const vk::Device& device) {
-        const ImageParameters parameters;
-        return createImageRaw(device,
-                              dimensions,
-                              vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
-                              format,
-                              parameters);
-    }
-
-
-    vk::Image createHostAccessibleColorImage(const vk::Extent2D& dimensions,
-                                             const vk::Format& format,
-                                             const vk::Device& device) {
-        ImageParameters parameters;
-        parameters.image_tiling = vk::ImageTiling::eLinear;
-        return createImageRaw(device,
-                              dimensions,
-                              vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst,
                               format,
                               parameters);
     }
@@ -144,13 +88,14 @@ namespace wg::internal::imageUtil {
      * Image views
      */
 
-    vk::ImageView createColorImageView(const vk::Image& image,
-                                       const vk::Format& format,
-                                       const vk::Device& device) {
+    vk::ImageView createImageView(const vk::Image& image,
+                                  const vk::Format& format,
+                                  const vk::ImageAspectFlagBits& aspect,
+                                  const vk::Device& device) {
         vk::ImageViewCreateInfo ivci = getDefaultImageViewCreateInfo(image);
         ivci.setFormat(format)
             .setSubresourceRange({
-                    vk::ImageAspectFlagBits::eColor,
+                    aspect,
                     0, // base mip level
                     1, // level count
                     0, // base array layer
@@ -160,20 +105,17 @@ namespace wg::internal::imageUtil {
         return device.createImageView(ivci);
     }
 
+    vk::ImageView createColorImageView(const vk::Image& image,
+                                       const vk::Format& format,
+                                       const vk::Device& device) {
+        return createImageView(image, format, vk::ImageAspectFlagBits::eColor, device);
+    }
+
     vk::ImageView createDepthImageView(const vk::Image& image,
                                        const vk::Format& format,
                                        const vk::Device& device) {
-        vk::ImageViewCreateInfo ivci = getDefaultImageViewCreateInfo(image);
-        ivci.setFormat(format)
-            .setSubresourceRange({
-                    vk::ImageAspectFlagBits::eDepth,
-                    0,
-                    1,
-                    0,
-                    1
-                });
 
-        return device.createImageView(ivci);
+        return createImageView(image, format, vk::ImageAspectFlagBits::eDepth, device);
     }
 
     /*

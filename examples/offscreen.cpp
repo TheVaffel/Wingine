@@ -122,7 +122,7 @@ int main() {
 
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
-        cameraUniform->setCurrentUniform(renderMatrix);
+        cameraUniform->setCurrent(renderMatrix);
 
 
         draw_pass->render();

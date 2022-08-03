@@ -48,6 +48,13 @@ namespace wg::internal::imageUtil {
                           const vk::Queue& queue,
                           const vk::Device& device);
 
+    void setLayout(const IImage& image,
+                   const vk::ImageLayout& initial_layout,
+                   const vk::ImageLayout& final_layout,
+                   const Command& command,
+                   const vk::Queue& queue,
+                   const vk::Device& device);
+
     /*
      * Recording
      */

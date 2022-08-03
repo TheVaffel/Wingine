@@ -18,8 +18,8 @@ namespace wg::internal {
     }
 
     IResourceSet& BasicResourceSetChain::getCurrentResourceSet() const {
-        for (uint32_t i = 0; i < this->resources.size(); i++) {
-            fl_assert_eq(this->resources[i]->getCurrentIndex(),
+        for (uint32_t i = 0; i < this->resource_chains.size(); i++) {
+            fl_assert_eq(this->resource_chains[i]->getCurrentIndex(),
                          this->resource_set_counter.getCurrentIndex());
         }
 
@@ -46,7 +46,6 @@ namespace wg::internal {
         uint32_t chain_length,
         const std::vector<std::shared_ptr<IResourceChain>>& resource_chains) {
 
-        this->resources.resize(chain_length);
         for (uint32_t i = 0; i < chain_length; i++) {
             std::vector<IResource*> tmp_resources(resource_chains.size());
 
@@ -66,10 +65,10 @@ namespace wg::internal {
         uint32_t chain_length = resource_chains[0]->getNumResources();
         fl_assert_eq(chain_length, this->resource_sets.size());
 
-        this->resources.resize(resource_chains.size());
+        this->resource_chains.resize(resource_chains.size());
 
         for (uint32_t i = 0; i < resource_chains.size(); i++) {
-            this->resources[i] = resource_chains[i];
+            this->resource_chains[i] = resource_chains[i];
             fl_assert_eq(resource_chains[i]->getNumResources(), chain_length);
         }
 

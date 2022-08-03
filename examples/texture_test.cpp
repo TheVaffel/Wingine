@@ -40,13 +40,6 @@ int main() {
         }
     }
 
-    /* wg::ResourceImagePtr tex_im = wing.createResourceImage(texture_width, texture_height);
-
-    std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
-
-    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(computeSetLayout);
-       compute_set->set({tex_im});
-
     std::vector<uint32_t> compute_spirv;
     {
         using namespace spurv;
@@ -67,17 +60,25 @@ int main() {
 
     wg::ShaderPtr compute_shader = wing.createShader(wg::ShaderStage::Compute, compute_spirv);
 
+    std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
     wg::ComputePipelinePtr compute_pipeline = wing.createComputePipeline({computeSetLayout},
                                                                          {compute_shader});
 
+    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(computeSetLayout);
+
+    wg::StorageTexturePtr storage_texture = wing.createStorageTexture(texture_width, texture_height);
+    wg::StaticResourceChainPtr storage_image_chain = wing.createStaticResourceChain(storage_texture->getStorageImage());
+    compute_set->set({ storage_image_chain });
+
     compute_pipeline->execute({ compute_set }, texture_width, texture_height);
-    compute_pipeline->awaitExecution(); */
+    compute_pipeline->awaitExecution();
+
+    storage_texture->makeIntoTextureSync();
 
     wg::SettableTexturePtr texture = wing.createSettableTexture(texture_width, texture_height);
     texture->set(texture_buffer, 0);
 
     wg::StaticResourceChainPtr texture_chain = wing.createStaticResourceChain(texture);
-    // texture->set(tex_im, {chain});
 
     wg::VertexBufferPtr<float> position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
@@ -94,7 +95,8 @@ int main() {
     std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
 
     wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
-    resourceSet->set({texture_chain});
+    wg::StaticResourceChainPtr computed_texture_chain = wing.createStaticResourceChain(storage_texture->getTexture());
+    resourceSet->set({computed_texture_chain});
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {

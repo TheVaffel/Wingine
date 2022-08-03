@@ -17,7 +17,7 @@ namespace wg::internal {
                                                std::shared_ptr<const DeviceManager> device_manager)
         : dimensions(dimensions),
           buffers(num_buffers),
-          debug_image(dimensions, BasicImageSettings::createHostAccessibleColorImageSettings(), device_manager),
+          debug_image(dimensions, BasicImageSetup::createHostAccessibleColorImageSetup(), device_manager),
           current_buffer_counter(num_buffers),
           device_manager(device_manager) {
 

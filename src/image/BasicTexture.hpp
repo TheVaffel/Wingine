@@ -9,9 +9,9 @@
 namespace wg::internal {
 
     struct BasicTextureSetup {
-        bool depth_only = false;
+        BasicImageSetup image_settings;
 
-        BasicTextureSetup& setDepthOnly(bool enable);
+        BasicTextureSetup(const BasicImageSetup& image_settings);
     };
 
     class BasicTexture : public virtual ITexture, public BasicImage {

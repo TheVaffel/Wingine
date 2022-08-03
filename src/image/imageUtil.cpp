@@ -127,13 +127,27 @@ namespace wg::internal::imageUtil {
                           const Command& command,
                           const vk::Queue& queue,
                           const vk::Device& device) {
+        setLayout(image,
+                  vk::ImageLayout::eUndefined,
+                  layout,
+                  command,
+                  queue,
+                  device);
+    }
+
+    void setLayout(const IImage& image,
+                   const vk::ImageLayout& initial_layout,
+                   const vk::ImageLayout& final_layout,
+                   const Command& command,
+                   const vk::Queue& queue,
+                   const vk::Device& device) {
         CommandLayoutTransitionData data;
 
         command.buffer.begin(vk::CommandBufferBeginInfo());
         imageUtil::recordSetLayout(data,
                                    command.buffer,
-                                   vk::ImageLayout::eUndefined,
-                                   layout,
+                                   initial_layout,
+                                   final_layout,
                                    image);
 
         command.buffer.end();

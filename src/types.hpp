@@ -14,6 +14,7 @@
 #include "./image/ITextureChain.hpp"
 #include "./image/BasicTexture.hpp"
 #include "./image/InternallyStagedTexture.hpp"
+#include "./image/StorageTexture.hpp"
 
 #include "./resource/IUniform.hpp"
 #include "./resource/IUniformChain.hpp"
@@ -55,6 +56,7 @@ namespace wg {
 
     typedef std::shared_ptr<internal::ITexture> TexturePtr;
     typedef std::shared_ptr<internal::InternallyStagedTexture> SettableTexturePtr;
+    typedef std::shared_ptr<internal::StorageTexture> StorageTexturePtr;
     typedef std::shared_ptr<internal::ITextureChain> TextureChainPtr;
     typedef std::shared_ptr<internal::FramebufferTextureChain> FramebufferTextureChainPtr;
 

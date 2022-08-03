@@ -3,7 +3,7 @@
 #include "./IImage.hpp"
 #include "../DeviceManager.hpp"
 
-#include "./BasicImageSettings.hpp"
+#include "./BasicImageSetup.hpp"
 
 namespace wg::internal {
 
@@ -39,7 +39,7 @@ namespace wg::internal {
         virtual const vk::ImageLayout getIntendedLayout() const;
 
         BasicImage(const vk::Extent2D& dimensions,
-                   const BasicImageSettings& basic_image_settings,
+                   const BasicImageSetup& basic_image_settings,
                    std::shared_ptr<const DeviceManager> device_manager);
         virtual ~BasicImage();
     };

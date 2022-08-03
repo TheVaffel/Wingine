@@ -6,19 +6,19 @@
 namespace wg::internal {
 
     namespace {
-        BasicImageSettings getColorImageSettings(const BasicFramebufferSetup& setup) {
+        BasicImageSetup getColorImageSetup(const BasicFramebufferSetup& setup) {
             if (setup.getSamplable()) {
-                return BasicImageSettings::createFramebufferTextureColorImageSettings();
+                return BasicImageSetup::createFramebufferTextureColorImageSetup();
             } else {
-                return BasicImageSettings::createFramebufferColorImageSettings();
+                return BasicImageSetup::createFramebufferColorImageSetup();
             }
         }
 
-        BasicImageSettings getDepthImageSettings(const BasicFramebufferSetup& setup) {
+        BasicImageSetup getDepthImageSetup(const BasicFramebufferSetup& setup) {
             if (setup.getSamplable()) {
-                return BasicImageSettings::createFramebufferTextureDepthImageSettings();
+                return BasicImageSetup::createFramebufferTextureDepthImageSetup();
             } else {
-                return BasicImageSettings::createFramebufferDepthImageSettings();
+                return BasicImageSetup::createFramebufferDepthImageSetup();
             }
         }
     };
@@ -28,7 +28,7 @@ namespace wg::internal {
                                        const BasicFramebufferSetup& setup,
                                        std::shared_ptr<const DeviceManager> device_manager,
                                        CompatibleRenderPassRegistry& render_pass_registry)
-        : depth_image(dimensions, getDepthImageSettings(setup), device_manager),
+        : depth_image(dimensions, getDepthImageSetup(setup), device_manager),
           device_manager(device_manager) {
 
         if (setup.getDepthOnly()) {
@@ -37,7 +37,7 @@ namespace wg::internal {
                                                                             device_manager->getDevice());
         } else {
             this->color_image.emplace(dimensions,
-                                      getColorImageSettings(setup),
+                                      getColorImageSetup(setup),
                                       device_manager);
             this->framebuffer = framebufferUtil::createBasicFramebuffer(*this->color_image,
                                                                         this->depth_image,

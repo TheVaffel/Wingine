@@ -1,9 +1,9 @@
-#include "./BasicImageSettings.hpp"
+#include "./BasicImageSetup.hpp"
 
 #include "./imageUtil.hpp"
 
 namespace wg::internal {
-    BasicImageSettings::BasicImageSettings(vk::ImageAspectFlagBits aspect,
+    BasicImageSetup::BasicImageSetup(vk::ImageAspectFlagBits aspect,
                                            vk::ImageLayout intended_layout,
                                            vk::ImageUsageFlags usage)
         : aspect(aspect), intended_layout(intended_layout), usage(usage) {
@@ -12,33 +12,33 @@ namespace wg::internal {
             imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT;
     }
 
-    BasicImageSettings BasicImageSettings::createFramebufferColorImageSettings() {
-        return BasicImageSettings(vk::ImageAspectFlagBits::eColor,
+    BasicImageSetup BasicImageSetup::createFramebufferColorImageSetup() {
+        return BasicImageSetup(vk::ImageAspectFlagBits::eColor,
                                   vk::ImageLayout::ePresentSrcKHR,
                                   vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc);
     }
 
-    BasicImageSettings BasicImageSettings::createFramebufferDepthImageSettings() {
-        return BasicImageSettings(vk::ImageAspectFlagBits::eDepth,
+    BasicImageSetup BasicImageSetup::createFramebufferDepthImageSetup() {
+        return BasicImageSetup(vk::ImageAspectFlagBits::eDepth,
                                   vk::ImageLayout::eDepthStencilAttachmentOptimal,
                                   vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eTransferSrc);
 
     }
 
-    BasicImageSettings BasicImageSettings::createFramebufferTextureColorImageSettings() {
-        return BasicImageSettings(vk::ImageAspectFlagBits::eColor,
+    BasicImageSetup BasicImageSetup::createFramebufferTextureColorImageSetup() {
+        return BasicImageSetup(vk::ImageAspectFlagBits::eColor,
                                   vk::ImageLayout::eColorAttachmentOptimal,
                                   vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
     }
 
-    BasicImageSettings BasicImageSettings::createFramebufferTextureDepthImageSettings() {
-        return BasicImageSettings(vk::ImageAspectFlagBits::eDepth,
+    BasicImageSetup BasicImageSetup::createFramebufferTextureDepthImageSetup() {
+        return BasicImageSetup(vk::ImageAspectFlagBits::eDepth,
                                   vk::ImageLayout::eDepthStencilAttachmentOptimal,
                                   vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled);
     }
 
-    BasicImageSettings BasicImageSettings::createHostAccessibleColorImageSettings() {
-        BasicImageSettings settings(vk::ImageAspectFlagBits::eColor,
+    BasicImageSetup BasicImageSetup::createHostAccessibleColorImageSetup() {
+        BasicImageSetup settings(vk::ImageAspectFlagBits::eColor,
                                     vk::ImageLayout::eGeneral,
                                     vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst);
         settings.format = vk::Format::eB8G8R8A8Unorm;
@@ -48,9 +48,17 @@ namespace wg::internal {
         return settings;
     }
 
-    BasicImageSettings BasicImageSettings::createColorTextureImageSettings() {
-        return BasicImageSettings(vk::ImageAspectFlagBits::eColor,
+    BasicImageSetup BasicImageSetup::createColorTextureImageSetup() {
+        return BasicImageSetup(vk::ImageAspectFlagBits::eColor,
                                   vk::ImageLayout::eShaderReadOnlyOptimal,
                                   vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst);
+    }
+
+
+    BasicImageSetup BasicImageSetup::createStorageTextureSetup() {
+        return BasicImageSetup(vk::ImageAspectFlagBits::eColor,
+                                  vk::ImageLayout::eGeneral,
+                                  vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eStorage);
+
     }
 };

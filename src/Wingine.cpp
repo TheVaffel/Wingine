@@ -808,6 +808,13 @@ namespace wg {
                                                                    this->command_manager);
     }
 
+    StorageTexturePtr Wingine::createStorageTexture(uint32_t width, uint32_t height) {
+        return internal::StorageTexture::createStorageTexture(vk::Extent2D(width, height),
+                                                              this->device_manager,
+                                                              this->command_manager,
+                                                              this->queue_manager);
+    }
+
     TextureChainPtr Wingine::createBasicTextureChain(uint32_t width,
                                                      uint32_t height,
                                                      const BasicTextureSetup& setup) {
@@ -827,7 +834,7 @@ namespace wg {
 
     StaticResourceChainPtr Wingine::createStaticResourceChain(std::shared_ptr<internal::IResource> resource) {
         return std::make_shared<internal::StaticResourceChain>(this->getNumFramebuffers(),
-                                                                  resource);
+                                                               resource);
     }
 
     SemaphoreChain* Wingine::createSemaphoreChain() {

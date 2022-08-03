@@ -6,7 +6,7 @@
 namespace wg::internal {
 
     BasicImage::BasicImage(const vk::Extent2D& dimensions,
-                           const BasicImageSettings& settings,
+                           const BasicImageSetup& settings,
                            std::shared_ptr<const DeviceManager> device_manager)
         : dimensions(dimensions),
           intended_layout(settings.intended_layout),

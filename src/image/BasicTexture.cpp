@@ -11,10 +11,8 @@ namespace wg::internal {
      * BasicTextureSetup
      */
 
-    BasicTextureSetup& BasicTextureSetup::setDepthOnly(bool enable) {
-        this->depth_only = enable;
-        return *this;
-    }
+    BasicTextureSetup::BasicTextureSetup(const BasicImageSetup& image_settings)
+        : image_settings(image_settings) { }
 
     /**
      * BasicTexture
@@ -24,7 +22,7 @@ namespace wg::internal {
                                const BasicTextureSetup& setup,
                                std::shared_ptr<const DeviceManager> device_manager)
         : BasicImage(dimensions,
-                     BasicImageSettings::createColorTextureImageSettings(),
+                     setup.image_settings,
                      device_manager) {
 
         this->sampler = samplerUtil::createBasicSampler({}, device_manager->getDevice());
@@ -34,7 +32,8 @@ namespace wg::internal {
         return this->sampler;
     }
 
-    std::unique_ptr<IResourceWriteAuxillaryData> BasicTexture::writeDescriptorUpdate(vk::WriteDescriptorSet& write_info) const {
+    std::unique_ptr<IResourceWriteAuxillaryData>
+    BasicTexture::writeDescriptorUpdate(vk::WriteDescriptorSet& write_info) const {
         auto aux_data = std::make_unique<ResourceWriteImageAuxillaryData>();
         aux_data->image_write_info.sampler = this->sampler;
         aux_data->image_write_info.imageView = this->getView();

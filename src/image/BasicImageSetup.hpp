@@ -3,7 +3,7 @@
 #include <vulkan/vulkan.hpp>
 
 namespace wg::internal {
-    struct BasicImageSettings {
+    struct BasicImageSetup {
         /*
          * Initialized from user in constructor
          */
@@ -23,15 +23,16 @@ namespace wg::internal {
         vk::MemoryPropertyFlagBits memory_properties = vk::MemoryPropertyFlagBits::eDeviceLocal;
         bool with_view = true;
 
-        BasicImageSettings(vk::ImageAspectFlagBits aspect,
+        BasicImageSetup(vk::ImageAspectFlagBits aspect,
                            vk::ImageLayout intended_layout,
                            vk::ImageUsageFlags usage);
 
-        static BasicImageSettings createFramebufferColorImageSettings();
-        static BasicImageSettings createFramebufferDepthImageSettings();
-        static BasicImageSettings createFramebufferTextureColorImageSettings();
-        static BasicImageSettings createFramebufferTextureDepthImageSettings();
-        static BasicImageSettings createHostAccessibleColorImageSettings();
-        static BasicImageSettings createColorTextureImageSettings();
+        static BasicImageSetup createFramebufferColorImageSetup();
+        static BasicImageSetup createFramebufferDepthImageSetup();
+        static BasicImageSetup createFramebufferTextureColorImageSetup();
+        static BasicImageSetup createFramebufferTextureDepthImageSetup();
+        static BasicImageSetup createHostAccessibleColorImageSetup();
+        static BasicImageSetup createColorTextureImageSetup();
+        static BasicImageSetup createStorageTextureSetup();
     };
 };

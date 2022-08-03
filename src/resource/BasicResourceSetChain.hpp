@@ -10,7 +10,7 @@ namespace wg::internal {
         IndexCounter resource_set_counter;
 
         std::vector<std::shared_ptr<IResourceSet>> resource_sets;
-        std::vector<std::shared_ptr<IResourceChain>> resources;
+        std::vector<std::shared_ptr<IResourceChain>> resource_chains;
 
         std::shared_ptr<const DeviceManager> device_manager;
 

@@ -15,7 +15,7 @@ namespace wg::internal {
                                std::shared_ptr<QueueManager> queue_manager,
                                std::shared_ptr<CommandManager> command_manager)
         : staging_image(dimensions,
-                        BasicImageSettings::createHostAccessibleColorImageSettings(),
+                        BasicImageSetup::createHostAccessibleColorImageSetup(),
                         device_manager), device_manager(device_manager),
           command_manager(command_manager)
     {

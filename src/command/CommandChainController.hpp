@@ -55,6 +55,7 @@ namespace wg::internal {
 
         void recordMakeFramebufferIntoTexture(std::shared_ptr<FramebufferTextureChain> framebuffer_texture);
         void recordMakeTextureIntoFramebuffer(std::shared_ptr<FramebufferTextureChain> framebuffer_texture);
+
         void recordDraw(const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                         const std::shared_ptr<IIndexBuffer> ind_buf,
                         const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,

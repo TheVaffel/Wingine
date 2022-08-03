@@ -15,7 +15,7 @@ namespace wg::internal {
                       image,
                       device_manager),
           depth_image(swapchain_manager->getDimensions(),
-                      BasicImageSettings::createFramebufferDepthImageSettings(),
+                      BasicImageSetup::createFramebufferDepthImageSetup(),
                       device_manager),
           device_manager(device_manager) {
 

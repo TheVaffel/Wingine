@@ -44,8 +44,6 @@ namespace wg::internal {
         vk::FenceCreateInfo fci;
         fci.setFlags(vk::FenceCreateFlagBits::eSignaled);
 
-        this->command.fence = device.createFence(fci);
-
         this->compute_queue = queue_manager->getComputeQueue();
     }
 
@@ -83,6 +81,7 @@ namespace wg::internal {
 
         vk::SubmitInfo si;
         si.setCommandBufferCount(1)
+            .setPCommandBuffers(&this->command.buffer)
             .setPWaitDstStageMask(wait_stages.data())
             .setWaitSemaphores(this->getWaitSemaphores().getCurrentRawSemaphores())
             .setSignalSemaphores(this->getSignalSemaphores().getCurrentRawSemaphores());
@@ -104,6 +103,7 @@ namespace wg::internal {
 
     BasicComputePipeline::~BasicComputePipeline() {
         this->device_manager->getDevice().destroyPipeline(this->pipeline);
+        this->device_manager->getDevice().destroyPipelineLayout(this->layout);
         this->command_manager->destroyGraphicsCommands({this->command});
     }
 };

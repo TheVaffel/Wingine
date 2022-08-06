@@ -10,8 +10,6 @@
 #include <Winval.hpp>
 #endif
 
-#include "declarations.hpp"
-
 #include "./render_pass/CompatibleRenderPassRegistry.hpp"
 #include "./VulkanInstanceManager.hpp"
 #include "./DeviceManager.hpp"
@@ -23,13 +21,6 @@
 
 #include "./pipeline/BasicPipelineSetup.hpp"
 #include "./pipeline/ShaderStage.hpp"
-
-#include "buffer.hpp"
-#include "image.hpp"
-#include "resource.hpp"
-#include "compute_pipeline.hpp"
-#include "semaphore.hpp"
-#include "util.hpp"
 
 #include "./types.hpp"
 
@@ -48,7 +39,6 @@ namespace wg {
 
         std::shared_ptr<internal::QueueManager> queue_manager;
         std::shared_ptr<internal::CommandManager> command_manager;
-        // std::shared_ptr<internal::StagingBufferManager> staging_buffer_manager;
         std::shared_ptr<internal::IFramebufferChain> default_framebuffer_chain;
 
         std::shared_ptr<internal::HostVisibleImageView> host_visible_image;
@@ -106,33 +96,6 @@ namespace wg {
         void init_descriptor_pool();
         void init_pipeline_cache();
 
-        void cons_image_image(Image& image,
-                              uint32_t width, uint32_t height,
-                              vk::Format format,
-                              vk::ImageUsageFlags usage,
-                              vk::ImageTiling tiling = vk::ImageTiling::eOptimal,
-                              vk::ImageLayout layout = vk::ImageLayout::eUndefined);
-
-        void cons_image_memory(Image& image,
-                               vk::MemoryPropertyFlags memProps);
-        void cons_image_view(Image& image,
-                             ImageViewType type,
-                             vk::Format format);
-
-        void copy_image(uint32_t w1, uint32_t h1, vk::Image src,
-                        vk::ImageLayout srcCurrentLayout, vk::ImageLayout srcFinalLayout,
-                        uint32_t w2, uint32_t h2, vk::Image dst,
-                        vk::ImageLayout dstCurrentLayout, vk::ImageLayout dstFinalLayout,
-                        vk::ImageAspectFlagBits flag,
-                        const std::initializer_list<SemaphoreChain*>& wait_semaphores);
-
-        void cmd_set_layout(const vk::CommandBuffer& commandBuffer, vk::Image image,
-                            vk::ImageAspectFlagBits aspect, vk::ImageLayout currentLayout,
-                            vk::ImageLayout finalLayout);
-
-        // Don't delete color images, those are handled by swapchain
-        void destroySwapchainImage(Image& image);
-
         vk::Queue getGraphicsQueue();
         vk::Queue getPresentQueue();
         vk::Device getDevice();
@@ -145,7 +108,6 @@ namespace wg {
         vk::RenderPass create_render_pass(internal::renderPassUtil::RenderPassType type,
                                           bool clear);
 
-        void destroy(Image& image);
 
     public:
 
@@ -183,8 +145,6 @@ namespace wg {
                                         const std::vector<ShaderPtr>& shaders,
                                         internal::BasicPipelineSetup setup = internal::BasicPipelineSetup());
 
-        /* ComputePipeline* createComputePipeline(const std::vector<std::vector<uint64_t> >& resourceSetLayout,
-           Shader* shaders); */
         ComputePipelinePtr createComputePipeline(const std::vector<std::vector<uint64_t>>& resource_set_layout,
                                                  ShaderPtr shader);
 
@@ -206,18 +166,10 @@ namespace wg {
 
         FramebufferChain getDefaultFramebufferChain();
 
-        ResourceImage* createResourceImage(uint32_t width, uint32_t height);
-
         TexturePtr createBasicTexture(uint32_t width, uint32_t height, const BasicTextureSetup& setup = BasicTextureSetup(internal::BasicImageSetup::createColorTextureImageSetup()));
         SettableTexturePtr createSettableTexture(uint32_t width, uint32_t height);
         StorageTexturePtr createStorageTexture(uint32_t width, uint32_t height);
         TextureChainPtr createBasicTextureChain(uint32_t width, uint32_t height, const BasicTextureSetup& setup = BasicTextureSetup(internal::BasicImageSetup::createColorTextureImageSetup()));
-
-        SemaphoreChain* createSemaphoreChain();
-
-        void dispatchCompute(ComputePipeline* compute,
-                             const std::initializer_list<ResourceSet*>& resource_sets,
-                             const std::initializer_list<SemaphoreChain*>& semaphores, int x_dim = 1, int y_dim = 1, int z_dim = 1);
 
         void setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores);
         Semaphore createAndAddImageReadySemaphore();
@@ -229,12 +181,6 @@ namespace wg {
 
         uint32_t getRenderedImageRowByteStride() const;
         void copyLastRenderedImage(uint32_t* dst);
-
-        void destroy(Buffer* buffer);
-        void destroy(SemaphoreChain* semaphore_chain);
-        void destroy(ResourceImage* resource_image);
-        void destroy(ResourceSet* resource_set);
-        void destroy(ComputePipeline* compute_pipeline);
 
 #ifndef HEADLESS
         Wingine(Winval& win);
@@ -248,16 +194,6 @@ namespace wg {
         Wingine(uint32_t width, uint32_t height, const std::string& app_name = "Wingine");
 
         ~Wingine();
-
-        friend class Buffer;
-        friend class RenderFamily;
-        friend class ResourceSetLayout;
-        friend class ResourceSet;
-        friend class Texture;
-        friend class SemaphoreChain;
-        friend class Image;
-        friend class ComputePipeline;
-        friend class ResourceImage;
     };
 };
 

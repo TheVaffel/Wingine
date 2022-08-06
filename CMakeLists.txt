@@ -27,7 +27,6 @@ set(BUFFER_SOURCES
   InternallyStagedIndexBuffer.cpp
   IIndexBuffer.cpp
   StagingBuffer.cpp
-  # StagingBufferManager.cpp
   copyBuffer.cpp)
 set(RESOURCE_SOURCES
   descriptorUtil.cpp
@@ -106,14 +105,7 @@ list(TRANSFORM UTIL_SOURCES PREPEND "util/")
 list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
 
 set(WINGINE_SOURCES
-  buffer.cpp
-  image.cpp
-  # renderfamily.cpp
-  compute_pipeline.cpp
   Wingine.cpp
-  resource.cpp
-  util.cpp
-  semaphore.cpp
   VulkanInstanceManager.cpp
   DeviceManager.cpp
   QueueManager.cpp

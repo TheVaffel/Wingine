@@ -4,7 +4,6 @@
 
 #include "./DeviceManager.hpp"
 #include "./QueueManager.hpp"
-#include "./semaphore.hpp"
 
 namespace wg::internal {
     class SwapchainManager {

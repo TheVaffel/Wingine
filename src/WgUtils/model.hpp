@@ -1,10 +1,9 @@
-#ifndef WGUT_MODEL_HPP
-#define WGUT_MODEL_HPP
+#pragma once
 
-#include "../declarations.hpp"
 #include <vector>
 #include <string>
 
+#include "../Wingine.hpp"
 #include "../types.hpp"
 
 namespace wgut {
@@ -55,5 +54,3 @@ namespace wgut {
                            int res);
     };
 };
-
-#endif // WGUT_MODEL_HPP

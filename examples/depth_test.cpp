@@ -60,17 +60,13 @@ int main() {
 
 
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
-    wg::UniformChainPtr<falg::Mat4> lightUniform = wing.createUniformChain<falg::Mat4>();
-
-    // Initialize resource set layout
+    wg::UniformChainPtr<falg::Mat4> light_uniform = wing.createUniformChain<falg::Mat4>();
 
     std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex };
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
-    resourceSet->set({cameraUniform});
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, cameraUniform);
 
-    wg::ResourceSetChainPtr lightSet = wing.createResourceSetChain(resourceSetLayout);
-    lightSet->set({lightUniform});
+    wg::ResourceSetChainPtr lightSet = wing.createResourceSetChain(resourceSetLayout, light_uniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
     {
@@ -88,8 +84,8 @@ int main() {
     std::vector<uint64_t> lightTextureSetLayout = {wg::resTexture | wg::shaFragment,
                                                    wg::resUniform | wg::shaFragment};
 
-    wg::ResourceSetChainPtr lightTextureSet = wing.createResourceSetChain(lightTextureSetLayout);
-       lightTextureSet->set({shadow_framebuffer_chain, lightUniform });
+    wg::ResourceSetChainPtr lightTextureSet = wing.createResourceSetChain(lightTextureSetLayout,
+                                                                          shadow_framebuffer_chain, light_uniform);
 
     std::vector<uint32_t> depth_vertex_shader;
     {
@@ -232,7 +228,7 @@ int main() {
         shadow_draw_pass->awaitCurrentCommand();
         real_draw_pass->awaitCurrentCommand();
 
-        lightUniform->setCurrent(light_camera.getRenderMatrix());
+        light_uniform->setCurrent(light_camera.getRenderMatrix());
 
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
 
@@ -266,7 +262,7 @@ int main() {
         resourceSet->swap();
 
         cameraUniform->swap();
-        lightUniform->swap();
+        light_uniform->swap();
     }
 
     wing.waitIdle();

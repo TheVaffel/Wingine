@@ -19,7 +19,6 @@
 #include "./resource/IUniform.hpp"
 #include "./resource/IUniformChain.hpp"
 #include "./resource/IResourceSetChain.hpp"
-#include "./resource/StaticResourceChain.hpp"
 
 #include "./pipeline/IShader.hpp"
 #include "./pipeline/IPipeline.hpp"
@@ -79,6 +78,4 @@ namespace wg {
 
     template<typename T>
     using StorageBufferPtr = std::shared_ptr<internal::IStorageBuffer<T>>;
-
-    typedef std::shared_ptr<internal::StaticResourceChain> StaticResourceChainPtr;
 };

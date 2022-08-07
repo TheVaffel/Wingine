@@ -38,8 +38,7 @@ int main() {
 
     wg::UniformChainPtr<float> time_uniform = wing.createUniformChain<float>();
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-    wg::ResourceSetChainPtr time_set = wing.createResourceSetChain(resourceSetLayout);
-    time_set->set({time_uniform});
+    wg::ResourceSetChainPtr time_set = wing.createResourceSetChain(resourceSetLayout, time_uniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc>

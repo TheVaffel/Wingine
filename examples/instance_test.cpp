@@ -56,9 +56,6 @@ int main() {
     wg::StorageBufferPtr<falg::Mat4> storage_buffer = wing.createStorageBuffer<falg::Mat4>(num_instances);
     storage_buffer->set(inst_mats.data(), 0, num_instances);
 
-    wg::StaticResourceChainPtr storage_chain = wing.createStaticResourceChain(storage_buffer);
-
-
     struct CamColl {
         falg::Mat4 cam, view;
     };
@@ -68,8 +65,7 @@ int main() {
     std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex,
                                                 wg::resStorageBuffer | wg::shaVertex };
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
-    resourceSet->set({cameraUniform, storage_chain});
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, cameraUniform, storage_buffer);
 
     // Positions, color, offset
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
@@ -234,7 +230,6 @@ int main() {
             break;
         }
 
-        storage_chain->swap();
         cameraUniform->swap();
 
         resourceSet->swap();

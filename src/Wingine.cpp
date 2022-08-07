@@ -10,8 +10,6 @@
 
 #include "./draw_pass/BasicDrawPass.hpp"
 
-#include "./resource/BasicResourceSetChain.hpp"
-
 #include "./image/BasicTextureChain.hpp"
 #include "./image/InternallyStagedTexture.hpp"
 
@@ -450,19 +448,6 @@ namespace wg {
                                                              vk::Extent2D(width, height),
                                                              setup,
                                                              this->device_manager);
-    }
-
-    ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<uint64_t>& resourceLayout) {
-        return std::make_shared<internal::BasicResourceSetChain>(
-            this->getNumFramebuffers(),
-            this->resource_set_layout_registry->ensureAndGet(resourceLayout),
-            this->descriptor_pool,
-            this->device_manager);
-    }
-
-    StaticResourceChainPtr Wingine::createStaticResourceChain(std::shared_ptr<internal::IResource> resource) {
-        return std::make_shared<internal::StaticResourceChain>(this->getNumFramebuffers(),
-                                                               resource);
     }
 
     EventChainPtr Wingine::createEventChain() {

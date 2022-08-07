@@ -64,11 +64,8 @@ int main() {
     wg::ComputePipelinePtr compute_pipeline = wing.createComputePipeline({computeSetLayout},
                                                                          {compute_shader});
 
-    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(computeSetLayout);
-
     wg::StorageTexturePtr storage_texture = wing.createStorageTexture(texture_width, texture_height);
-    wg::StaticResourceChainPtr storage_image_chain = wing.createStaticResourceChain(storage_texture->getStorageImage());
-    compute_set->set({ storage_image_chain });
+    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(computeSetLayout, storage_texture->getStorageImage());
 
     compute_pipeline->execute({ compute_set }, texture_width, texture_height);
     compute_pipeline->awaitExecution();
@@ -77,8 +74,6 @@ int main() {
 
     wg::SettableTexturePtr texture = wing.createSettableTexture(texture_width, texture_height);
     texture->set(texture_buffer, 0);
-
-    wg::StaticResourceChainPtr texture_chain = wing.createStaticResourceChain(texture);
 
     wg::VertexBufferPtr<float> position_buffer =
         wing.createVertexBuffer<float>(num_points * 4);
@@ -94,9 +89,7 @@ int main() {
 
     std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout);
-    wg::StaticResourceChainPtr computed_texture_chain = wing.createStaticResourceChain(storage_texture->getTexture());
-    resourceSet->set({computed_texture_chain});
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, storage_texture->getTexture());
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {
@@ -166,7 +159,6 @@ int main() {
         }
 
         resourceSet->swap();
-        texture_chain->swap();
     }
 
     wing.waitIdle();

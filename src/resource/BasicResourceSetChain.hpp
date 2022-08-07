@@ -18,13 +18,24 @@ namespace wg::internal {
             uint32_t chain_length,
             const std::vector<std::shared_ptr<IResourceChain>>& resource_chains);
 
+
+        std::shared_ptr<IResourceChain> ensureChain(std::shared_ptr<IResourceChain> resource_chain);
+        std::shared_ptr<IResourceChain> ensureChain(std::shared_ptr<IResource> resource);
+
+        template<typename T, typename... Ts>
+        void ensureOnlyChains(std::vector<std::shared_ptr<IResourceChain>>& results, T resource, Ts... rest_resources);
+
+        void setChains(const std::vector<std::shared_ptr<IResourceChain>>& resource_chains);
+
     public:
-        BasicResourceSetChain(uint32_t count,
+        template<typename... Ts>
+        BasicResourceSetChain(uint32_t chain_length,
                               const vk::DescriptorSetLayout& layout,
                               const vk::DescriptorPool& pool,
-                              std::shared_ptr<const DeviceManager> device_manager);
+                              std::shared_ptr<const DeviceManager> device_manager,
+                              Ts... resources);
 
-        virtual void set(const std::vector<std::shared_ptr<IResourceChain>>& resource_chains) override;
+
         virtual IResourceSet& getCurrentResourceSet() const override;
         virtual IResourceSet& getResourceSetAt(uint32_t index) override;
         virtual uint32_t getNumResources() const override;
@@ -33,3 +44,5 @@ namespace wg::internal {
         virtual void swap() override;
     };
 };
+
+#include "./BasicResourceSetChain.impl.hpp"

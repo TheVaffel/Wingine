@@ -52,8 +52,7 @@ int main() {
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
 
-    wg::ResourceSetChainPtr resourceSetChain = wing.createResourceSetChain(resourceSetLayout);
-    resourceSetChain->set({cameraUniform});
+    wg::ResourceSetChainPtr resourceSetChain = wing.createResourceSetChain(resourceSetLayout, cameraUniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {

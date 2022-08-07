@@ -135,9 +135,9 @@ namespace wg {
 
         DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
 
-        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout);
-
-        StaticResourceChainPtr createStaticResourceChain(std::shared_ptr<internal::IResource> resource);
+        template<typename... Ts>
+        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
+                                                   Ts... resources);
 
         ShaderPtr createShader(internal::ShaderStage shader_stage, const std::vector<uint32_t>& spirv);
         PipelinePtr createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,

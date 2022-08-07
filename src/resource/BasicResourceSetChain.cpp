@@ -6,15 +6,12 @@
 #include <flawed_assert.hpp>
 
 namespace wg::internal {
+    std::shared_ptr<IResourceChain> BasicResourceSetChain::ensureChain(std::shared_ptr<IResourceChain> resource_chain) {
+        return resource_chain;
+    }
 
-    BasicResourceSetChain::BasicResourceSetChain(uint32_t count,
-                                                 const vk::DescriptorSetLayout& layout,
-                                                 const vk::DescriptorPool& pool,
-                                                 std::shared_ptr<const DeviceManager> device_manager)
-        : resource_set_counter(count), device_manager(device_manager) {
-        for (uint32_t i = 0; i < count; i++) {
-            this->resource_sets.push_back(std::make_shared<BasicResourceSet>(layout, pool, device_manager));
-        }
+    std::shared_ptr<IResourceChain> BasicResourceSetChain::ensureChain(std::shared_ptr<IResource> resource) {
+        return std::make_shared<StaticResourceChain>(this->resource_set_counter.getNumIndices(), resource);
     }
 
     IResourceSet& BasicResourceSetChain::getCurrentResourceSet() const {
@@ -59,7 +56,7 @@ namespace wg::internal {
         }
     }
 
-    void BasicResourceSetChain::set(const std::vector<std::shared_ptr<IResourceChain>>& resource_chains) {
+    void BasicResourceSetChain::setChains(const std::vector<std::shared_ptr<IResourceChain>>& resource_chains) {
         fl_assert_gt(resource_chains.size(), 0u);
 
         uint32_t chain_length = resource_chains[0]->getNumResources();

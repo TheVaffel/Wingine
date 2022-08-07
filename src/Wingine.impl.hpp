@@ -6,6 +6,7 @@
 #include "./resource/BasicUniformChain.hpp"
 #include "./buffer/InternallyStagedVertexBuffer.hpp"
 #include "./buffer/InternallyStagedStorageBuffer.hpp"
+#include "./resource/BasicResourceSetChain.hpp"
 
 namespace wg {
     template<typename T>
@@ -33,5 +34,16 @@ namespace wg {
                                                                             this->device_manager,
                                                                             this->queue_manager,
                                                                             this->command_manager);
+    }
+
+    template<typename... Ts>
+    ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
+                                                        Ts... resources) {
+        return std::make_shared<internal::BasicResourceSetChain>(
+            this->getNumFramebuffers(),
+            this->resource_set_layout_registry->ensureAndGet(resourceLayout),
+            this->descriptor_pool,
+            this->device_manager,
+            resources...);
     }
 };

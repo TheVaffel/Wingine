@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./IResourceSet.hpp"
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 namespace wg::internal {
     class BasicResourceSet : public IResourceSet {

@@ -1,6 +1,6 @@
 #include "./Wingine.hpp"
 #include "./util/log.hpp"
-#include "./constants.hpp"
+#include "./core/constants.hpp"
 
 #include "./framebuffer/BasicFramebuffer.hpp"
 #include "./framebuffer/HostCopyingFramebufferChain.hpp"

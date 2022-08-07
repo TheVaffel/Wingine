@@ -3,7 +3,7 @@
 #include "./BasicFramebufferChain.hpp"
 
 #include "./BasicFramebuffer.hpp"
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 #include "../sync/semaphoreUtil.hpp"
 
 #include <iostream>

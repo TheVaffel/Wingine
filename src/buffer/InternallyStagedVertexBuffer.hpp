@@ -4,7 +4,7 @@
 #include "./BasicBuffer.hpp"
 #include "./StagingBuffer.hpp"
 
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 
 namespace wg::internal {
     template<typename T>

@@ -1,6 +1,6 @@
 #include "./SwapchainManager.hpp"
 
-#include "./image/imageUtil.hpp"
+#include "../image/imageUtil.hpp"
 #include "./constants.hpp"
 
 namespace wg::internal {

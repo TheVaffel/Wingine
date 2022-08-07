@@ -2,7 +2,7 @@
 
 #include "./BasicImage.hpp"
 
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 
 #include <span>
 

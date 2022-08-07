@@ -20,6 +20,14 @@ set(FLAWED_ROOT "${CMAKE_HOME_DIRECTORY}/../flawed")
 set(FLAWED_INCLUDE_DIR "${FLAWED_ROOT}/include")
 set(FLAWED_LIB_DIR "${FLAWED_ROOT}/lib")
 
+set(CORE_SOURCES
+  VulkanInstanceManager.cpp
+  DeviceManager.cpp
+  QueueManager.cpp
+  CommandManager.cpp
+  SwapchainManager.cpp
+  queueUtils.cpp
+  deviceEvaluation.cpp)
 set(BUFFER_SOURCES
   bufferUtil.cpp
   IBuffer.cpp
@@ -91,6 +99,7 @@ set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp math.cpp)
 set(WGUTIL_SOURCES camera.cpp model.cpp)
 
+list(TRANSFORM CORE_SOURCES PREPEND "core/")
 list(TRANSFORM BUFFER_SOURCES PREPEND "buffer/")
 list(TRANSFORM FRAMEBUFFER_SOURCES PREPEND "framebuffer/")
 list(TRANSFORM IMAGE_SOURCES PREPEND "image/")
@@ -106,13 +115,7 @@ list(TRANSFORM WGUTIL_SOURCES PREPEND "WgUtils/")
 
 set(WINGINE_SOURCES
   Wingine.cpp
-  VulkanInstanceManager.cpp
-  DeviceManager.cpp
-  QueueManager.cpp
-  CommandManager.cpp
-  SwapchainManager.cpp
-  queueUtils.cpp
-  deviceEvaluation.cpp
+  ${CORE_SOURCES}
   ${BUFFER_SOURCES}
   ${FRAMEBUFFER_SOURCES}
   ${IMAGE_SOURCES}

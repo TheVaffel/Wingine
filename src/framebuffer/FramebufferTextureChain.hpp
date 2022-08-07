@@ -3,7 +3,7 @@
 #include "./IFramebufferChain.hpp"
 #include "./IFramebuffer.hpp"
 
-#include "../QueueManager.hpp"
+#include "../core/QueueManager.hpp"
 
 #include "../image/ITextureChain.hpp"
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"

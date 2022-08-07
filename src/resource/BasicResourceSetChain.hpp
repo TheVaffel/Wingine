@@ -3,7 +3,7 @@
 #include "./IResourceSetChain.hpp"
 
 #include "../util/IndexCounter.hpp"
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 namespace wg::internal {
     class BasicResourceSetChain : public IResourceSetChain {

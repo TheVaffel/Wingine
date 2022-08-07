@@ -2,7 +2,7 @@
 
 #include "./IImage.hpp"
 #include "../buffer/IBuffer.hpp"
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 #include "./CopyImageAuxillaryData.hpp"
 
 namespace wg::internal::copyImage {

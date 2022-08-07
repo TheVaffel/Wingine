@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 #include "./ShaderStage.hpp"
 #include "./IShader.hpp"

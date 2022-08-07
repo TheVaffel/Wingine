@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 #include "../util/IndexCounter.hpp"
 
 #include <vulkan/vulkan.hpp>

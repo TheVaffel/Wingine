@@ -1,6 +1,6 @@
 #include "./QueueManager.hpp"
 
-#include "./util/log.hpp"
+#include "../util/log.hpp"
 
 #include <iostream>
 

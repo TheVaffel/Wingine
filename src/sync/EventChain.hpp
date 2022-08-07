@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 #include "../util/IndexCounter.hpp"
 
 namespace wg::internal {

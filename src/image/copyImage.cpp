@@ -2,7 +2,7 @@
 
 #include "./imageUtil.hpp"
 
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 #include "../sync/fenceUtil.hpp"
 
 #include <flawed_assert.hpp>

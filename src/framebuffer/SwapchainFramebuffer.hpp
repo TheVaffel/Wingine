@@ -1,6 +1,6 @@
 #include "./FramebufferChainBase.hpp"
 
-#include "../SwapchainManager.hpp"
+#include "../core/SwapchainManager.hpp"
 
 #include "../image/SwapchainColorImage.hpp"
 #include "../image/BasicImage.hpp"

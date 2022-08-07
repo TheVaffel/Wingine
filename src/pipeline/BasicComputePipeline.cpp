@@ -1,5 +1,5 @@
 #include "./BasicComputePipeline.hpp"
-#include "../constants.hpp"
+#include "../core/constants.hpp"
 
 #include "../resource/IResourceSetChain.hpp"
 

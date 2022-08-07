@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./IImage.hpp"
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 #include "../sync/SynchronizedQueueOperationBase.hpp"
 #include "./CopyImageAuxillaryData.hpp"
 

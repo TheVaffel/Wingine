@@ -5,7 +5,7 @@
 
 #include "../sync/ISynchronizedQueueOperation.hpp"
 
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 
 #include "../framebuffer/IFramebufferChain.hpp"
 #include "./ITextureChain.hpp"

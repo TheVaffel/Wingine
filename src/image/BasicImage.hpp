@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./IImage.hpp"
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 #include "./BasicImageSetup.hpp"
 

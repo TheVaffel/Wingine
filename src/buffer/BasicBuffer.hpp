@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./IBuffer.hpp"
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 namespace wg::internal {
     class BasicBuffer : public virtual IBuffer {

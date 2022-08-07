@@ -6,7 +6,7 @@
 #include "./VertexAttribDesc.hpp"
 #include "./IShader.hpp"
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
 namespace wg::internal {

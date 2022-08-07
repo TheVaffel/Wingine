@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 
 #include "../framebuffer/FramebufferTextureChain.hpp"
 #include "../framebuffer/IFramebufferChain.hpp"

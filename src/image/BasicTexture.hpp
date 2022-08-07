@@ -3,7 +3,7 @@
 #include "./ITexture.hpp"
 #include "./BasicImage.hpp"
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 #include "./ImageCopier.hpp"
 
 namespace wg::internal {

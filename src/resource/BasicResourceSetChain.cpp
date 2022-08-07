@@ -1,6 +1,7 @@
 #include "./BasicResourceSetChain.hpp"
 
 #include "./BasicResourceSet.hpp"
+#include "./StaticResourceChain.hpp"
 #include "./descriptorUtil.hpp"
 
 #include <flawed_assert.hpp>

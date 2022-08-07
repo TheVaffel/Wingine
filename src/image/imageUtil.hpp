@@ -4,7 +4,7 @@
 
 #include "./CopyImageAuxillaryData.hpp"
 #include "./IImage.hpp"
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 
 namespace wg::internal::imageUtil {
 

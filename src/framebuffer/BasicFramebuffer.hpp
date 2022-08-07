@@ -5,7 +5,7 @@
 #include "./IFramebuffer.hpp"
 
 #include "../image/BasicImage.hpp"
-#include "../SwapchainManager.hpp"
+#include "../core/SwapchainManager.hpp"
 
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 

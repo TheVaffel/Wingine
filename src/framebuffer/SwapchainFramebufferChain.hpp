@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "../DeviceManager.hpp"
-#include "../SwapchainManager.hpp"
+#include "../core/DeviceManager.hpp"
+#include "../core/SwapchainManager.hpp"
 
 #include "../framebuffer/FramebufferChainBase.hpp"
 

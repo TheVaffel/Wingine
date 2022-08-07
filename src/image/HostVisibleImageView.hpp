@@ -2,7 +2,7 @@
 
 #include "../buffer/IBuffer.hpp"
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 #include "../util/IndexCounter.hpp"
 
 #include "./BasicImage.hpp"

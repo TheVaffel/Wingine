@@ -2,7 +2,7 @@
 
 #include "./deviceEvaluation.hpp"
 #include "./queueUtils.hpp"
-#include "./util/log.hpp"
+#include "../util/log.hpp"
 
 #include <iostream>
 

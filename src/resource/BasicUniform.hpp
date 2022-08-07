@@ -3,7 +3,7 @@
 #include "./IUniform.hpp"
 #include "../buffer/IBuffer.hpp"
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 namespace wg::internal {
     template <typename T>

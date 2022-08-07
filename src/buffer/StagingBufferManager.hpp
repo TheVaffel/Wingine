@@ -1,8 +1,8 @@
 #pragma once
 
 #include "./IBuffer.hpp"
-#include "../DeviceManager.hpp"
-#include "../CommandManager.hpp"
+#include "../core/DeviceManager.hpp"
+#include "../core/CommandManager.hpp"
 
 namespace wg::internal {
     class StagingBufferManager {

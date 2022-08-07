@@ -1,6 +1,6 @@
 #include "./CommandManager.hpp"
 
-#include "./util/log.hpp"
+#include "../util/log.hpp"
 
 namespace wg::internal {
 

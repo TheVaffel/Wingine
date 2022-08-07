@@ -3,8 +3,8 @@
 #include "./IComputePipeline.hpp"
 #include "./IShader.hpp"
 
-#include "../DeviceManager.hpp"
-#include "../CommandManager.hpp"
+#include "../core/DeviceManager.hpp"
+#include "../core/CommandManager.hpp"
 
 #include "../sync/SynchronizedQueueOperationBase.hpp"
 

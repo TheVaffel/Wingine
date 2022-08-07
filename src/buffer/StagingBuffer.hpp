@@ -2,7 +2,7 @@
 
 #include "./BasicBuffer.hpp"
 
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 
 namespace wg::internal {
     class StagingBuffer {

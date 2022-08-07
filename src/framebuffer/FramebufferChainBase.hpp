@@ -4,7 +4,7 @@
 
 #include "../sync/SynchronizedQueueOperationBase.hpp"
 
-#include "../QueueManager.hpp"
+#include "../core/QueueManager.hpp"
 
 namespace wg::internal {
     class FramebufferChainBase : public virtual IFramebufferChain, protected SynchronizedQueueOperationBase {

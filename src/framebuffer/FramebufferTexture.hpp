@@ -4,7 +4,7 @@
 #include "../image/ITexture.hpp"
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 namespace wg::internal {
     class FramebufferTexture : public IFramebuffer, public ITexture {

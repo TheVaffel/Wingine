@@ -11,9 +11,9 @@
 #endif
 
 #include "./render_pass/CompatibleRenderPassRegistry.hpp"
-#include "./VulkanInstanceManager.hpp"
-#include "./DeviceManager.hpp"
-#include "./QueueManager.hpp"
+#include "./core/VulkanInstanceManager.hpp"
+#include "./core/DeviceManager.hpp"
+#include "./core/QueueManager.hpp"
 #include "./image/HostVisibleImageView.hpp"
 #include "./draw_pass/BasicDrawPassSettings.hpp"
 #include "./framebuffer/SwapchainFramebufferChain.hpp"

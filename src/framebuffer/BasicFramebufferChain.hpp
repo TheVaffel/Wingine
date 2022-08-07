@@ -2,8 +2,8 @@
 
 #include "./FramebufferChainBase.hpp"
 
-#include "../DeviceManager.hpp"
-#include "../QueueManager.hpp"
+#include "../core/DeviceManager.hpp"
+#include "../core/QueueManager.hpp"
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
 #include <concepts>

@@ -4,7 +4,7 @@
 
 #include <map>
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 #include "./renderPassUtil.hpp"
 

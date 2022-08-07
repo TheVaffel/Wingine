@@ -2,7 +2,7 @@
 
 #include "./IImage.hpp"
 #include "./ImageCopier.hpp"
-#include "../CommandManager.hpp"
+#include "../core/CommandManager.hpp"
 #include "../sync/WaitSemaphoreSet.hpp"
 #include "../sync/SignalSemaphoreSet.hpp"
 #include "./CopyImageAuxillaryData.hpp"

@@ -2,7 +2,7 @@
 
 #include "./IImage.hpp"
 
-#include "../DeviceManager.hpp"
+#include "../core/DeviceManager.hpp"
 
 namespace wg::internal {
 

@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <limits>
+#include <concepts>
 
 #ifndef HEADLESS
 #include <Winval.hpp>
@@ -25,7 +26,6 @@
 #include "./types.hpp"
 
 namespace wg {
-
 
     class Wingine {
 
@@ -48,9 +48,9 @@ namespace wg {
 
         // General purpose fence for the moving phase
         vk::Fence general_purpose_fence;
+        ChainReelPtr default_chain_reel;
 
         vk::DescriptorPool descriptor_pool;
-
         vk::PipelineCache pipeline_cache;
 
         uint32_t window_width, window_height;
@@ -108,6 +108,10 @@ namespace wg {
         vk::RenderPass create_render_pass(internal::renderPassUtil::RenderPassType type,
                                           bool clear);
 
+        template<typename... Ts>
+        ResourceSetChainPtr createResourceSetChainWithChainReel(const std::vector<uint64_t>& resourceLayout,
+                                                            ChainReelPtr chain_reel,
+                                                            Ts... resources);
 
     public:
 
@@ -131,13 +135,18 @@ namespace wg {
         UniformPtr<T> createUniform();
 
         template<typename T>
-        UniformChainPtr<T> createUniformChain();
+        UniformChainPtr<T> createUniformChain(ChainReelPtr chain_reel = {});
 
-        DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
+        template<typename FirstT, typename... Ts>
+        requires(!(std::same_as<FirstT, ChainReelPtr>))
+        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
+                                                   FirstT first_resource, Ts... resources);
 
         template<typename... Ts>
         ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
-                                                   Ts... resources);
+                                                   ChainReelPtr chain_reel, Ts... resources);
+
+        DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
 
         ShaderPtr createShader(internal::ShaderStage shader_stage, const std::vector<uint32_t>& spirv);
         PipelinePtr createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,

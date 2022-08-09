@@ -93,6 +93,7 @@ namespace wg {
 
     void Wingine::present() {
         this->default_framebuffer_chain->swapFramebuffer();
+        this->default_chain_reel->swap();
     }
 
     uint32_t Wingine::getRenderedImageRowByteStride() const {
@@ -238,12 +239,8 @@ namespace wg {
         this->resource_set_layout_registry =
             std::make_shared<internal::ResourceSetLayoutRegistry>(this->device_manager);
 
-        // General purpose fence for the moving stage
-        vk::FenceCreateInfo fence_create_info;
-        fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
-
-        this->general_purpose_fence =
-            this->device.createFence(fence_create_info);
+        this->default_chain_reel =
+            std::make_shared<internal::ChainReel>(this->default_framebuffer_chain->getNumFramebuffers());
 
         this->init_generic_render_pass();
 

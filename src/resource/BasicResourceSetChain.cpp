@@ -12,32 +12,20 @@ namespace wg::internal {
     }
 
     std::shared_ptr<IResourceChain> BasicResourceSetChain::ensureChain(std::shared_ptr<IResource> resource) {
-        return std::make_shared<StaticResourceChain>(this->resource_set_counter.getNumIndices(), resource);
+        return std::make_shared<StaticResourceChain>(this->getElementChainLength(), resource);
     }
 
     IResourceSet& BasicResourceSetChain::getCurrentResourceSet() const {
         for (uint32_t i = 0; i < this->resource_chains.size(); i++) {
-            fl_assert_eq(this->resource_chains[i]->getCurrentIndex(),
-                         this->resource_set_counter.getCurrentIndex());
+            fl_assert_eq(this->resource_chains[i]->getCurrentElementIndex(),
+                         this->getCurrentElementIndex());
         }
 
-        return *this->resource_sets[this->resource_set_counter.getCurrentIndex()];
+        return *this->resource_sets[this->getCurrentElementIndex()];
     }
 
     IResourceSet& BasicResourceSetChain::getResourceSetAt(uint32_t index) {
         return *this->resource_sets[index];
-    }
-
-    uint32_t BasicResourceSetChain::getNumResources() const {
-        return this->resource_sets.size();
-    }
-
-    uint32_t BasicResourceSetChain::getCurrentResourceIndex() const {
-        return this->resource_set_counter.getCurrentIndex();
-    }
-
-    void BasicResourceSetChain::swap() {
-        this->resource_set_counter.incrementIndex();
     }
 
     void BasicResourceSetChain::writeToDescriptorSets(
@@ -60,14 +48,14 @@ namespace wg::internal {
     void BasicResourceSetChain::setChains(const std::vector<std::shared_ptr<IResourceChain>>& resource_chains) {
         fl_assert_gt(resource_chains.size(), 0u);
 
-        uint32_t chain_length = resource_chains[0]->getNumResources();
+        uint32_t chain_length = resource_chains[0]->getElementChainLength();
         fl_assert_eq(chain_length, this->resource_sets.size());
 
         this->resource_chains.resize(resource_chains.size());
 
         for (uint32_t i = 0; i < resource_chains.size(); i++) {
             this->resource_chains[i] = resource_chains[i];
-            fl_assert_eq(resource_chains[i]->getNumResources(), chain_length);
+            fl_assert_eq(resource_chains[i]->getElementChainLength(), chain_length);
         }
 
         this->writeToDescriptorSets(chain_length, resource_chains);

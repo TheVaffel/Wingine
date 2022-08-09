@@ -40,10 +40,10 @@ namespace wg::internal {
     void ImageChainCopier::recordCopies(std::shared_ptr<IFramebufferChain> framebuffer_chain,
                                         std::shared_ptr<ITextureChain> texture_chain) {
         fl_assert_eq(framebuffer_chain->getNumFramebuffers(),
-                     texture_chain->getNumResources());
+                     texture_chain->getElementChainLength());
 
         std::vector<IImage*> srcs, dsts;
-        for (uint32_t i = 0; i < texture_chain->getNumResources(); i++) {
+        for (uint32_t i = 0; i < texture_chain->getElementChainLength(); i++) {
             IImage& image = framebuffer_chain->getFramebuffer(i).hasColorImage() ?
                 framebuffer_chain->getFramebuffer(i).getColorImage() :
                 framebuffer_chain->getFramebuffer(i).getDepthImage();

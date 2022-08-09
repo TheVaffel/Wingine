@@ -11,7 +11,7 @@ namespace wg::internal {
                                                  const vk::DescriptorPool& pool,
                                                  std::shared_ptr<const DeviceManager> device_manager,
                                                  Ts... resources)
-        : resource_set_counter(chain_length), device_manager(device_manager) {
+        : ElementChainBase(chain_length), device_manager(device_manager) {
         for (uint32_t i = 0; i < chain_length; i++) {
             this->resource_sets.push_back(std::make_shared<BasicResourceSet>(layout, pool, device_manager));
         }

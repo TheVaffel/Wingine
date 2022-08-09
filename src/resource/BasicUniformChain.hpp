@@ -5,14 +5,12 @@
 
 #include "../sync/SynchronizedQueueOperationBase.hpp"
 #include "../util/IndexCounter.hpp"
+#include "../core/ElementChainBase.hpp"
 
 namespace wg::internal {
 
     template<typename T>
-    class BasicUniformChain : public IUniformChain<T> {
-
-        IndexCounter uniform_index;
-
+    class BasicUniformChain : public IUniformChain<T>, public ElementChainBase {
         std::vector<std::shared_ptr<IUniform<T>>> uniforms;
 
     public:
@@ -23,9 +21,6 @@ namespace wg::internal {
         virtual void setCurrent(const T& value) override;
         virtual IUniform<T>& getCurrentUniform() override;
 
-        virtual uint32_t getCurrentIndex() const override;
-        virtual uint32_t getNumResources() const override;
-        virtual void swap() override;
         virtual IResource& getResourceAt(uint32_t index) override;
     };
 };

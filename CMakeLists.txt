@@ -27,7 +27,9 @@ set(CORE_SOURCES
   CommandManager.cpp
   SwapchainManager.cpp
   queueUtils.cpp
-  deviceEvaluation.cpp)
+  deviceEvaluation.cpp
+  ChainReel.cpp
+  ElementChainBase.cpp)
 set(BUFFER_SOURCES
   bufferUtil.cpp
   IBuffer.cpp

@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "./core/ChainReel.hpp"
+
 #include "./framebuffer/IFramebuffer.hpp"
 #include "./framebuffer/IFramebufferChain.hpp"
 
@@ -78,4 +80,6 @@ namespace wg {
 
     template<typename T>
     using StorageBufferPtr = std::shared_ptr<internal::IStorageBuffer<T>>;
+
+    typedef std::shared_ptr<internal::ChainReel> ChainReelPtr;
 };

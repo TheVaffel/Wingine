@@ -4,6 +4,7 @@
 #include "./IFramebuffer.hpp"
 
 #include "../core/QueueManager.hpp"
+#include "../core/ElementChainBase.hpp"
 
 #include "../image/ITextureChain.hpp"
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
@@ -13,7 +14,7 @@
 #include "./FramebufferTexture.hpp"
 
 namespace wg::internal {
-    class FramebufferTextureChain : public IFramebufferChain, public ITextureChain {
+    class FramebufferTextureChain : public IFramebufferChain, public ITextureChain, public ElementChainBase {
 
         IndexCounter framebuffer_index;
 
@@ -40,10 +41,6 @@ namespace wg::internal {
         virtual const IFramebuffer& getCurrentFramebuffer() const override;
 
         virtual void swapFramebuffer() override;
-
-        virtual void swap() override;
-        virtual uint32_t getCurrentIndex() const override;
-        virtual uint32_t getNumResources() const override;
 
         virtual IResource& getResourceAt(uint32_t index) override;
 

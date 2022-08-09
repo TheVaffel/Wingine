@@ -4,11 +4,10 @@
 
 #include "../util/IndexCounter.hpp"
 #include "../core/DeviceManager.hpp"
+#include "../core/ElementChainBase.hpp"
 
 namespace wg::internal {
-    class BasicResourceSetChain : public IResourceSetChain {
-        IndexCounter resource_set_counter;
-
+    class BasicResourceSetChain : public IResourceSetChain, public ElementChainBase {
         std::vector<std::shared_ptr<IResourceSet>> resource_sets;
         std::vector<std::shared_ptr<IResourceChain>> resource_chains;
 
@@ -38,10 +37,6 @@ namespace wg::internal {
 
         virtual IResourceSet& getCurrentResourceSet() const override;
         virtual IResourceSet& getResourceSetAt(uint32_t index) override;
-        virtual uint32_t getNumResources() const override;
-        virtual uint32_t getCurrentResourceIndex() const override;
-
-        virtual void swap() override;
     };
 };
 

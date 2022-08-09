@@ -5,11 +5,11 @@
 #include "./BasicTexture.hpp"
 
 #include "../framebuffer/IFramebufferChain.hpp"
+#include "../core/ElementChainBase.hpp"
 
 namespace wg::internal {
-    class BasicTextureChain : public virtual ITextureChain {
+    class BasicTextureChain : public virtual ITextureChain, public ElementChainBase {
 
-        IndexCounter texture_index;
         std::vector<std::shared_ptr<ITexture>> textures;
 
         std::shared_ptr<const DeviceManager> device_manager;
@@ -20,11 +20,7 @@ namespace wg::internal {
                           const BasicTextureSetup& setup,
                           std::shared_ptr<const DeviceManager> device_manager);
 
-        virtual void swap();
-        virtual uint32_t getCurrentIndex() const;
-        virtual uint32_t getNumResources() const;
-
-        virtual ITexture& getTextureAt(uint32_t index);
-        virtual IResource& getResourceAt(uint32_t index);
+        virtual ITexture& getTextureAt(uint32_t index) override;
+        virtual IResource& getResourceAt(uint32_t index) override;
     };
 };

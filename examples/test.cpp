@@ -130,9 +130,6 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
-
-        cameraUniform->swap();
-        resourceSet->swap();
     }
 
     wing.waitIdle();

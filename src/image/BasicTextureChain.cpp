@@ -9,7 +9,7 @@ namespace wg::internal {
                                          const vk::Extent2D& dimensions,
                                          const BasicTextureSetup& setup,
                                          std::shared_ptr<const DeviceManager> device_manager)
-        : texture_index(count),
+        : ElementChainBase(count),
           device_manager(device_manager) {
 
         this->textures.resize(count);
@@ -17,18 +17,6 @@ namespace wg::internal {
         for (uint32_t i = 0; i < count; i++) {
             this->textures[i] = std::make_unique<BasicTexture>(dimensions, setup, device_manager);
         }
-    }
-
-    void BasicTextureChain::swap() {
-        this->texture_index.incrementIndex();
-    }
-
-    uint32_t BasicTextureChain::getCurrentIndex() const {
-        return this->texture_index.getCurrentIndex();
-    }
-
-    uint32_t BasicTextureChain::getNumResources() const {
-        return this->textures.size();
     }
 
     IResource& BasicTextureChain::getResourceAt(uint32_t index) {

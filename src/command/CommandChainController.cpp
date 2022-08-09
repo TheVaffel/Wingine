@@ -206,7 +206,7 @@ namespace wg::internal {
 
     void CommandChainController::sanityCheckRecordedResourceSets() {
         for (uint32_t i = 0; i < this->recorded_resource_sets.size(); i++) {
-            fl_assert_eq(this->recorded_resource_sets[i]->getCurrentResourceIndex(),
+            fl_assert_eq(this->recorded_resource_sets[i]->getCurrentElementIndex(),
                          this->command_index.getCurrentIndex());
         }
     }

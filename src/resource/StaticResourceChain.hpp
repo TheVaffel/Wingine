@@ -1,22 +1,18 @@
 #include "./IResourceChain.hpp"
 #include "../util/IndexCounter.hpp"
 
-namespace wg::internal {
-    class StaticResourceChain : public virtual IResourceChain {
+#include "../core/ElementChainBase.hpp"
 
-        IndexCounter index_counter;
+namespace wg::internal {
+    class StaticResourceChain : public virtual IResourceChain, public ElementChainBase {
 
         std::shared_ptr<IResource> resource;
 
     public:
 
-        virtual void swap() final;
-        virtual uint32_t getCurrentIndex() const final;
-        virtual uint32_t getNumResources() const final;
-
-        virtual IResource& getResourceAt(uint32_t index) final;
-
         StaticResourceChain(uint32_t num_resources,
                             std::shared_ptr<IResource> resource);
+
+        virtual IResource& getResourceAt(uint32_t index) final;
     };
 };

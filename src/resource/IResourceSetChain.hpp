@@ -3,13 +3,12 @@
 #include "./IResourceChain.hpp"
 #include "./IResourceSet.hpp"
 
+#include "../core/IElementChain.hpp"
+
 namespace wg::internal {
-    class IResourceSetChain {
+    class IResourceSetChain : virtual public IElementChain {
     public:
         virtual IResourceSet& getCurrentResourceSet() const = 0;
         virtual IResourceSet& getResourceSetAt(uint32_t index) = 0;
-        virtual uint32_t getNumResources() const = 0;
-        virtual uint32_t getCurrentResourceIndex() const = 0;
-        virtual void swap() = 0;
     };
 };

@@ -6,7 +6,7 @@ namespace wg::internal {
     template<typename T>
     BasicUniformChain<T>::BasicUniformChain(uint32_t count,
                                             std::shared_ptr<const DeviceManager> device_manager)
-        : uniform_index(count) {
+        : ElementChainBase(count) {
         for (uint32_t i = 0; i < count; i++) {
             this->uniforms.push_back(std::make_shared<BasicUniform<T>>(device_manager));
         }
@@ -21,27 +21,12 @@ namespace wg::internal {
 
     template<typename T>
     void BasicUniformChain<T>::setCurrent(const T& value) {
-        this->uniforms[this->uniform_index.getCurrentIndex()]->set(value);
-    }
-
-    template<typename T>
-    void BasicUniformChain<T>::swap() {
-        this->uniform_index.incrementIndex();
+        this->uniforms[this->getCurrentElementIndex()]->set(value);
     }
 
     template<typename T>
     IUniform<T>& BasicUniformChain<T>::getCurrentUniform() {
-        return *this->uniforms[this->uniform_index.getCurrentIndex()];
-    }
-
-    template<typename T>
-    uint32_t BasicUniformChain<T>::getCurrentIndex() const {
-        return this->uniform_index.getCurrentIndex();
-    }
-
-    template<typename T>
-    uint32_t BasicUniformChain<T>::getNumResources() const {
-        return this->uniforms.size();
+        return *this->uniforms[this->getCurrentElementIndex()];
     }
 
     template<typename T>

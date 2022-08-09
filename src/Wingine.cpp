@@ -280,30 +280,6 @@ namespace wg {
         this->init_vulkan(init_info);
     }
 
-    vk::Device Wingine::getDevice() {
-        return this->device;
-    }
-
-    vk::Queue Wingine::getGraphicsQueue() {
-        return this->queue_manager->getGraphicsQueue();
-    }
-
-    vk::Queue Wingine::getPresentQueue() {
-        return this->queue_manager->getPresentQueue();
-    }
-
-    const internal::Command& Wingine::getGeneralCommand() {
-        return this->command_manager->getGeneralCommand();
-    }
-
-    vk::CommandPool Wingine::getGraphicsCommandPool() {
-        return this->command_manager->getGraphicsCommandPool();
-    }
-
-    vk::DescriptorPool Wingine::getDescriptorPool() {
-        return this->descriptor_pool;
-    }
-
     int Wingine::getNumFramebuffers() {
         return this->default_framebuffer_chain->getNumFramebuffers();
     }
@@ -467,7 +443,5 @@ namespace wg {
     Wingine::~Wingine() {
         this->device.destroy(this->descriptor_pool, nullptr);
         this->device.destroy(this->pipeline_cache, nullptr);
-
-        this->device.destroyFence(this->general_purpose_fence);
     }
 };

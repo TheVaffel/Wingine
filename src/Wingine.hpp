@@ -46,8 +46,6 @@ namespace wg {
 
         std::shared_ptr<internal::ResourceSetLayoutRegistry> resource_set_layout_registry;
 
-        // General purpose fence for the moving phase
-        vk::Fence general_purpose_fence;
         ChainReelPtr default_chain_reel;
 
         vk::DescriptorPool descriptor_pool;
@@ -95,14 +93,6 @@ namespace wg {
         void init_generic_render_pass();
         void init_descriptor_pool();
         void init_pipeline_cache();
-
-        vk::Queue getGraphicsQueue();
-        vk::Queue getPresentQueue();
-        vk::Device getDevice();
-        const internal::Command& getGeneralCommand();
-        vk::DescriptorPool getDescriptorPool();
-        vk::CommandPool getPresentCommandPool();
-        vk::CommandPool getGraphicsCommandPool();
 
         void register_compatible_render_pass(internal::renderPassUtil::RenderPassType type);
         vk::RenderPass create_render_pass(internal::renderPassUtil::RenderPassType type,

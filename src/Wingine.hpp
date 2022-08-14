@@ -47,6 +47,7 @@ namespace wg {
         std::shared_ptr<internal::ResourceSetLayoutRegistry> resource_set_layout_registry;
 
         ChainReelPtr default_chain_reel;
+        ChainReelPtr current_chain_reel;
 
         vk::DescriptorPool descriptor_pool;
         vk::PipelineCache pipeline_cache;
@@ -94,14 +95,7 @@ namespace wg {
         void init_descriptor_pool();
         void init_pipeline_cache();
 
-        void register_compatible_render_pass(internal::renderPassUtil::RenderPassType type);
-        vk::RenderPass create_render_pass(internal::renderPassUtil::RenderPassType type,
-                                          bool clear);
-
-        template<typename... Ts>
-        ResourceSetChainPtr createResourceSetChainWithChainReel(const std::vector<uint64_t>& resourceLayout,
-                                                            ChainReelPtr chain_reel,
-                                                            Ts... resources);
+        void setChainReel(ChainReelPtr chain_reel);
 
     public:
 
@@ -125,16 +119,29 @@ namespace wg {
         UniformPtr<T> createUniform();
 
         template<typename T>
-        UniformChainPtr<T> createUniformChain(ChainReelPtr chain_reel = {});
-
-        template<typename FirstT, typename... Ts>
-        requires(!(std::same_as<FirstT, ChainReelPtr>))
-        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
-                                                   FirstT first_resource, Ts... resources);
+        UniformChainPtr<T> createUniformChain();
 
         template<typename... Ts>
-        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
-                                                   ChainReelPtr chain_reel, Ts... resources);
+        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout, Ts... resources);
+
+        ChainReelPtr createChainReel(uint32_t chain_length);
+        ChainReelPtr getDefaultChainReel();
+        ChainReelPtr getCurrentChainReel();
+
+        class ChainReelGuard {
+            ChainReelPtr old_chain_reel;
+            Wingine* wing;
+
+            ChainReelGuard(Wingine* wing, ChainReelPtr chain_reel);
+
+        public:
+            ~ChainReelGuard();
+
+            friend Wingine;
+        };
+
+        [[nodiscard]]
+        std::unique_ptr<ChainReelGuard> lockChainReel(ChainReelPtr chain_reel);
 
         DrawPassPtr createBasicDrawPass(PipelinePtr pipeline, const internal::BasicDrawPassSettings& settings);
 
@@ -194,6 +201,8 @@ namespace wg {
 
         ~Wingine();
     };
+
+    typedef std::unique_ptr<Wingine::ChainReelGuard> ChainReelGuard;
 };
 
 

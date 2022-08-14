@@ -15,12 +15,10 @@ namespace wg {
     }
 
     template<typename T>
-    UniformChainPtr<T> Wingine::createUniformChain(ChainReelPtr chain_reel) {
-        chain_reel = chain_reel ? chain_reel : this->default_chain_reel;
-
+    UniformChainPtr<T> Wingine::createUniformChain() {
         auto uniform_chain = std::make_shared<internal::BasicUniformChain<T>>(this->getNumFramebuffers(),
                                                                               this->device_manager);
-        chain_reel->addChain(uniform_chain);
+        this->current_chain_reel->addChain(uniform_chain);
         return uniform_chain;
     }
 
@@ -40,33 +38,16 @@ namespace wg {
                                                                             this->command_manager);
     }
 
-    template<typename FirstT, typename... Ts>
-    requires(!(std::same_as<FirstT, ChainReelPtr>))
-    ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
-                                                        FirstT first, Ts... resources) {
-        return this->createResourceSetChainWithChainReel(resourceLayout,
-                                                         this->default_chain_reel,
-                                                         first,
-                                                         resources...);
-    }
-
     template<typename... Ts>
     ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
-                                                        ChainReelPtr chain_reel, Ts... resources) {
-        chain_reel = chain_reel ? chain_reel : this->default_chain_reel;
-        return this->createResourceSetChainWithChainReel(resourceLayout, chain_reel, resources...);
-    }
-
-    template<typename... Ts>
-    ResourceSetChainPtr Wingine::createResourceSetChainWithChainReel(const std::vector<uint64_t>& resourceLayout,
-                                                                     ChainReelPtr chain_reel, Ts... resources) {
+                                                        Ts... resources) {
         ResourceSetChainPtr res = std::make_shared<internal::BasicResourceSetChain>(
             this->getNumFramebuffers(),
             this->resource_set_layout_registry->ensureAndGet(resourceLayout),
             this->descriptor_pool,
             this->device_manager,
             resources...);
-        chain_reel->addChain(res);
+        this->current_chain_reel->addChain(res);
         return res;
     }
 };

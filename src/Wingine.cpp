@@ -83,10 +83,6 @@ namespace wg {
         return this->window_height;
     }
 
-    void Wingine::register_compatible_render_pass(internal::renderPassUtil::RenderPassType type) {
-        this->compatible_render_pass_registry->ensureAndGetRenderPass(type);
-    }
-
     void Wingine::setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores) {
         this->default_framebuffer_chain->setPresentWaitSemaphores(std::move(semaphores));
     }
@@ -120,7 +116,8 @@ namespace wg {
     }
 
     void Wingine::init_generic_render_pass() {
-        this->register_compatible_render_pass(internal::renderPassUtil::RenderPassType::colorDepth);
+        this->compatible_render_pass_registry->ensureAndGetRenderPass(
+            internal::renderPassUtil::RenderPassType::colorDepth);
     }
 
 
@@ -154,6 +151,10 @@ namespace wg {
 
         // We use defaults in the create info
         this->pipeline_cache = this->device.createPipelineCache(pcci);
+    }
+
+    void Wingine::setChainReel(ChainReelPtr chain_reel) {
+        this->current_chain_reel = chain_reel;
     }
 
     void Wingine::waitIdle() {
@@ -241,6 +242,7 @@ namespace wg {
 
         this->default_chain_reel =
             std::make_shared<internal::ChainReel>(this->default_framebuffer_chain->getNumFramebuffers());
+        this->current_chain_reel = this->default_chain_reel;
 
         this->init_generic_render_pass();
 
@@ -293,6 +295,32 @@ namespace wg {
                                                                        this->device_manager,
                                                                        this->queue_manager,
                                                                        this->command_manager);
+    }
+
+    ChainReelPtr Wingine::createChainReel(uint32_t chain_length) {
+        return std::make_shared<internal::ChainReel>(chain_length);
+    }
+
+    ChainReelPtr Wingine::getDefaultChainReel() {
+        return this->default_chain_reel;
+    }
+
+    ChainReelPtr Wingine::getCurrentChainReel() {
+        return this->current_chain_reel;
+    }
+
+    Wingine::ChainReelGuard::ChainReelGuard(Wingine* wing, ChainReelPtr chain_reel)
+        : wing(wing) {
+        this->old_chain_reel = wing->getCurrentChainReel();
+        wing->setChainReel(chain_reel);
+    }
+
+    Wingine::ChainReelGuard::~ChainReelGuard() {
+        this->wing->setChainReel(this->old_chain_reel);
+    }
+
+    std::unique_ptr<Wingine::ChainReelGuard> Wingine::lockChainReel(ChainReelPtr chain_reel) {
+        return std::unique_ptr<Wingine::ChainReelGuard>(new ChainReelGuard(this, chain_reel));
     }
 
     ShaderPtr Wingine::createShader(internal::ShaderStage stage_bit, const std::vector<uint32_t>& spirv) {

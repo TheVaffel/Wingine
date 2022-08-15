@@ -4,18 +4,17 @@
 
 #include "../sync/ISynchronizedQueueOperation.hpp"
 
+#include "../core/IElementChain.hpp"
+
 namespace wg::internal {
-    class IFramebufferChain : virtual ISynchronizedQueueOperation {
+    class IFramebufferChain : virtual ISynchronizedQueueOperation, public virtual IElementChain {
     public:
 
-        virtual uint32_t getNumFramebuffers() const = 0;
         virtual const IFramebuffer& getFramebuffer(uint32_t index) const = 0;
         IFramebuffer& getFramebuffer(uint32_t index);
 
         virtual const IFramebuffer& getCurrentFramebuffer() const = 0;
         IFramebuffer& getCurrentFramebuffer();
-
-        virtual void swapFramebuffer() = 0;
 
         virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) = 0;
         virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() = 0;

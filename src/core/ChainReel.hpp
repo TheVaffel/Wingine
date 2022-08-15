@@ -20,7 +20,7 @@ namespace wg::internal {
         void addChain(std::shared_ptr<IElementChain> chain);
         void removeChain(std::shared_ptr<IElementChain> chain);
 
-        uint32_t getChainLength();
+        uint32_t getChainLength() const;
 
         void swap();
     };

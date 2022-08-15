@@ -14,8 +14,8 @@ namespace wg::internal {
         ElementChainBase(uint32_t chain_length);
 
     public:
-        virtual uint32_t getCurrentElementIndex() const final;
-        virtual uint32_t getElementChainLength() const final;
-        virtual void swapToNextElement() final;
+        virtual uint32_t getCurrentElementIndex() const override;
+        virtual uint32_t getElementChainLength() const override;
+        virtual void swapToNextElement() override;
     };
 };

@@ -11,8 +11,7 @@ namespace wg::internal {
                                                      std::shared_ptr<const DeviceManager> device_manager,
                                                      std::shared_ptr<const QueueManager> queue_manager,
                                                      CompatibleRenderPassRegistry& render_pass_registry)
-    : ElementChainBase(count),
-      framebuffer_index(count), semaphores(count, device_manager), queue_manager(queue_manager) {
+    : ElementChainBase(count), semaphores(count, device_manager), queue_manager(queue_manager) {
 
         for (uint32_t i = 0; i < count; i++) {
             this->framebuffer_textures.push_back(std::make_shared<FramebufferTexture>(dimensions,
@@ -26,26 +25,22 @@ namespace wg::internal {
         return *this->framebuffer_textures[index];
     }
 
-    uint32_t FramebufferTextureChain::getNumFramebuffers() const {
-        return this->framebuffer_textures.size();
-    }
-
     const IFramebuffer& FramebufferTextureChain::getFramebuffer(uint32_t index) const {
         return *this->framebuffer_textures[index];
     }
 
     const IFramebuffer& FramebufferTextureChain::getCurrentFramebuffer() const {
-        return *this->framebuffer_textures[this->framebuffer_index.getCurrentIndex()];
+        return *this->framebuffer_textures[this->getCurrentElementIndex()];
     }
 
-    void FramebufferTextureChain::swapFramebuffer() {
+    void FramebufferTextureChain::swapToNextElement() {
+        this->ElementChainBase::swapToNextElement();
         semaphoreUtil::signalManySemaphoresFromManySemaphores(this->semaphores.getWaitSemaphores().getCurrentRawSemaphores(),
                                                               this->semaphores.getSignalSemaphores().getCurrentRawSemaphores(),
                                                               this->queue_manager->getGraphicsQueue());
 
         this->semaphores.getWaitSemaphores().swapSemaphores();
         this->semaphores.getSignalSemaphores().swapSemaphores();
-        this->framebuffer_index.incrementIndex();
     }
 
     IResource& FramebufferTextureChain::getResourceAt(uint32_t index) {

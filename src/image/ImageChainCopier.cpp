@@ -39,7 +39,7 @@ namespace wg::internal {
 
     void ImageChainCopier::recordCopies(std::shared_ptr<IFramebufferChain> framebuffer_chain,
                                         std::shared_ptr<ITextureChain> texture_chain) {
-        fl_assert_eq(framebuffer_chain->getNumFramebuffers(),
+        fl_assert_eq(framebuffer_chain->getElementChainLength(),
                      texture_chain->getElementChainLength());
 
         std::vector<IImage*> srcs, dsts;

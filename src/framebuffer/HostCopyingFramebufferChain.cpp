@@ -14,7 +14,6 @@ namespace wg::internal {
                                                          queue_manager->getGraphicsQueue(),
                                                          command_manager,
                                                          device_manager)),
-      inner_framebuffer_index_counter(num_framebuffers),
       dst_image(dst_image),
       inner_framebuffer_chain(num_framebuffers,
                               device_manager,
@@ -43,10 +42,6 @@ namespace wg::internal {
     }
 
 
-    uint32_t HostCopyingFramebufferChain::getNumFramebuffers() const {
-        return this->inner_framebuffer_chain.getNumFramebuffers();
-    }
-
     const IFramebuffer& HostCopyingFramebufferChain::getFramebuffer(uint32_t index) const {
         return this->inner_framebuffer_chain.getFramebuffer(index);
     }
@@ -55,14 +50,20 @@ namespace wg::internal {
         return this->inner_framebuffer_chain.getCurrentFramebuffer();
     }
 
-    void HostCopyingFramebufferChain::swapFramebuffer() {
-        this->inner_framebuffer_chain.swapFramebuffer();
+    void HostCopyingFramebufferChain::swapToNextElement() {
+        this->inner_framebuffer_chain.swapToNextElement();
         this->image_copier->runAndAwaitCopy();
 
         this->dst_image->setReadyForCopyFence(image_copier->getLastImageCopyCompleteFence());
-        inner_framebuffer_index_counter.incrementIndex();
-        }
+    }
 
+    uint32_t HostCopyingFramebufferChain::getElementChainLength() const {
+        return this->inner_framebuffer_chain.getElementChainLength();
+    }
+
+    uint32_t HostCopyingFramebufferChain::getCurrentElementIndex() const {
+        return this->inner_framebuffer_chain.getCurrentElementIndex();
+    }
 
     void HostCopyingFramebufferChain::setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) {
         this->inner_framebuffer_chain.setPresentWaitSemaphores(std::move(semaphores));

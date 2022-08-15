@@ -157,8 +157,6 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
-
-        resourceSet->swap();
     }
 
     wing.waitIdle();

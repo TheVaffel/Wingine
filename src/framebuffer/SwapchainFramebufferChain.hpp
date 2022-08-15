@@ -40,11 +40,13 @@ namespace wg::internal {
                                   CompatibleRenderPassRegistry& render_pass_registry);
         ~SwapchainFramebufferChain();
 
-        virtual void swapFramebuffer();
-        virtual const IFramebuffer& getCurrentFramebuffer() const;
+        virtual const IFramebuffer& getCurrentFramebuffer() const final;
 
-        virtual uint32_t getNumFramebuffers() const;
+        virtual void swapToNextElement() final;
+        virtual uint32_t getCurrentElementIndex() const final;
+        virtual uint32_t getElementChainLength() const final;
 
-        virtual const IFramebuffer& getFramebuffer(uint32_t index) const;
+
+        virtual const IFramebuffer& getFramebuffer(uint32_t index) const final;
     };
 };

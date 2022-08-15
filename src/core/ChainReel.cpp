@@ -27,7 +27,7 @@ namespace wg::internal {
         throw std::runtime_error("[ChainReel] Could not find chain to delete");
     }
 
-    uint32_t ChainReel::getChainLength() {
+    uint32_t ChainReel::getChainLength() const {
         return this->index_counter.getNumIndices();
     }
 

@@ -16,8 +16,6 @@
 namespace wg::internal {
     class FramebufferTextureChain : public IFramebufferChain, public ITextureChain, public ElementChainBase {
 
-        IndexCounter framebuffer_index;
-
         SignalAndWaitSemaphores semaphores;
 
         std::vector<std::shared_ptr<FramebufferTexture>> framebuffer_textures;
@@ -33,21 +31,19 @@ namespace wg::internal {
                                 std::shared_ptr<const QueueManager> queue_manager,
                                 CompatibleRenderPassRegistry& render_pass_registry);
 
-        virtual ITexture& getTextureAt(uint32_t index) override;
+        virtual ITexture& getTextureAt(uint32_t index) final;
 
-        virtual uint32_t getNumFramebuffers() const override;
-        virtual const IFramebuffer& getFramebuffer(uint32_t index) const override;
+        virtual void swapToNextElement() final;
 
-        virtual const IFramebuffer& getCurrentFramebuffer() const override;
+        virtual const IFramebuffer& getFramebuffer(uint32_t index) const final;
+        virtual const IFramebuffer& getCurrentFramebuffer() const final;
 
-        virtual void swapFramebuffer() override;
+        virtual IResource& getResourceAt(uint32_t index) final;
 
-        virtual IResource& getResourceAt(uint32_t index) override;
+        virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) final;
+        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() final;
+        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) final;
 
-        virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) override;
-        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() override;
-        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) override;
-
-        virtual SignalAndWaitSemaphores& getSemaphores() override;
+        virtual SignalAndWaitSemaphores& getSemaphores() final;
     };
 };

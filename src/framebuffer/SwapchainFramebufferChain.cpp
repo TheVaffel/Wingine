@@ -129,7 +129,7 @@ namespace wg::internal {
         }
     }
 
-    void SwapchainFramebufferChain::swapFramebuffer() {
+    void SwapchainFramebufferChain::swapToNextElement() {
         this->present();
     }
 
@@ -137,7 +137,11 @@ namespace wg::internal {
         return *this->framebuffers[this->swapchain_index_counter.getCurrentIndex()];
     }
 
-    uint32_t SwapchainFramebufferChain::getNumFramebuffers() const {
+    uint32_t SwapchainFramebufferChain::getCurrentElementIndex() const {
+        return this->swapchain_index_counter.getCurrentIndex();
+    }
+
+    uint32_t SwapchainFramebufferChain::getElementChainLength() const {
         return this->framebuffers.size();
     }
 

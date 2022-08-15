@@ -159,7 +159,6 @@ int main() {
 
         draw_pass->awaitCurrentCommand();
 
-        // win.sleepMilliseconds(10);
         time_uniform->setCurrent(sin(f));
 
         draw_pass->render();
@@ -170,9 +169,6 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
-
-        time_uniform->swap();
-        time_set->swap();
     }
 
     wing.waitIdle();

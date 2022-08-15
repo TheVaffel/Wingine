@@ -88,7 +88,7 @@ namespace wg {
     }
 
     void Wingine::present() {
-        this->default_framebuffer_chain->swapFramebuffer();
+        this->default_framebuffer_chain->swapToNextElement();
         this->default_chain_reel->swap();
     }
 
@@ -241,7 +241,7 @@ namespace wg {
             std::make_shared<internal::ResourceSetLayoutRegistry>(this->device_manager);
 
         this->default_chain_reel =
-            std::make_shared<internal::ChainReel>(this->default_framebuffer_chain->getNumFramebuffers());
+            std::make_shared<internal::ChainReel>(this->getNumFramebuffers());
         this->current_chain_reel = this->default_chain_reel;
 
         this->init_generic_render_pass();
@@ -283,7 +283,7 @@ namespace wg {
     }
 
     int Wingine::getNumFramebuffers() {
-        return this->default_framebuffer_chain->getNumFramebuffers();
+        return this->default_framebuffer_chain->getElementChainLength();
     }
 
     const internal::IFramebuffer& Wingine::getCurrentFramebuffer() {
@@ -376,33 +376,39 @@ namespace wg {
                                                             *this->compatible_render_pass_registry);
     }
 
-    FramebufferChain Wingine::createFramebufferChain(uint32_t width, uint32_t height,
-                                                     bool depthOnly, uint32_t num_framebuffers) {
+    FramebufferChain Wingine::createFramebufferChain(uint32_t width, uint32_t height, bool depthOnly) {
         internal::BasicFramebufferSetup setup;
         setup.setDepthOnly(depthOnly);
-        return std::make_shared<
-            internal::BasicFramebufferChain<
-                internal::BasicFramebuffer>>(num_framebuffers,
+        auto framebuffer_chain =
+            std::make_shared<internal::BasicFramebufferChain<
+                internal::BasicFramebuffer>>(this->current_chain_reel->getChainLength(),
                                              this->device_manager,
                                              this->queue_manager,
                                              vk::Extent2D(width, height),
                                              setup,
                                              this->device_manager,
                                              *this->compatible_render_pass_registry);
+
+        this->current_chain_reel->addChain(framebuffer_chain);
+
+        return framebuffer_chain;
     }
 
     FramebufferTextureChainPtr Wingine::createFramebufferTextureChain(uint32_t width,
                                                                       uint32_t height,
-                                                                      bool depth_only,
-                                                                      uint32_t count) {
-        count = count == std::numeric_limits<uint32_t>::max() ? this->getNumFramebuffers() : count;
-        return std::make_shared<internal::FramebufferTextureChain>(
-            count,
+                                                                      bool depth_only) {
+
+        auto framebuffer_chain =  std::make_shared<internal::FramebufferTextureChain>(
+            this->current_chain_reel->getChainLength(),
             vk::Extent2D(width, height),
             depth_only,
             this->device_manager,
             this->queue_manager,
             *this->compatible_render_pass_registry);
+
+        this->current_chain_reel->addChain(framebuffer_chain);
+
+        return framebuffer_chain;
     }
 
     FramebufferChain Wingine::getDefaultFramebufferChain() {
@@ -460,7 +466,7 @@ namespace wg {
     DrawPassPtr Wingine::createBasicDrawPass(PipelinePtr pipeline,
                                              const internal::BasicDrawPassSettings& settings) {
         return std::make_shared<internal::BasicDrawPass>(pipeline,
-                                                         this->getDefaultFramebufferChain()->getNumFramebuffers(),
+                                                         this->getNumFramebuffers(),
                                                          settings,
                                                          this->command_manager,
                                                          this->queue_manager,

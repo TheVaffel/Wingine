@@ -254,15 +254,6 @@ int main() {
         if(win.isKeyPressed(WK_ESC)) {
             break;
         }
-
-        shadow_framebuffer_chain->swapFramebuffer();
-
-        lightSet->swap();
-        lightTextureSet->swap();
-        resourceSet->swap();
-
-        cameraUniform->swap();
-        light_uniform->swap();
     }
 
     wing.waitIdle();

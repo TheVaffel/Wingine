@@ -31,15 +31,9 @@ namespace wg::internal {
     }
 
     template<CFramebuffer T>
-    uint32_t BasicFramebufferChain<T>::getNumFramebuffers() const {
-        return this->framebuffers.size();
-    }
-
-    template<CFramebuffer T>
     const IFramebuffer& BasicFramebufferChain<T>::getFramebuffer(uint32_t index) const {
         return *this->framebuffers[index];
     }
-
 
     template<CFramebuffer T>
     const IFramebuffer& BasicFramebufferChain<T>::getCurrentFramebuffer() const {
@@ -47,7 +41,17 @@ namespace wg::internal {
     }
 
     template<CFramebuffer T>
-    void BasicFramebufferChain<T>::swapFramebuffer() {
+    uint32_t BasicFramebufferChain<T>::getElementChainLength() const {
+        return this->framebuffers.size();
+    }
+
+    template<CFramebuffer T>
+    uint32_t BasicFramebufferChain<T>::getCurrentElementIndex() const {
+        return this->framebuffer_index.getCurrentIndex();
+    }
+
+    template<CFramebuffer T>
+    void BasicFramebufferChain<T>::swapToNextElement() {
         semaphoreUtil::signalManySemaphoresFromManySemaphores(this->getWaitSemaphores().getCurrentRawSemaphores(),
                                                               this->getSignalSemaphores().getCurrentRawSemaphores(),
                                                               this->queue_manager->getGraphicsQueue());

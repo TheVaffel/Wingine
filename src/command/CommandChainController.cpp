@@ -27,7 +27,7 @@ namespace wg::internal {
     void CommandChainController::startRecording(std::shared_ptr<IFramebufferChain> framebuffer_chain) {
         fl_assert_eq(this->is_recording, false);
 
-        fl_assert_eq(this->commands.size(), framebuffer_chain->getNumFramebuffers());
+        fl_assert_eq(this->commands.size(), framebuffer_chain->getElementChainLength());
         for (uint32_t i = 0; i < this->commands.size(); i++) {
             recordUtil::beginRecording(this->commands[i].buffer);
         }

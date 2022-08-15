@@ -159,13 +159,11 @@ namespace wg {
 
         FramebufferChain createFramebufferChain(uint32_t width,
                                                 uint32_t height,
-                                                bool depthOnly = false,
-                                                uint32_t count = 3);
+                                                bool depthOnly = false);
 
         FramebufferTextureChainPtr createFramebufferTextureChain(uint32_t width,
                                                                  uint32_t height,
-                                                                 bool depth_only = false,
-                                                                 uint32_t count = std::numeric_limits<uint32_t>::max());
+                                                                 bool depth_only = false);
 
         ImageCopierPtr createImageCopier();
         ImageChainCopierPtr createImageChainCopier();

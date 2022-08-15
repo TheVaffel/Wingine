@@ -27,14 +27,16 @@ namespace wg::internal {
                               std::shared_ptr<const QueueManager> queue_manager,
                               Args&&... arguments);
 
+
+        virtual uint32_t getCurrentElementIndex() const;
+        virtual uint32_t getElementChainLength() const;
+        virtual void swapToNextElement();
+
         template<typename ...Args>
         static std::unique_ptr<BasicFramebufferChain> createFramebufferSet(uint32_t count, Args&&... arguments);
 
-        virtual uint32_t getNumFramebuffers() const;
         virtual const IFramebuffer& getFramebuffer(uint32_t index) const;
         virtual const IFramebuffer& getCurrentFramebuffer() const;
-
-        virtual void swapFramebuffer();
     };
 };
 

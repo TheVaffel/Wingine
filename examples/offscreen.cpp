@@ -135,9 +135,6 @@ int main() {
         hg::writeImage(image, file_name_oss.str());
         std::cout << "Wrote file " << file_name_oss.str() << std::endl;
 
-        cameraUniform->swap();
-        resourceSetChain->swap();
-
         renderdoc::end_capture(rdapi);
 
     }

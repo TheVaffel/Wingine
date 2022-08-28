@@ -1,5 +1,7 @@
 #pragma once
 
+#include <FlatAlg.hpp>
+
 namespace wg::internal {
     enum class ComponentType
     {
@@ -8,4 +10,5 @@ namespace wg::internal {
         Int32,
         Int64
     };
+
 };

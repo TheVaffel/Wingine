@@ -78,7 +78,7 @@ namespace wg::internal::pipelineUtil {
             attribs[i].setBinding(descriptions[i].binding_num)
                 .setLocation(i)
                 .setFormat(pipelineUtil::getFormat(descriptions[i].component_type,
-                                                   descriptions[i].num_elements))
+                                                   descriptions[i].num_components))
                 .setOffset(descriptions[i].offset_in_bytes);
         }
 

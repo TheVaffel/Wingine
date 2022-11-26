@@ -24,13 +24,15 @@ namespace wg::internal::recordUtil {
     void endRenderPass(const vk::CommandBuffer& command_buffer);
     void endRecording(const vk::CommandBuffer& command_buffer);
 
+    void recordBindResourceSetForCommand(const vk::CommandBuffer& command_buffer,
+                                         std::shared_ptr<IResourceSetChain> resource_set,
+                                         uint32_t binding,
+                                         std::shared_ptr<IPipeline> pipeline,
+                                         uint32_t index);
 
     void recordDrawForCommand(const vk::CommandBuffer& command_buffer,
-                              std::shared_ptr<IPipeline> pipeline,
                               const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                               const std::shared_ptr<IIndexBuffer> index_buffer,
-                              const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
-                              uint32_t index,
                               uint32_t instance_count);
 
     void recordMakeFramebufferIntoTexture(const vk::CommandBuffer& command,

@@ -140,7 +140,8 @@ int main() {
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordDraw({position_buffer, tex_coord_buffer}, index_buffer, {resourceSet});
+    draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    draw_pass->getCommandChain().recordDraw({position_buffer, tex_coord_buffer}, index_buffer);
     draw_pass->getCommandChain().endRecording();
 
     draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });

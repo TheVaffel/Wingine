@@ -58,8 +58,9 @@ namespace wg::internal {
 
         void recordDraw(const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                         const std::shared_ptr<IIndexBuffer> ind_buf,
-                        const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
                         uint32_t instanceCount = 1);
+
+        void recordBindResourceSet(const std::shared_ptr<IResourceSetChain> resource_set, uint32_t binding);
 
         /* NB: Syncrhonization using events is not generalized properly, usage is discouraged before cleanup */
         void recordSetEvent(std::shared_ptr<EventChain> event);

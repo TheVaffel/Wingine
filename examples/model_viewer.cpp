@@ -132,11 +132,13 @@ int main() {
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
 
     polygon_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    polygon_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    polygon_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    polygon_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     polygon_draw_pass->getCommandChain().endRecording();
 
     line_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    line_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    line_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    line_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     line_draw_pass->getCommandChain().endRecording();
 
     int lock_x = width / 2, lock_y = height / 2;
@@ -197,11 +199,13 @@ int main() {
             wgut::Model& curr_model = switch_state == 0 ? model : model2;
 
             polygon_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-            polygon_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
+            polygon_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+            polygon_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer());
             polygon_draw_pass->getCommandChain().endRecording();
 
             line_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-            line_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer(), {resourceSet});
+            line_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+            line_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer());
             line_draw_pass->getCommandChain().endRecording();
         }
 

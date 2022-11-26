@@ -123,7 +123,8 @@ int main() {
     wg::DrawPassPtr shadow_draw_pass = wing.createBasicDrawPass(depth_pipeline, shadow_draw_pass_settings);
 
     shadow_draw_pass->getCommandChain().startRecording(shadow_framebuffer_chain);
-    shadow_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer, { lightSet });
+    shadow_draw_pass->getCommandChain().recordBindResourceSet(lightSet, 0);
+    shadow_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer);
     shadow_draw_pass->getCommandChain().endRecording();
 
     std::vector<uint32_t> vertex_spirv;
@@ -193,7 +194,9 @@ int main() {
     wg::DrawPassPtr real_draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     real_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    real_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer, { resourceSet, lightTextureSet });
+    real_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    real_draw_pass->getCommandChain().recordBindResourceSet(lightTextureSet, 1);
+    real_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer);
     real_draw_pass->getCommandChain().endRecording();
 
     shadow_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });

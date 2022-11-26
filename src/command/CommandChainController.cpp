@@ -98,7 +98,6 @@ namespace wg::internal {
 
     void CommandChainController::recordDraw(const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                                             const std::shared_ptr<IIndexBuffer> ind_buf,
-                                            const std::vector<std::shared_ptr<IResourceSetChain>>& sets,
                                             uint32_t instance_count) {
         fl_assert_eq(this->is_recording, true);
 
@@ -106,18 +105,27 @@ namespace wg::internal {
             this->beginRenderPass();
         }
 
-        for (uint32_t i = 0; i < sets.size(); i++) {
-            this->recorded_resource_sets.push_back(sets[i]);
-        }
-
         for (uint32_t i = 0; i < this->commands.size(); i++) {
             recordUtil::recordDrawForCommand(this->commands[i].buffer,
-                                             this->pipeline,
                                              vertex_buffers,
                                              ind_buf,
-                                             sets,
-                                             i,
                                              instance_count);
+        }
+    }
+
+    void CommandChainController::recordBindResourceSet(const std::shared_ptr<IResourceSetChain> resource_set,
+                                                       uint32_t binding) {
+        fl_assert_eq(this->is_recording, true);
+
+        if (!is_recording_render_pass) {
+            this->beginRenderPass();
+        }
+        for (uint32_t i = 0; i < this->commands.size(); i++) {
+            recordUtil::recordBindResourceSetForCommand(this->commands[i].buffer,
+                                                        resource_set,
+                                                        binding,
+                                                        this->pipeline,
+                                                        i);
         }
     }
 

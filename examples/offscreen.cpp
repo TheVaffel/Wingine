@@ -103,7 +103,8 @@ int main() {
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSetChain});
+    draw_pass->getCommandChain().recordBindResourceSet(resourceSetChain, 0);
+    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 
     draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });

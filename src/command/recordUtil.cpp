@@ -72,27 +72,6 @@ namespace wg::internal::recordUtil {
 
             command_buffer.drawIndexed(index_buffer->getNumIndices(), instance_count, 0, 0, 0);
         }
-
-        void recordBindDescriptorSets(const vk::CommandBuffer& command_buffer,
-                                      const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
-                                      uint32_t index,
-                                      std::shared_ptr<IPipeline> pipeline) {
-
-            std::vector<vk::DescriptorSet> descriptor_sets(resource_sets.size());
-            for (uint32_t i = 0; i < resource_sets.size(); i++) {
-                descriptor_sets[i] = resource_sets[i]->getResourceSetAt(index).getDescriptorSet();
-            }
-
-            if (resource_sets.size()) {
-                command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                                  pipeline->getPipelineLayout(),
-                                                  0,
-                                                  descriptor_sets.size(),
-                                                  descriptor_sets.data(),
-                                                  0,
-                                                  nullptr);
-            }
-        }
     };
 
     void beginRecording(const vk::CommandBuffer& command_buffer) {
@@ -130,22 +109,33 @@ namespace wg::internal::recordUtil {
         command_buffer.end();
     }
 
+
+    void recordBindResourceSetForCommand(const vk::CommandBuffer& command_buffer,
+                                         std::shared_ptr<IResourceSetChain> resource_set,
+                                         uint32_t binding,
+                                         std::shared_ptr<IPipeline> pipeline,
+                                         uint32_t index) {
+        vk::DescriptorSet descriptor_set = resource_set->getResourceSetAt(index).getDescriptorSet();
+
+        command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                          pipeline->getPipelineLayout(),
+                                          binding,
+                                          1,
+                                          &descriptor_set,
+                                          0,
+                                          nullptr);
+    }
+
     void recordDrawForCommand(const vk::CommandBuffer& command_buffer,
-                              std::shared_ptr<IPipeline> pipeline,
                               const std::vector<std::shared_ptr<IBuffer>>& vertex_buffers,
                               const std::shared_ptr<IIndexBuffer> index_buffer,
-                              const std::vector<std::shared_ptr<IResourceSetChain>>& resource_sets,
-                              uint32_t index,
                               uint32_t instance_count) {
-
-        recordBindDescriptorSets(command_buffer, resource_sets, index, pipeline);
 
         recordBindAndDrawVertexBuffers(command_buffer,
                                        vertex_buffers,
                                        index_buffer,
                                        instance_count);
     }
-
 
     void recordMakeTextureIntoFramebufferAndClear(const vk::CommandBuffer& command,
                                                   const IImage& image,

@@ -108,7 +108,8 @@ int main() {
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer(), {resourceSet});
+    draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 
     draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });

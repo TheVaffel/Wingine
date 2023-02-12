@@ -76,6 +76,8 @@ namespace wg {
     template<typename T>
     using VertexBufferPtr = std::shared_ptr<internal::IVertexBuffer<T>>;
 
+    using BufferPtr = std::shared_ptr<internal::IBuffer>;
+
     typedef std::shared_ptr<internal::IIndexBuffer> IndexBufferPtr;
 
     template<typename T>

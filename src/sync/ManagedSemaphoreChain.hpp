@@ -15,8 +15,9 @@ namespace wg::internal {
         IndexCounter wait_index;
 
         // Sanity check that this is associated with one signal set and one wait set
-        bool has_signal_set;
-        bool has_wait_set;
+        // bool has_signal_set;
+        // bool has_wait_set;
+        bool last_operation_was_signal;
 
         std::vector<vk::Semaphore> semaphores;
         std::shared_ptr<const DeviceManager> device_manager;

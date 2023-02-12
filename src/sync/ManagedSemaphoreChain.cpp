@@ -15,8 +15,9 @@ namespace wg::internal {
                                                  std::shared_ptr<const DeviceManager> device_manager)
         : signal_index(num_semaphores),
           wait_index(num_semaphores),
-          has_signal_set(false),
-          has_wait_set(false),
+          // has_signal_set(false),
+          // has_wait_set(false),
+          last_operation_was_signal(false),
           semaphores(num_semaphores),
           device_manager(device_manager) {
 
@@ -31,8 +32,8 @@ namespace wg::internal {
                                      "did you create semaphore after starting rendering within a frame?");
         }
 
-        fl_assert_eq(this->has_signal_set, true);
-        fl_assert_eq(this->has_wait_set, true);
+        // fl_assert_eq(this->has_signal_set, true);
+        // fl_assert_eq(this->has_wait_set, true);
 
         this->signal_index.incrementIndex();
     }
@@ -42,8 +43,8 @@ namespace wg::internal {
     }
 
     void ManagedSemaphoreChain::swapWaitSemaphore() {
-        fl_assert_eq(this->has_signal_set, true);
-        fl_assert_eq(this->has_wait_set, true);
+        // fl_assert_eq(this->has_signal_set, true);
+        // fl_assert_eq(this->has_wait_set, true);
 
         this->wait_index.incrementIndex();
 
@@ -55,23 +56,23 @@ namespace wg::internal {
     }
 
     void ManagedSemaphoreChain::registerSignalSet() {
-        fl_assert_eq(this->has_signal_set, false);
-        this->has_signal_set = true;
+        // fl_assert_eq(this->has_signal_set, false);
+        // this->has_signal_set = true;
     }
 
     void ManagedSemaphoreChain::registerWaitSet() {
-        fl_assert_eq(this->has_wait_set, false);
-        this->has_wait_set = true;
+        // fl_assert_eq(this->has_wait_set, false);
+        // this->has_wait_set = true;
     }
 
     void ManagedSemaphoreChain::unregisterSignalSet() {
-        fl_assert_eq(this->has_signal_set, true);
-        this->has_signal_set = false;
+        // fl_assert_eq(this->has_signal_set, true);
+        // this->has_signal_set = false;
     }
 
     void ManagedSemaphoreChain::unregisterWaitSet() {
-        fl_assert_eq(this->has_wait_set, true);
-        this->has_wait_set = false;
+        // fl_assert_eq(this->has_wait_set, true);
+        // this->has_wait_set = false;
     }
 
     bool ManagedSemaphoreChain::isBetweenSignalAndAwait() const {
@@ -95,8 +96,8 @@ namespace wg::internal {
     }
 
     ManagedSemaphoreChain::~ManagedSemaphoreChain() {
-        fl_assert_eq(this->has_wait_set, false);
-        fl_assert_eq(this->has_signal_set, false);
+        // fl_assert_eq(this->has_wait_set, false);
+        // fl_assert_eq(this->has_signal_set, false);
 
         for (const vk::Semaphore& semaphore : this->semaphores) {
             this->device_manager->getDevice().destroy(semaphore);

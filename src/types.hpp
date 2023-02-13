@@ -42,6 +42,9 @@ namespace wg {
     typedef internal::BasicDrawPassSettings BasicDrawPassSettings;
 
     typedef std::shared_ptr<internal::ManagedSemaphoreChain> Semaphore;
+    typedef internal::WaitSemaphoreSet WaitSemaphoreSet;
+    typedef internal::SignalSemaphoreSet SignalSemaphoreSet;
+
     typedef std::shared_ptr<internal::EventChain> EventChainPtr;
 
     typedef std::unique_ptr<internal::ImageCopier> ImageCopierPtr;

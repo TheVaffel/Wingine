@@ -8,6 +8,7 @@ namespace wg::internal {
 
         WaitSemaphoreSet(uint32_t chain_length,
                          std::shared_ptr<const DeviceManager> device_manager);
+        WaitSemaphoreSet(const std::vector<SemaphoreChainPtr>& semaphores);
         WaitSemaphoreSet(const std::initializer_list<SemaphoreChainPtr>& semaphores);
 
         WaitSemaphoreSet(const WaitSemaphoreSet& semaphore_set) = delete;

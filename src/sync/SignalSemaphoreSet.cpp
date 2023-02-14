@@ -24,6 +24,8 @@ namespace wg::internal {
                                            std::shared_ptr<const DeviceManager> device_manager)
         : SemaphoreSetBase(SemaphoreSetType::Signal, chain_length, device_manager) { }
 
+    SignalSemaphoreSet::SignalSemaphoreSet(const std::vector<SemaphoreChainPtr>& semaphores)
+        : SemaphoreSetBase(SemaphoreSetType::Signal, semaphores) { }
 
     SignalSemaphoreSet::SignalSemaphoreSet(const std::initializer_list<SemaphoreChainPtr>& semaphores)
         : SemaphoreSetBase(SemaphoreSetType::Signal, semaphores) { }

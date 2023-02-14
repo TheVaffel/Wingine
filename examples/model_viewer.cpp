@@ -9,24 +9,34 @@
 
 namespace gn = generelle;
 
-
 int main() {
     const int width = 800, height = 800;
     Winval win(width, height);
     wg::Wingine wing(width, height, win.getWinProp0(), win.getWinProp1());
 
-    gn::GE scene = gn::makeSphere(1.0f).translate(falg::Vec3(0.01f, 0.01f, 0.01f)).scale(falg::Vec3(1.0f, 0.5f, 1.0f))
-        .add(gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f)).translate(falg::Vec3(0.0f, 0.0f, 1.0f)));
+    gn::GE scene = gn::makeSphere(1.0f)
+	.translate(falg::Vec3(0.01f, 0.01f, 0.01f))
+	.scale(falg::Vec3(1.0f, 0.5f, 1.0f))
+        .add(gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f))
+	     .translate(falg::Vec3(0.0f, 0.0f, 1.0f)));
     // gn::GE scene = gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f));
+
+    gn::GE scene2 = gn::makeSphere(1.0f)
+	.translate(falg::Vec3(-0.5f, 0.0f, 0.0f))
+	.add(gn::makeSphere(1.0f)
+	     .translate(falg::Vec3(0.5f, 0.0f, 0.0f)))
+	.add(gn::makeCylinder(1.0f, 1.0f).translate(falg::Vec3(0.0f, 1.0f, 0.0f)));
 
     gn::MeshConstructor::ConstructMeshSetup meshSetup1, meshSetup2;
 
-    meshSetup1.numRectify = 1;
-
-    meshSetup2.numRectify = 2;
+    meshSetup1.numRectify = 2;
+    meshSetup2.numRectify = 3;
 
     gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), meshSetup1);
     gn::Mesh mesh2 = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), meshSetup2);
+
+    // gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene2, 0.3f, 1e8f, falg::Vec3(0.0f, 0.0f, 0.0f), meshSetup1);
+
 
     /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::VertexAttribute::Position,
             wgut::VertexAttribute::Normal},

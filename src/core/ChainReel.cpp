@@ -40,4 +40,8 @@ namespace wg::internal {
             fl_assert_eq(chain->getCurrentElementIndex(), this->index_counter.getCurrentIndex());
         }
     }
+
+    void ChainReel::reset() {
+        this->element_chains.clear();
+    }
 };

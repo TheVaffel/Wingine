@@ -183,6 +183,18 @@ namespace wg {
         uint32_t getRenderedImageRowByteStride() const;
         void copyLastRenderedImage(uint32_t* dst);
 
+        /**
+         * Clear excessive references and check that device_manager refs
+         * are cleared. Important for e.g. C API error checking
+         */
+        void clearAndCheckDeviceManagerRefs();
+
+        /**
+         * Counter to sanity-check that all references to device_manager has been destroyed before
+         * destroying the Wingine instance
+         */
+      uint32_t original_device_manager_refs;
+
 #ifndef HEADLESS
         Wingine(Winval& win);
 

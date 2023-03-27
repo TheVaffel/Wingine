@@ -23,5 +23,6 @@ namespace wg::internal {
         uint32_t getChainLength() const;
 
         void swap();
+        void reset();
     };
 };

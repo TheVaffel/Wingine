@@ -15,6 +15,7 @@ namespace wg::internal {
     public:
 
         BasicUniform(std::shared_ptr<const DeviceManager> device_manager);
+        virtual ~BasicUniform() = default;
 
         virtual void set(const T& val) override;
 

@@ -256,6 +256,7 @@ namespace wg {
                      winval_type_0 arg0, winval_type_1 arg1, const std::string& application_name) {
         VulkanInitInfo init_info(width, height, arg0, arg1, application_name);
         this->init_vulkan(init_info);
+        this->original_device_manager_refs = this->device_manager.use_count();
     }
 #endif
 
@@ -274,12 +275,15 @@ namespace wg {
         this->init_vulkan(init_info);
 
 #endif // WIN32
+        this->original_device_manager_refs = this->device_manager.use_count();
     }
 #endif
 
     Wingine::Wingine(uint32_t width, uint32_t height, const std::string& app_title) {
         VulkanInitInfo init_info(width, height, app_title);
         this->init_vulkan(init_info);
+
+        this->original_device_manager_refs = this->device_manager.use_count();
     }
 
     int Wingine::getNumFramebuffers() {
@@ -474,8 +478,24 @@ namespace wg {
 
     }
 
+    void Wingine::clearAndCheckDeviceManagerRefs() {
+        this->current_chain_reel->reset();
+        this->default_chain_reel->reset();
+        this->default_framebuffer_chain->setSignalImageAcquiredSemaphores({});
+        this->default_framebuffer_chain->setPresentWaitSemaphores({});
+
+        if (this->original_device_manager_refs != this->device_manager.use_count()) {
+            std::cerr << "Wingine device manager ref count was wrong, expected "
+                      << this->original_device_manager_refs << ", got "
+                      << this->device_manager.use_count() << std::endl;
+            throw std::runtime_error("Wrong number of device_manager references. Have you forgotten to manually destruct an object in C API?");
+        }
+    }
+
     Wingine::~Wingine() {
         this->device.destroy(this->descriptor_pool, nullptr);
         this->device.destroy(this->pipeline_cache, nullptr);
+
+        this->clearAndCheckDeviceManagerRefs();
     }
 };

@@ -47,10 +47,10 @@ namespace wg::internal {
         std::vector<const char*> getInstanceLayerNames() {
             return std::vector<const char*> {
 #ifdef DEBUG
-                "VK_LAYER_LUNARG_standard_validation",
+                // "VK_LAYER_LUNARG_standard_validation",
                 // "VK_LAYER_LUNARG_api_dump",
                 // "VK_LAYER_LUNARG_device_simulation",
-                // "VK_LAYER_LUNARG_monitor",
+                "VK_LAYER_LUNARG_monitor",
                 // "VK_LAYER_RENDERDOC_Capture",
                 // "VK_LAYER_LUNARG_api_dump",
                 // "VK_LAYER_LUNARG_object_tracker",

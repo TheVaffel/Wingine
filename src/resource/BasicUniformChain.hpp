@@ -22,6 +22,8 @@ namespace wg::internal {
         virtual IUniform<T>& getCurrentUniform() override;
 
         virtual IResource& getResourceAt(uint32_t index) override;
+
+        virtual ~BasicUniformChain() = default;
     };
 };
 

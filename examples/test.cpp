@@ -46,7 +46,7 @@ int main() {
 
     std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, cameraUniform);
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(cameraUniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         {
@@ -86,7 +86,6 @@ int main() {
 
     wg::PipelinePtr pipeline = wing.
         createBasicPipeline(vertAttrDesc,
-                            { resourceSetLayout },
                             { vertex_shader, fragment_shader });
 
     wg::BasicDrawPassSettings draw_pass_settings;

@@ -13,6 +13,8 @@ namespace wg::internal {
 
         std::shared_ptr<const DeviceManager> device_manager;
 
+        vk::DescriptorSetLayout layout;
+
         void writeToDescriptorSets(
             uint32_t chain_length,
             const std::vector<std::shared_ptr<IResourceChain>>& resource_chains);
@@ -37,6 +39,8 @@ namespace wg::internal {
 
         virtual IResourceSet& getCurrentResourceSet() const override;
         virtual IResourceSet& getResourceSetAt(uint32_t index) override;
+
+        virtual ~BasicResourceSetChain();
     };
 };
 

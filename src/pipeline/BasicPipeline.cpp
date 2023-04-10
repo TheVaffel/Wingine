@@ -2,6 +2,7 @@
 
 #include "./pipelineUtil.hpp"
 #include "../render_pass/renderPassUtil.hpp"
+#include "../spirv/util.hpp"
 
 #include <iostream>
 
@@ -9,7 +10,6 @@ namespace wg::internal {
 
     BasicPipeline::BasicPipeline(const BasicPipelineSetup& setup,
                                  const std::vector<VertexAttribDesc>& attribute_descriptions,
-                                 const std::vector<vk::DescriptorSetLayout>& resourceSetLayouts,
                                  const std::vector<std::shared_ptr<IShader>>& shaders,
                                  std::shared_ptr<DeviceManager> device_manager,
                                  std::shared_ptr<CompatibleRenderPassRegistry> render_pass_registry,
@@ -51,7 +51,18 @@ namespace wg::internal {
         vk::PipelineViewportStateCreateInfo vp = pipelineUtil::createViewportInfo(width, height, viewport, scissor);
         vk::PipelineDepthStencilStateCreateInfo ds = pipelineUtil::createDepthStencilInfo(setup.enableDepth);
         vk::PipelineMultisampleStateCreateInfo ms = pipelineUtil::getDefaultMultisampleInfo();
-        vk::PipelineLayoutCreateInfo layoutCreateInfo = pipelineUtil::createLayoutInfo(resourceSetLayouts);
+
+        std::vector<std::span<const spirv::DescriptorSetLayout>> layouts;
+        for (auto& shader : shaders) {
+            layouts.push_back(shader->getLayouts());
+        }
+
+        auto resource_set_layouts = spirv::util::mergeDescriptorSetLayouts(layouts,
+                                                                           this->device_manager->getDevice());
+        this->descriptor_set_layouts = resource_set_layouts;
+
+        vk::PipelineLayoutCreateInfo layoutCreateInfo = pipelineUtil::createLayoutInfo(resource_set_layouts);
+
         std::vector<vk::PipelineShaderStageCreateInfo> pssci = pipelineUtil::getShaderInfo(shaders);
 
         vk::RenderPass compatible_render_pass = pipelineUtil::getCompatibleRenderPass(setup.depthOnly,
@@ -91,5 +102,8 @@ namespace wg::internal {
     BasicPipeline::~BasicPipeline() {
         this->device_manager->getDevice().destroy(this->pipeline);
         this->device_manager->getDevice().destroy(this->pipeline_layout);
+        for (auto& layout : this->descriptor_set_layouts) {
+            this->device_manager->getDevice().destroy(layout);
+        }
     }
 };

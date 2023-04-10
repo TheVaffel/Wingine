@@ -14,6 +14,7 @@ namespace wg::internal {
         std::vector<uint32_t> spirv_bytecode;
 
         std::shared_ptr<DeviceManager> device_manager;
+        spirv::SpirvModule module_info;
     public:
 
         BasicShader(ShaderStage stage,
@@ -23,6 +24,8 @@ namespace wg::internal {
         ~BasicShader();
 
         virtual vk::PipelineShaderStageCreateInfo getShaderInfo() const final;
+
+        virtual const std::span<const spirv::DescriptorSetLayout> getLayouts() const final;
 
     };
 };

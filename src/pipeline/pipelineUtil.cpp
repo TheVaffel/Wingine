@@ -201,7 +201,7 @@ namespace wg::internal::pipelineUtil {
         return ms;
     }
 
-    vk::PipelineLayoutCreateInfo createLayoutInfo(const std::vector<vk::DescriptorSetLayout>& resourceSetLayouts) {
+    vk::PipelineLayoutCreateInfo createLayoutInfo(const std::span<const vk::DescriptorSetLayout>& resourceSetLayouts) {
 
         vk::PipelineLayoutCreateInfo layoutCreateInfo;
         layoutCreateInfo.setPushConstantRangeCount(0)

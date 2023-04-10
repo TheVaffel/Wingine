@@ -19,6 +19,8 @@ namespace wg::internal {
         std::vector<std::shared_ptr<IResourceChain>> chains;
         this->ensureOnlyChains(chains, resources...);
         this->setChains(chains);
+
+        this->layout = layout;
     }
 
     template<typename T, typename... Ts>

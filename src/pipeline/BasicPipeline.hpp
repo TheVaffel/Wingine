@@ -14,13 +14,14 @@ namespace wg::internal {
         vk::Pipeline pipeline;
         vk::PipelineLayout pipeline_layout;
 
+        std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
+
         std::shared_ptr<DeviceManager> device_manager;
 
     public:
 
         BasicPipeline(const BasicPipelineSetup& setup,
                       const std::vector<VertexAttribDesc>& descriptions,
-                      const std::vector<vk::DescriptorSetLayout>& resource_set_layout,
                       const std::vector<std::shared_ptr<IShader>>& shaders,
                       std::shared_ptr<DeviceManager> device_manager,
                       std::shared_ptr<CompatibleRenderPassRegistry> render_pass_registry,

@@ -7,8 +7,78 @@
 #include "./buffer/InternallyStagedVertexBuffer.hpp"
 #include "./buffer/InternallyStagedStorageBuffer.hpp"
 #include "./resource/BasicResourceSetChain.hpp"
+#include "./resource/descriptorUtil.hpp"
 
 namespace wg {
+
+    namespace {
+
+        template<typename T>
+        struct ResourceType { };
+
+        template<typename T>
+        struct ResourceType <std::shared_ptr<internal::IUniformChain<T>>> {
+            constexpr static vk::DescriptorType value = vk::DescriptorType::eUniformBuffer;
+        };
+
+        template<>
+        struct ResourceType <std::shared_ptr<internal::ITextureChain>> {
+            constexpr static vk::DescriptorType value = vk::DescriptorType::eCombinedImageSampler;
+        };
+
+        template<>
+        struct ResourceType <std::shared_ptr<internal::StorageTexture::TextureResourceComponent>> {
+            constexpr static vk::DescriptorType value = vk::DescriptorType::eCombinedImageSampler;
+        };
+
+        template<>
+        struct ResourceType <std::shared_ptr<internal::StorageTexture::StorageImageResourceComponent>> {
+            constexpr static vk::DescriptorType value = vk::DescriptorType::eStorageImage;
+        };
+
+
+        template<typename T>
+        struct ResourceType <std::shared_ptr<internal::IStorageBuffer<T>>> {
+            constexpr static vk::DescriptorType value = vk::DescriptorType::eStorageBuffer;
+        };
+
+        template<>
+        struct ResourceType <std::shared_ptr<wg::internal::FramebufferTextureChain>> {
+            constexpr static vk::DescriptorType value = vk::DescriptorType::eCombinedImageSampler;
+        };
+
+        template<typename T, typename... Ts>
+        void getDescriptorSetBindings(std::vector<vk::DescriptorSetLayoutBinding>& bindings,
+                                      T resource, Ts... rest) {
+
+            vk::DescriptorSetLayoutBinding binding;
+            binding.setBinding(bindings.size())
+                .setDescriptorCount(1)
+                .setStageFlags(vk::ShaderStageFlagBits::eAll)
+                .setDescriptorType(ResourceType<T>::value);
+
+            bindings.push_back(binding);
+
+            if constexpr (sizeof...(Ts) > 0) {
+                getDescriptorSetBindings(bindings, rest...);
+            }
+        }
+
+        template<typename... Ts>
+        vk::DescriptorSetLayout createLayout(const vk::Device& device,
+                                             Ts... resources) {
+            std::vector<vk::DescriptorSetLayoutBinding> bindings;
+
+            if constexpr (sizeof...(Ts) > 0) {
+                getDescriptorSetBindings(bindings, resources...);
+            }
+
+            return
+                internal::descriptorUtil::createDescriptorSetLayoutFromBindings(bindings,
+                                                                                device);
+        }
+    }
+
     template<typename T>
     UniformPtr<T> Wingine::createUniform() {
         return std::make_shared<internal::BasicUniform<T>>(this->device_manager);
@@ -39,11 +109,11 @@ namespace wg {
     }
 
     template<typename... Ts>
-    ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<uint64_t>& resourceLayout,
-                                                        Ts... resources) {
+    ResourceSetChainPtr Wingine::createResourceSetChain(Ts... resources) {
+        vk::DescriptorSetLayout layout = createLayout(this->device_manager->getDevice(), resources...);
         ResourceSetChainPtr res = std::make_shared<internal::BasicResourceSetChain>(
             this->getNumFramebuffers(),
-            this->resource_set_layout_registry->ensureAndGet(resourceLayout),
+            layout,
             this->descriptor_pool,
             this->device_manager,
             resources...);

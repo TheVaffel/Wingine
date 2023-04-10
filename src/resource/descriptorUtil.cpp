@@ -2,6 +2,19 @@
 
 namespace wg::internal::descriptorUtil {
 
+    vk::DescriptorSetLayout createDescriptorSetLayoutFromBindings(const std::span<const vk::DescriptorSetLayoutBinding>& bindings,
+                                                                  const vk::Device& device) {
+        vk::DescriptorSetLayoutCreateInfo dlc;
+        dlc.setBindingCount((uint32_t) bindings.size())
+            .setPBindings(bindings.data());
+
+        vk::DescriptorSetLayout layout =
+            device.createDescriptorSetLayout(dlc);
+
+        return layout;
+    }
+
+
     vk::DescriptorSetLayout createDescriptorSetLayout(const std::vector<uint64_t>& flags,
                                                       const vk::Device& device) {
         std::vector<vk::DescriptorSetLayoutBinding> lbs(flags.size());
@@ -10,19 +23,13 @@ namespace wg::internal::descriptorUtil {
         for(uint64_t flag : flags) {
             lbs[i].setBinding(i)
                 .setDescriptorCount(1)
-                .setStageFlags(vk::ShaderStageFlagBits(flag >> 32))
+                // .setStageFlags(vk::ShaderStageFlagBits(flag >> 32))
+                .setStageFlags(vk::ShaderStageFlagBits::eAll)
                 .setDescriptorType(vk::DescriptorType(flag & ((1LL << 32) - 1)));
             i++;
         }
 
-        vk::DescriptorSetLayoutCreateInfo dlc;
-        dlc.setBindingCount((uint32_t)lbs.size())
-            .setPBindings(lbs.data());
-
-        vk::DescriptorSetLayout layout =
-            device.createDescriptorSetLayout(dlc);
-
-        return layout;
+        return createDescriptorSetLayoutFromBindings(lbs, device);
     }
 
     vk::DescriptorSet allocateDescriptorSet(const vk::DescriptorPool& pool,

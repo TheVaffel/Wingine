@@ -60,4 +60,8 @@ namespace wg::internal {
 
         this->writeToDescriptorSets(chain_length, resource_chains);
     }
+
+    BasicResourceSetChain::~BasicResourceSetChain() {
+        this->device_manager->getDevice().destroy(this->layout);
+    }
 };

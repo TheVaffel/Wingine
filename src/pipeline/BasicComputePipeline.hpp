@@ -19,12 +19,13 @@ namespace wg::internal {
         std::shared_ptr<DeviceManager> device_manager;
         std::shared_ptr<CommandManager> command_manager;
 
+        std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
+
     public:
 
         // TODO: Make it use a chain of commands instead of one
 
         BasicComputePipeline(
-            const std::vector<vk::DescriptorSetLayout>& resource_set_layout,
             const std::shared_ptr<IShader>& shader,
             std::shared_ptr<DeviceManager> device_manager,
             std::shared_ptr<CommandManager> command_manager,

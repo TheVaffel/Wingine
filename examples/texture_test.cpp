@@ -60,12 +60,11 @@ int main() {
 
     wg::ShaderPtr compute_shader = wing.createShader(wg::ShaderStage::Compute, compute_spirv);
 
-    std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
-    wg::ComputePipelinePtr compute_pipeline = wing.createComputePipeline({computeSetLayout},
-                                                                         {compute_shader});
+    // std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
+    wg::ComputePipelinePtr compute_pipeline = wing.createComputePipeline({compute_shader});
 
     wg::StorageTexturePtr storage_texture = wing.createStorageTexture(texture_width, texture_height);
-    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(computeSetLayout, storage_texture->getStorageImage());
+    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(storage_texture->getStorageImage());
 
     compute_pipeline->execute({ compute_set }, texture_width, texture_height);
     compute_pipeline->awaitExecution();
@@ -87,9 +86,7 @@ int main() {
     index_buffer->set(indices, 0, num_triangles * 3);
 
 
-    std::vector<uint64_t> resourceSetLayout = {wg::resTexture | wg::shaFragment};
-
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, storage_texture->getTexture());
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(storage_texture->getTexture());
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {
@@ -132,7 +129,6 @@ int main() {
 
     wg::PipelinePtr pipeline = wing.
         createBasicPipeline(vertAttrDesc,
-                       {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
     wg::BasicDrawPassSettings draw_pass_settings;

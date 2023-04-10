@@ -39,7 +39,7 @@ namespace wg::internal::pipelineUtil {
 
     vk::PipelineDepthStencilStateCreateInfo createDepthStencilInfo(bool depthEnabled);
     vk::PipelineMultisampleStateCreateInfo getDefaultMultisampleInfo();
-    vk::PipelineLayoutCreateInfo createLayoutInfo(const std::vector<vk::DescriptorSetLayout>& resourceSetLayouts);
+    vk::PipelineLayoutCreateInfo createLayoutInfo(const std::span<const vk::DescriptorSetLayout>& resourceSetLayouts);
 
     std::vector<vk::PipelineShaderStageCreateInfo> getShaderInfo(std::vector<std::shared_ptr<IShader>> shaders);
 

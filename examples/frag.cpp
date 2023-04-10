@@ -37,8 +37,7 @@ int main() {
     wgut::Model model({position_buffer}, index_buffer);
 
     wg::UniformChainPtr<float> time_uniform = wing.createUniformChain<float>();
-    std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-    wg::ResourceSetChainPtr time_set = wing.createResourceSetChain(resourceSetLayout, time_uniform);
+    wg::ResourceSetChainPtr time_set = wing.createResourceSetChain(time_uniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc>
@@ -133,7 +132,6 @@ int main() {
     wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
     wg::PipelinePtr pipeline = wing.
         createBasicPipeline(vertAttrDesc,
-                       {resourceSetLayout},
                        {vertex_shader, fragment_shader});
 
     wg::BasicDrawPassSettings draw_pass_settings;

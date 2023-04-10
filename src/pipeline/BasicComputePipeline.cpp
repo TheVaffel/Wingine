@@ -1,16 +1,20 @@
 #include "./BasicComputePipeline.hpp"
+
+#include "./pipelineUtil.hpp"
+
 #include "../core/constants.hpp"
 
 #include "../resource/IResourceSetChain.hpp"
 
 #include "../sync/fenceUtil.hpp"
 
+#include "../spirv/util.hpp"
+
 #include "../util/log.hpp"
 
 namespace wg::internal {
 
     BasicComputePipeline::BasicComputePipeline(
-        const std::vector<vk::DescriptorSetLayout>& resource_set_layouts,
         const std::shared_ptr<IShader>& shader,
         std::shared_ptr<DeviceManager> device_manager,
         std::shared_ptr<CommandManager> command_manager,
@@ -25,12 +29,12 @@ namespace wg::internal {
 
         vk::Device device = device_manager->getDevice();
 
-        std::vector<vk::DescriptorSetLayout> layouts(resource_set_layouts);
+        auto raw_layouts = shader->getLayouts();
+        for (auto& raw_layout : raw_layouts) {
+            this->descriptor_set_layouts.push_back(spirv::util::createDescriptorSetLayoutFromBindings(raw_layout.bindings, device));
+        }
 
-        vk::PipelineLayoutCreateInfo layoutCreateInfo;
-        layoutCreateInfo.setPushConstantRangeCount(0)
-            .setPPushConstantRanges(nullptr)
-            .setSetLayouts(layouts);
+        vk::PipelineLayoutCreateInfo layoutCreateInfo = pipelineUtil::createLayoutInfo(this->descriptor_set_layouts);
 
         this->layout = device.createPipelineLayout(layoutCreateInfo);
 
@@ -105,5 +109,8 @@ namespace wg::internal {
         this->device_manager->getDevice().destroyPipeline(this->pipeline);
         this->device_manager->getDevice().destroyPipelineLayout(this->layout);
         this->command_manager->destroyGraphicsCommands({this->command});
+        for (auto& layout : this->descriptor_set_layouts) {
+            this->device_manager->getDevice().destroy(layout);
+        }
     }
 };

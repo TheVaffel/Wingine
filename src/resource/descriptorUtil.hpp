@@ -3,8 +3,13 @@
 #include <vulkan/vulkan.hpp>
 
 #include "./IResource.hpp"
+#include <span>
 
 namespace wg::internal::descriptorUtil {
+    vk::DescriptorSetLayout
+    createDescriptorSetLayoutFromBindings(const std::span<const vk::DescriptorSetLayoutBinding>& bindings,
+                                          const vk::Device& device);
+
     vk::DescriptorSetLayout createDescriptorSetLayout(const std::vector<uint64_t>& flags,
                                                       const vk::Device& device);
 

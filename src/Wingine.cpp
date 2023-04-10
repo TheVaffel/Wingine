@@ -122,7 +122,7 @@ namespace wg {
 
 
     void Wingine::init_descriptor_pool() {
-        const int max_num_descriptors = 16; // Use as placeholder - refactor this part if necessary
+        const int max_num_descriptors = 1000; // Use as placeholder - refactor this part if necessary
 
         std::vector<vk::DescriptorPoolSize> sizes(4);
         sizes[0].setType(vk::DescriptorType::eUniformBuffer)
@@ -237,9 +237,6 @@ namespace wg {
                     *this->compatible_render_pass_registry);
         }
 
-        this->resource_set_layout_registry =
-            std::make_shared<internal::ResourceSetLayoutRegistry>(this->device_manager);
-
         this->default_chain_reel =
             std::make_shared<internal::ChainReel>(this->getNumFramebuffers());
         this->current_chain_reel = this->default_chain_reel;
@@ -332,7 +329,6 @@ namespace wg {
     }
 
     PipelinePtr Wingine::createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,
-                                             const std::vector<std::vector<uint64_t>>& resource_set_layout,
                                              const std::vector<ShaderPtr>& shaders,
                                              internal::BasicPipelineSetup setup) {
         if (setup.width == 0 || setup.height == 0) {
@@ -341,29 +337,16 @@ namespace wg {
             setup.height = dims.height;
         }
 
-        std::vector<vk::DescriptorSetLayout> rsl;
-        for(unsigned int i = 0; i < resource_set_layout.size(); i++) {
-            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resource_set_layout[i]));
-        }
-
         return std::make_shared<internal::BasicPipeline>(setup,
                                                          descriptions,
-                                                         rsl,
                                                          shaders,
                                                          this->device_manager,
                                                          this->compatible_render_pass_registry,
                                                          this->pipeline_cache);
     }
 
-    ComputePipelinePtr Wingine::createComputePipeline(const std::vector<std::vector<uint64_t>>& resource_set_layouts,
-                                                      ShaderPtr shader) {
-        std::vector<vk::DescriptorSetLayout> rsl;
-        for(unsigned int i = 0; i < resource_set_layouts.size(); i++) {
-            rsl.push_back(this->resource_set_layout_registry->ensureAndGet(resource_set_layouts[i]));
-        }
-
-        return std::make_shared<internal::BasicComputePipeline>(rsl,
-                                                                shader,
+    ComputePipelinePtr Wingine::createComputePipeline(ShaderPtr shader) {
+        return std::make_shared<internal::BasicComputePipeline>(shader,
                                                                 this->device_manager,
                                                                 this->command_manager,
                                                                 this->queue_manager,

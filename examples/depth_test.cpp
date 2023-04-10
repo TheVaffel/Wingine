@@ -62,11 +62,9 @@ int main() {
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
     wg::UniformChainPtr<falg::Mat4> light_uniform = wing.createUniformChain<falg::Mat4>();
 
-    std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex };
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(cameraUniform);
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, cameraUniform);
-
-    wg::ResourceSetChainPtr lightSet = wing.createResourceSetChain(resourceSetLayout, light_uniform);
+    wg::ResourceSetChainPtr lightSet = wing.createResourceSetChain(light_uniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
     {
@@ -81,11 +79,7 @@ int main() {
     wg::FramebufferTextureChainPtr shadow_framebuffer_chain = wing.createFramebufferTextureChain(
         shadow_buffer_width, shadow_buffer_height, true);
 
-    std::vector<uint64_t> lightTextureSetLayout = {wg::resTexture | wg::shaFragment,
-                                                   wg::resUniform | wg::shaFragment};
-
-    wg::ResourceSetChainPtr lightTextureSet = wing.createResourceSetChain(lightTextureSetLayout,
-                                                                          shadow_framebuffer_chain, light_uniform);
+    wg::ResourceSetChainPtr lightTextureSet = wing.createResourceSetChain(shadow_framebuffer_chain, light_uniform);
 
     std::vector<uint32_t> depth_vertex_shader;
     {
@@ -111,7 +105,6 @@ int main() {
         .setHeight(shadow_buffer_height)
         .setDepthOnly(true);
     wg::PipelinePtr depth_pipeline = wing.createBasicPipeline({vertAttrDesc[0]},
-                                                              {resourceSetLayout},
                                                               {depth_shader},
                                                               shadow_pipeline_setup);
 
@@ -185,7 +178,6 @@ int main() {
 
     wg::PipelinePtr pipeline = wing.
         createBasicPipeline(vertAttrDesc,
-                            {resourceSetLayout, lightTextureSetLayout},
                             {vertex_shader, fragment_shader});
 
     wg::BasicDrawPassSettings draw_pass_settings;

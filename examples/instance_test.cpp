@@ -62,10 +62,7 @@ int main() {
 
     wg::UniformChainPtr<CamColl> cameraUniform = wing.createUniformChain<CamColl>();
 
-    std::vector<uint64_t> resourceSetLayout = { wg::resUniform | wg::shaVertex,
-                                                wg::resStorageBuffer | wg::shaVertex };
-
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(resourceSetLayout, cameraUniform, storage_buffer);
+    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(cameraUniform, storage_buffer);
 
     // Positions, color, offset
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
@@ -166,7 +163,6 @@ int main() {
 
     wg::PipelinePtr pipeline = wing.
         createBasicPipeline(vertAttrDesc,
-                            {resourceSetLayout},
                             {vertex_shader, fragment_shader});
 
 

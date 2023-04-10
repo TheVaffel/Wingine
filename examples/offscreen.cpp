@@ -50,9 +50,7 @@ int main() {
 
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
-    std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-
-    wg::ResourceSetChainPtr resourceSetChain = wing.createResourceSetChain(resourceSetLayout, cameraUniform);
+    wg::ResourceSetChainPtr resourceSetChain = wing.createResourceSetChain(cameraUniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {
@@ -93,8 +91,7 @@ int main() {
 
     wg::PipelinePtr pipeline = wing.
         createBasicPipeline(vertAttrDesc,
-                       {resourceSetLayout},
-                       {vertex_shader, fragment_shader});
+                            {vertex_shader, fragment_shader});
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 

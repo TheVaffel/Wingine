@@ -15,7 +15,6 @@
 #include "./image/HostVisibleImageView.hpp"
 #include "./draw_pass/BasicDrawPassSettings.hpp"
 #include "./framebuffer/SwapchainFramebufferChain.hpp"
-#include "./resource/ResourceSetLayoutRegistry.hpp"
 
 #include "./pipeline/BasicPipelineSetup.hpp"
 #include "./pipeline/ShaderStage.hpp"
@@ -40,8 +39,6 @@ namespace wg {
 
         std::shared_ptr<internal::HostVisibleImageView> host_visible_image;
         std::shared_ptr<internal::IImage> host_accessible_image;
-
-        std::shared_ptr<internal::ResourceSetLayoutRegistry> resource_set_layout_registry;
 
         ChainReelPtr default_chain_reel;
         ChainReelPtr current_chain_reel;
@@ -119,7 +116,7 @@ namespace wg {
         UniformChainPtr<T> createUniformChain();
 
         template<typename... Ts>
-        ResourceSetChainPtr createResourceSetChain(const std::vector<uint64_t>& resourceLayout, Ts... resources);
+        ResourceSetChainPtr createResourceSetChain(Ts... resources);
 
         ChainReelPtr createChainReel(uint32_t chain_length);
         ChainReelPtr getDefaultChainReel();
@@ -144,12 +141,10 @@ namespace wg {
 
         ShaderPtr createShader(internal::ShaderStage shader_stage, const std::vector<uint32_t>& spirv);
         PipelinePtr createBasicPipeline(const std::vector<VertexAttribDesc>& descriptions,
-                                        const std::vector<std::vector<uint64_t>>& resource_set_layout,
                                         const std::vector<ShaderPtr>& shaders,
                                         internal::BasicPipelineSetup setup = internal::BasicPipelineSetup());
 
-        ComputePipelinePtr createComputePipeline(const std::vector<std::vector<uint64_t>>& resource_set_layout,
-                                                 ShaderPtr shader);
+        ComputePipelinePtr createComputePipeline(ShaderPtr shader);
 
         Framebuffer createFramebuffer(uint32_t width, uint32_t height,
                                       bool depthOnly = false);

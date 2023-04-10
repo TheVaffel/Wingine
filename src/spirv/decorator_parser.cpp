@@ -14,7 +14,6 @@ namespace wg::spirv::decorator {
             parse_result.descriptor_set_decorators.push_back(operation);
             break;
         case Decoration::Binding:
-            std::cout << "Registered binding decoration on parse!! Had binding " << operation.getArg(2) << " and target " << operation.getArg(0) << std::endl;
             parse_result.descriptor_binding_decorators.push_back(operation);
             break;
         }

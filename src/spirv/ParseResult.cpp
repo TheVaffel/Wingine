@@ -29,8 +29,6 @@ namespace wg::spirv {
             std::map<uint32_t, uint32_t> variable_to_descriptor_set;
             std::map<uint32_t, uint32_t> variable_to_descriptor_binding;
 
-            std::cout << "Parse result num descriptor set decorators = " << parse_result.descriptor_set_decorators.size() << std::endl;
-
             for ( auto& decorator : parse_result.descriptor_set_decorators) {
                 uint32_t target = decorator.getArg(0);
 
@@ -47,8 +45,6 @@ namespace wg::spirv {
             for (auto &pp : variable_to_descriptor_set) {
                 descriptor_set_ids.push_back(pp.second);
             }
-
-            std::cout << "Num descriptor set IDs: " << descriptor_set_ids.size() << std::endl;
 
             descriptor_set_ids = deduplicate(descriptor_set_ids);
 
@@ -67,8 +63,6 @@ namespace wg::spirv {
                     // Assume variable without binding number is binding 0
 
                     auto& desc_layout = id_to_descriptor_set[variable_to_descriptor_set[identifier]];
-
-                    std::cout << "Got an identifier without binding - assuming 0. Set is " << variable_to_descriptor_set[identifier] << ", target is " << identifier << std::endl;
 
                     vk::DescriptorSetLayoutBinding binding;
                     binding.setBinding(0)

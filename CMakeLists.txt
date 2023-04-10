@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(Wingine)
-
+cmake_policy(SET CMP0076 NEW)
 
 if (NOT WIN32)
   add_definitions(-Wall -g -Wno-class-memaccess -Wno-init-list-lifetime -mavx -fPIC -DDEBUG)
@@ -164,6 +164,8 @@ link_directories(${GENERELLE_LIB_DIR})
 link_directories(${FLAWED_LIB_DIR})
 
 add_library(Wingine STATIC ${WINGINE_SOURCES})
+
+add_subdirectory(src/spirv)
 
 add_executable(trivial ${WINGINE_EXAMPLES_DIR}/trivial.cpp)
 add_executable(test ${WINGINE_EXAMPLES_DIR}/test.cpp)

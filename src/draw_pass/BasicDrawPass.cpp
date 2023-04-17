@@ -33,6 +33,7 @@ namespace wg::internal {
     BasicDrawPass::BasicDrawPass(std::shared_ptr<IPipeline> pipeline,
                                  uint32_t num_framebuffers,
                                  const BasicDrawPassSettings& settings,
+                                 const vk::DescriptorPool& descriptor_pool,
                                  std::shared_ptr<const CommandManager> command_manager,
                                  std::shared_ptr<const QueueManager> queue_manager,
                                  std::shared_ptr<const DeviceManager> device_manager)
@@ -48,6 +49,7 @@ namespace wg::internal {
                         commandSettingsFromRenderPassSettings(settings.render_pass_settings),
                         render_pass,
                         pipeline,
+                        descriptor_pool,
                         command_manager,
                         device_manager),
           is_recording(false) {
@@ -90,7 +92,7 @@ namespace wg::internal {
     }
 
     void BasicDrawPass::render() {
-        this->command_chain.sanityCheckRecordedResourceSets();
+        // this->command_chain.sanityCheckRecordedResourceSets();
 
         SubmitInfoData submit_info_data;
         this->createSubmitInfo(submit_info_data);

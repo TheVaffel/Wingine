@@ -46,20 +46,8 @@ namespace wg::spirv::util {
         }
     }
 
-    vk::DescriptorSetLayout createDescriptorSetLayoutFromBindings(const std::span<const vk::DescriptorSetLayoutBinding>& bindings,
-                                                                  const vk::Device& device) {
-        vk::DescriptorSetLayoutCreateInfo dlc;
-        dlc.setBindingCount(bindings.size())
-            .setPBindings(bindings.data());
+    std::map<uint32_t, internal::WrappedDSLCI> getDescriptorSetCreateInfos(const std::span<const std::span<const result::DescriptorSetLayout>>& layouts) {
 
-        vk::DescriptorSetLayout layout =
-            device.createDescriptorSetLayout(dlc);
-
-        return layout;
-    }
-
-    std::vector<vk::DescriptorSetLayout> mergeDescriptorSetLayouts(const std::span<const std::span<const result::DescriptorSetLayout>>& layouts,
-                                                                   const vk::Device& device) {
         std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> set_no_to_bindings;
 
         for (auto& shader_sets : layouts) {
@@ -74,20 +62,14 @@ namespace wg::spirv::util {
             }
         }
 
-        std::vector<vk::DescriptorSetLayout> out_layouts;
+        std::map<uint32_t, internal::WrappedDSLCI> out_layout_infos;
 
-        for (uint32_t i = 0; ; i++) {
-            if (!set_no_to_bindings.contains(i)) {
-                break;
-            }
+        for (auto& set_no_and_bindings : set_no_to_bindings) {
+            internal::WrappedDSLCI info(set_no_and_bindings.second);
 
-            auto bindings = set_no_to_bindings[i];
-
-            vk::DescriptorSetLayout layout = createDescriptorSetLayoutFromBindings(bindings, device);
-
-            out_layouts.push_back(layout);
+            out_layout_infos.insert(std::make_pair(set_no_and_bindings.first, info));
         }
 
-        return out_layouts;
+        return out_layout_infos;
     }
 };

@@ -3,7 +3,6 @@
 #include <vulkan/vulkan.hpp>
 
 #include "./IResource.hpp"
-#include "./types.hpp"
 
 namespace wg::internal {
     class IResourceSet {

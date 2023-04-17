@@ -44,9 +44,7 @@ int main() {
 
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
-    std::vector<uint64_t> resourceSetLayout = {wg::resUniform | wg::shaVertex};
-
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(cameraUniform);
+    // wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain({ 0, cameraUniform });
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         {
@@ -88,6 +86,7 @@ int main() {
         createBasicPipeline(vertAttrDesc,
                             { vertex_shader, fragment_shader });
 
+
     wg::BasicDrawPassSettings draw_pass_settings;
     draw_pass_settings.render_pass_settings.setShouldClear(true);
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
@@ -95,7 +94,7 @@ int main() {
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    draw_pass->getCommandChain().recordBindResourceSet({{ 0, cameraUniform }}, 0);
     draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 

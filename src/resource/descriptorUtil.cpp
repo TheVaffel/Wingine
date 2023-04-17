@@ -1,6 +1,24 @@
 #include "./descriptorUtil.hpp"
 
+#include <iostream>
+
+#include <flawed_assert.hpp>
+
 namespace wg::internal::descriptorUtil {
+
+    std::map<uint32_t, vk::DescriptorSetLayout> createDescriptorSetLayoutFromInfos(const std::map<uint32_t, WrappedDSLCI>& infos,
+                                                                                   const vk::Device& device) {
+
+        std::map<uint32_t, vk::DescriptorSetLayout> layouts;
+        for (auto& set_and_info : infos) {
+            // Ensure the set numbers are consecutive
+            fl_assert_lt(set_and_info.first, infos.size());
+
+            layouts[set_and_info.first] = device.createDescriptorSetLayout(set_and_info.second.getCreateInfo());
+        }
+
+        return layouts;
+    }
 
     vk::DescriptorSetLayout createDescriptorSetLayoutFromBindings(const std::span<const vk::DescriptorSetLayoutBinding>& bindings,
                                                                   const vk::Device& device) {
@@ -12,24 +30,6 @@ namespace wg::internal::descriptorUtil {
             device.createDescriptorSetLayout(dlc);
 
         return layout;
-    }
-
-
-    vk::DescriptorSetLayout createDescriptorSetLayout(const std::vector<uint64_t>& flags,
-                                                      const vk::Device& device) {
-        std::vector<vk::DescriptorSetLayoutBinding> lbs(flags.size());
-
-        int i = 0;
-        for(uint64_t flag : flags) {
-            lbs[i].setBinding(i)
-                .setDescriptorCount(1)
-                // .setStageFlags(vk::ShaderStageFlagBits(flag >> 32))
-                .setStageFlags(vk::ShaderStageFlagBits::eAll)
-                .setDescriptorType(vk::DescriptorType(flag & ((1LL << 32) - 1)));
-            i++;
-        }
-
-        return createDescriptorSetLayoutFromBindings(lbs, device);
     }
 
     vk::DescriptorSet allocateDescriptorSet(const vk::DescriptorPool& pool,

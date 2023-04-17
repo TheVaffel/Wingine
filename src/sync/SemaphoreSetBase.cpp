@@ -10,8 +10,9 @@ namespace wg::internal {
         uint32_t getChainLengthFromSemaphores(
             const std::vector<SemaphoreChainPtr>& semaphores) {
             if (semaphores.size() == 0) {
-                throw std::runtime_error(
-                    "[SemaphoreSetBase] Cannot find chain length from zero-length semaphore list");
+                /* throw std::runtime_error(
+                   "[SemaphoreSetBase] Cannot find chain length from zero-length semaphore list"); */
+                return 0;
             }
 
             return std::begin(semaphores)[0]->getNumSemaphores();
@@ -20,8 +21,9 @@ namespace wg::internal {
         std::shared_ptr<const DeviceManager> getDeviceManagerFromSemaphores(
             const std::vector<SemaphoreChainPtr>& semaphores) {
             if (semaphores.size() == 0) {
-                throw std::runtime_error(
-                    "[SemaphoreSetBase] Cannot find device manager from zero-length semaphore list");
+                /* throw std::runtime_error(
+                   "[SemaphoreSetBase] Cannot find device manager from zero-length semaphore list"); */
+                return 0;
             }
 
             return std::begin(semaphores)[0]->getDeviceManager();

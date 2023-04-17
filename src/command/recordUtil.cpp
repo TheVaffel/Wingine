@@ -118,7 +118,7 @@ namespace wg::internal::recordUtil {
         vk::DescriptorSet descriptor_set = resource_set->getResourceSetAt(index).getDescriptorSet();
 
         command_buffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
-                                          pipeline->getPipelineLayout(),
+                                          pipeline->getPipelineInfo().layout,
                                           binding,
                                           1,
                                           &descriptor_set,

@@ -1,6 +1,7 @@
 #include "./CommandChainController.hpp"
 
 #include "./recordUtil.hpp"
+#include "../resource/BasicResourceSetChain.hpp"
 
 #include <flawed_assert.hpp>
 
@@ -10,14 +11,15 @@ namespace wg::internal {
                                                    const CommandControllerSettings& settings,
                                                    const vk::RenderPass& render_pass,
                                                    std::shared_ptr<IPipeline> pipeline,
+                                                   const vk::DescriptorPool& descriptor_pool,
                                                    std::shared_ptr<const CommandManager> command_manager,
-
                                                    std::shared_ptr<const DeviceManager> device_manager)
     : command_index(num_commands),
       command_manager(command_manager),
       device_manager(device_manager),
       render_pass(render_pass),
       pipeline(pipeline),
+      descriptor_pool(descriptor_pool),
       is_recording(false),
       is_recording_render_pass(false) {
         this->commands = command_manager->createGraphicsCommands(num_commands);
@@ -113,7 +115,7 @@ namespace wg::internal {
         }
     }
 
-    void CommandChainController::recordBindResourceSet(const std::shared_ptr<IResourceSetChain> resource_set,
+    /* void CommandChainController::recordBindResourceSet(const std::shared_ptr<IResourceSetChain> resource_set,
                                                        uint32_t binding) {
         fl_assert_eq(this->is_recording, true);
 
@@ -124,6 +126,56 @@ namespace wg::internal {
             recordUtil::recordBindResourceSetForCommand(this->commands[i].buffer,
                                                         resource_set,
                                                         binding,
+                                                        this->pipeline,
+                                                        i);
+        }
+        } */
+    std::shared_ptr<IResourceSetChain> CommandChainController::createResourceSet(const std::vector<ResourceBinding>& incoming_bindings,
+                                                                                 const std::vector<vk::DescriptorSetLayoutBinding>& shader_bindings,
+                                                                                 const vk::DescriptorSetLayout& layout) {
+        std::vector<ResourceBinding> relevant_bindings;
+        for (const ResourceBinding& resource_binding : incoming_bindings) {
+            for (const vk::DescriptorSetLayoutBinding shader_binding : shader_bindings) {
+                if (shader_binding.binding == resource_binding.binding_index) {
+                    relevant_bindings.push_back(resource_binding);
+                }
+            }
+        }
+
+        fl_assert_eq(relevant_bindings.size(), shader_bindings.size());
+
+        std::shared_ptr<IResourceSetChain> resource_set =
+            std::make_shared<BasicResourceSetChain>(this->command_index.getNumIndices(),
+                                                    relevant_bindings,
+                                                    layout,
+                                                    this->descriptor_pool,
+                                                    this->device_manager);
+
+        return resource_set;
+    }
+
+    void CommandChainController::recordBindResourceSet(const std::vector<ResourceBinding>& bindings,
+                                                       uint32_t set_binding) {
+        fl_assert_eq(this->is_recording, true);
+
+        if (!is_recording_render_pass) {
+            this->beginRenderPass();
+        }
+
+        vk::DescriptorSetLayoutCreateInfo shader_binding_info = this->pipeline->getPipelineInfo().set_layout_info_map.at(set_binding).getCreateInfo();
+
+        std::vector<vk::DescriptorSetLayoutBinding> shader_bindings(shader_binding_info.pBindings, shader_binding_info.pBindings + shader_binding_info.bindingCount);
+
+        std::shared_ptr<IResourceSetChain> resource_set = this->createResourceSet(bindings,
+                                                                                  shader_bindings,
+                                                                                  this->pipeline->getPipelineInfo().set_layout_map.at(set_binding));
+
+        this->recorded_resource_sets.push_back(resource_set);
+
+        for (uint32_t i = 0; i < this->commands.size(); i++) {
+            recordUtil::recordBindResourceSetForCommand(this->commands[i].buffer,
+                                                        resource_set,
+                                                        set_binding,
                                                         this->pipeline,
                                                         i);
         }
@@ -228,6 +280,7 @@ namespace wg::internal {
     }
 
     CommandChainController::~CommandChainController() {
+        this->recorded_resource_sets.clear();
         this->command_manager->destroyGraphicsCommands(this->commands);
     }
 };

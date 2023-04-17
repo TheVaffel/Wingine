@@ -19,7 +19,7 @@ namespace wg::internal {
         std::shared_ptr<DeviceManager> device_manager;
         std::shared_ptr<CommandManager> command_manager;
 
-        std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
+        std::map<uint32_t, vk::DescriptorSetLayout> descriptor_set_layouts;
 
     public:
 

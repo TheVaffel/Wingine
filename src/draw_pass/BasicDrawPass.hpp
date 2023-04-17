@@ -50,6 +50,7 @@ namespace wg::internal {
         BasicDrawPass(std::shared_ptr<IPipeline> pipeline,
                       uint32_t num_framebuffers,
                       const BasicDrawPassSettings& settings,
+                      const vk::DescriptorPool& descriptor_pool,
                       std::shared_ptr<const CommandManager> command_manager,
                       std::shared_ptr<const QueueManager> queue_manager,
                       std::shared_ptr<const DeviceManager> device_manager);

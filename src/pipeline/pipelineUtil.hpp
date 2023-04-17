@@ -4,6 +4,7 @@
 #include "./VertexAttribDesc.hpp"
 #include "./IShader.hpp"
 #include "./types.hpp"
+#include "./WrappedPLCI.hpp"
 
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
@@ -39,7 +40,7 @@ namespace wg::internal::pipelineUtil {
 
     vk::PipelineDepthStencilStateCreateInfo createDepthStencilInfo(bool depthEnabled);
     vk::PipelineMultisampleStateCreateInfo getDefaultMultisampleInfo();
-    vk::PipelineLayoutCreateInfo createLayoutInfo(const std::span<const vk::DescriptorSetLayout>& resourceSetLayouts);
+    WrappedPLCI createLayoutInfo(const std::map<uint32_t, vk::DescriptorSetLayout>& resourceSetLayouts);
 
     std::vector<vk::PipelineShaderStageCreateInfo> getShaderInfo(std::vector<std::shared_ptr<IShader>> shaders);
 

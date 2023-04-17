@@ -1,10 +1,12 @@
 #include "./BasicComputePipeline.hpp"
 
 #include "./pipelineUtil.hpp"
+#include "./WrappedPLCI.hpp"
 
 #include "../core/constants.hpp"
 
 #include "../resource/IResourceSetChain.hpp"
+#include "../resource/descriptorUtil.hpp"
 
 #include "../sync/fenceUtil.hpp"
 
@@ -31,12 +33,12 @@ namespace wg::internal {
 
         auto raw_layouts = shader->getLayouts();
         for (auto& raw_layout : raw_layouts) {
-            this->descriptor_set_layouts.push_back(spirv::util::createDescriptorSetLayoutFromBindings(raw_layout.bindings, device));
+            this->descriptor_set_layouts[raw_layout.set_binding] = (descriptorUtil::createDescriptorSetLayoutFromBindings(raw_layout.bindings, device));
         }
 
-        vk::PipelineLayoutCreateInfo layoutCreateInfo = pipelineUtil::createLayoutInfo(this->descriptor_set_layouts);
+        WrappedPLCI layoutCreateInfo = pipelineUtil::createLayoutInfo(this->descriptor_set_layouts);
 
-        this->layout = device.createPipelineLayout(layoutCreateInfo);
+        this->layout = device.createPipelineLayout(layoutCreateInfo.getCreateInfo());
 
         vk::ComputePipelineCreateInfo cpci;
         cpci.setLayout(this->layout)
@@ -109,8 +111,8 @@ namespace wg::internal {
         this->device_manager->getDevice().destroyPipeline(this->pipeline);
         this->device_manager->getDevice().destroyPipelineLayout(this->layout);
         this->command_manager->destroyGraphicsCommands({this->command});
-        for (auto& layout : this->descriptor_set_layouts) {
-            this->device_manager->getDevice().destroy(layout);
+        for (auto& set_and_layout : this->descriptor_set_layouts) {
+            this->device_manager->getDevice().destroy(set_and_layout.second);
         }
     }
 };

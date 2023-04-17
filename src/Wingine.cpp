@@ -19,6 +19,8 @@
 
 #include "./buffer/InternallyStagedIndexBuffer.hpp"
 
+#include "./resource/StaticResourceChain.hpp"
+
 #include <exception>
 
 
@@ -455,10 +457,27 @@ namespace wg {
         return std::make_shared<internal::BasicDrawPass>(pipeline,
                                                          this->getNumFramebuffers(),
                                                          settings,
+                                                         this->descriptor_pool,
                                                          this->command_manager,
                                                          this->queue_manager,
                                                          this->device_manager);
 
+    }
+
+    /* ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<ResourceBinding>& resource_binding) {
+        vk::DescriptorSetLayout layout = createLayout(this->device_manager->getDevice(), resources...);
+        ResourceSetChainPtr res = std::make_shared<internal::BasicResourceSetChain>(
+                                                                                    this->getNumFramebuffers(),
+                                                                                    layout,
+                                                                                    this->descriptor_pool,
+                                                                                    this->device_manager,
+                                                                                    resources...);
+        this->current_chain_reel->addChain(res);
+        return res;
+        } */
+
+    ResourceChainPtr Wingine::createResourceChain(std::shared_ptr<internal::IResource> resource) {
+        return std::make_shared<internal::StaticResourceChain>(this->getNumFramebuffers(), resource);
     }
 
     void Wingine::clearAndCheckDeviceManagerRefs() {

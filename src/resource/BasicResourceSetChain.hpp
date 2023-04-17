@@ -6,6 +6,8 @@
 #include "../core/DeviceManager.hpp"
 #include "../core/ElementChainBase.hpp"
 
+#include "./ResourceBinding.hpp"
+
 namespace wg::internal {
     class BasicResourceSetChain : public IResourceSetChain, public ElementChainBase {
         std::vector<std::shared_ptr<IResourceSet>> resource_sets;
@@ -31,10 +33,10 @@ namespace wg::internal {
     public:
         template<typename... Ts>
         BasicResourceSetChain(uint32_t chain_length,
+                              const std::vector<ResourceBinding>& bindings,
                               const vk::DescriptorSetLayout& layout,
                               const vk::DescriptorPool& pool,
-                              std::shared_ptr<const DeviceManager> device_manager,
-                              Ts... resources);
+                              std::shared_ptr<const DeviceManager> device_manager);
 
 
         virtual IResourceSet& getCurrentResourceSet() const override;

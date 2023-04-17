@@ -5,6 +5,7 @@
 #include "./BasicPipelineSetup.hpp"
 #include "./VertexAttribDesc.hpp"
 #include "./IShader.hpp"
+#include "./PipelineLayoutInfo.hpp"
 
 #include "../core/DeviceManager.hpp"
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
@@ -12,9 +13,12 @@
 namespace wg::internal {
     class BasicPipeline : public IPipeline {
         vk::Pipeline pipeline;
-        vk::PipelineLayout pipeline_layout;
 
-        std::vector<vk::DescriptorSetLayout> descriptor_set_layouts;
+        PipelineLayoutInfo layout_info;
+        // vk::PipelineLayout pipeline_layout;
+        // std::vector<spirv::DescriptorSetLayout> set_layouts;
+
+        // std::map<uint32_t, vk::DescriptorSetLayout> descriptor_set_layouts;
 
         std::shared_ptr<DeviceManager> device_manager;
 
@@ -28,7 +32,7 @@ namespace wg::internal {
                       const vk::PipelineCache& pipeline_cache);
 
         virtual vk::Pipeline getPipeline() const final;
-        virtual vk::PipelineLayout getPipelineLayout() const final;
+        virtual const PipelineLayoutInfo& getPipelineInfo() const final;
 
         ~BasicPipeline();
     };

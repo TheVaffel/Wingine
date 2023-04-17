@@ -201,14 +201,22 @@ namespace wg::internal::pipelineUtil {
         return ms;
     }
 
-    vk::PipelineLayoutCreateInfo createLayoutInfo(const std::span<const vk::DescriptorSetLayout>& resourceSetLayouts) {
+    WrappedPLCI createLayoutInfo(const std::map<uint32_t, vk::DescriptorSetLayout>& resourceSetLayouts) {
+
+        std::vector<vk::DescriptorSetLayout> descriptor_set_layouts(resourceSetLayouts.size());
+
+        for (auto& set_and_layout : resourceSetLayouts) {
+            fl_assert_lt(set_and_layout.first, resourceSetLayouts.size());
+            descriptor_set_layouts[set_and_layout.first] = set_and_layout.second;
+        }
 
         vk::PipelineLayoutCreateInfo layoutCreateInfo;
         layoutCreateInfo.setPushConstantRangeCount(0)
-            .setPPushConstantRanges(nullptr)
-            .setSetLayouts(resourceSetLayouts);
+            .setPPushConstantRanges(nullptr);
 
-        return layoutCreateInfo;
+        WrappedPLCI plci(layoutCreateInfo, descriptor_set_layouts);
+
+        return plci;
     }
 
     std::vector<vk::PipelineShaderStageCreateInfo> getShaderInfo(std::vector<std::shared_ptr<IShader>> shaders) {

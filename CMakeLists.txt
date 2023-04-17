@@ -42,8 +42,8 @@ set(RESOURCE_SOURCES
   descriptorUtil.cpp
   BasicResourceSet.cpp
   BasicResourceSetChain.cpp
-  ResourceSetLayoutRegistry.cpp
-  StaticResourceChain.cpp)
+  StaticResourceChain.cpp
+  WrappedDSLCI.cpp)
 set(FRAMEBUFFER_SOURCES
   framebufferUtil.cpp
   IFramebuffer.cpp
@@ -95,7 +95,8 @@ set(PIPELINE_SOURCES
   pipelineUtil.cpp
   shaderUtil.cpp
   VertexAttribDesc.cpp
-  BasicComputePipeline.cpp)
+  BasicComputePipeline.cpp
+  WrappedPLCI.cpp)
 set(DRAW_PASS_SOURCES BasicDrawPass.cpp DrawPassBase.cpp)
 set(MEMORY_SOURCES memoryUtil.cpp)
 set(UTIL_SOURCES IndexCounter.cpp SettableIndexCounter.cpp log.cpp math.cpp)
@@ -163,7 +164,7 @@ link_directories(${SPURV_ROOT}/lib)
 link_directories(${GENERELLE_LIB_DIR})
 link_directories(${FLAWED_LIB_DIR})
 
-add_library(Wingine STATIC ${WINGINE_SOURCES})
+add_library(Wingine SHARED ${WINGINE_SOURCES})
 
 add_subdirectory(src/spirv)
 

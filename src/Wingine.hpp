@@ -115,8 +115,9 @@ namespace wg {
         template<typename T>
         UniformChainPtr<T> createUniformChain();
 
-        template<typename... Ts>
-        ResourceSetChainPtr createResourceSetChain(Ts... resources);
+        ResourceSetChainPtr createResourceSetChain(const std::vector<internal::ResourceBinding>& resource_binding);
+
+        ResourceChainPtr createResourceChain(std::shared_ptr<internal::IResource> resource);
 
         ChainReelPtr createChainReel(uint32_t chain_length);
         ChainReelPtr getDefaultChainReel();

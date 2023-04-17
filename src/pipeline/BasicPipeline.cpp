@@ -6,6 +6,9 @@
 
 #include <iostream>
 
+#include "../resource/WrappedDSLCI.hpp"
+#include "../resource/descriptorUtil.hpp"
+
 namespace wg::internal {
 
     BasicPipeline::BasicPipeline(const BasicPipelineSetup& setup,
@@ -45,7 +48,6 @@ namespace wg::internal {
         vk::PipelineColorBlendAttachmentState att_state;
         vk::PipelineColorBlendStateCreateInfo cb = pipelineUtil::getDefaultColorBlendInfo(att_state);
 
-
         vk::Viewport viewport;
         vk::Rect2D scissor;
         vk::PipelineViewportStateCreateInfo vp = pipelineUtil::createViewportInfo(width, height, viewport, scissor);
@@ -53,25 +55,28 @@ namespace wg::internal {
         vk::PipelineMultisampleStateCreateInfo ms = pipelineUtil::getDefaultMultisampleInfo();
 
         std::vector<std::span<const spirv::DescriptorSetLayout>> layouts;
+
         for (auto& shader : shaders) {
             layouts.push_back(shader->getLayouts());
         }
 
-        auto resource_set_layouts = spirv::util::mergeDescriptorSetLayouts(layouts,
-                                                                           this->device_manager->getDevice());
-        this->descriptor_set_layouts = resource_set_layouts;
-
-        vk::PipelineLayoutCreateInfo layoutCreateInfo = pipelineUtil::createLayoutInfo(resource_set_layouts);
+        std::map<uint32_t, WrappedDSLCI> create_infos = spirv::util::getDescriptorSetCreateInfos(layouts);
+        std::map<uint32_t, vk::DescriptorSetLayout> resource_set_layouts =
+            descriptorUtil::createDescriptorSetLayoutFromInfos(create_infos,
+                                                            this->device_manager->getDevice());
+        WrappedPLCI layoutCreateInfo = pipelineUtil::createLayoutInfo(resource_set_layouts);
 
         std::vector<vk::PipelineShaderStageCreateInfo> pssci = pipelineUtil::getShaderInfo(shaders);
 
         vk::RenderPass compatible_render_pass = pipelineUtil::getCompatibleRenderPass(setup.depthOnly,
                                                                                       render_pass_registry);
 
-        this->pipeline_layout = device.createPipelineLayout(layoutCreateInfo);
+        this->layout_info.layout = device.createPipelineLayout(layoutCreateInfo.getCreateInfo());
+        this->layout_info.set_layout_info_map = create_infos;
+        this->layout_info.set_layout_map = resource_set_layouts;
 
         vk::GraphicsPipelineCreateInfo createInfo;
-        createInfo.setLayout(this->pipeline_layout)
+        createInfo.setLayout(this->layout_info.layout)
             .setBasePipelineHandle(nullptr)
             .setBasePipelineIndex(0)
             .setPVertexInputState(&vi)
@@ -95,15 +100,15 @@ namespace wg::internal {
         return this->pipeline;
     }
 
-    vk::PipelineLayout BasicPipeline::getPipelineLayout() const {
-        return this->pipeline_layout;
+    const PipelineLayoutInfo& BasicPipeline::getPipelineInfo() const {
+        return this->layout_info;
     }
 
     BasicPipeline::~BasicPipeline() {
         this->device_manager->getDevice().destroy(this->pipeline);
-        this->device_manager->getDevice().destroy(this->pipeline_layout);
-        for (auto& layout : this->descriptor_set_layouts) {
-            this->device_manager->getDevice().destroy(layout);
+        this->device_manager->getDevice().destroy(this->layout_info.layout);
+        for (auto& layout : this->layout_info.set_layout_map) {
+            this->device_manager->getDevice().destroy(layout.second);
         }
     }
 };

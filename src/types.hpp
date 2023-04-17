@@ -21,6 +21,7 @@
 #include "./resource/IUniform.hpp"
 #include "./resource/IUniformChain.hpp"
 #include "./resource/IResourceSetChain.hpp"
+#include "./resource/ResourceBinding.hpp"
 
 #include "./pipeline/IShader.hpp"
 #include "./pipeline/IPipeline.hpp"
@@ -51,6 +52,7 @@ namespace wg {
     typedef std::shared_ptr<internal::ImageChainCopier> ImageChainCopierPtr;
 
     typedef std::shared_ptr<internal::IResourceSetChain> ResourceSetChainPtr;
+    typedef std::shared_ptr<internal::IResourceChain> ResourceChainPtr;
 
     template<typename T>
     using UniformPtr = std::shared_ptr<internal::IUniform<T>>;
@@ -87,4 +89,6 @@ namespace wg {
     using StorageBufferPtr = std::shared_ptr<internal::IStorageBuffer<T>>;
 
     typedef std::shared_ptr<internal::ChainReel> ChainReelPtr;
+
+    typedef internal::ResourceBinding ResourceBinding;
 };

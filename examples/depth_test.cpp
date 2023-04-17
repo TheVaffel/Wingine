@@ -62,10 +62,6 @@ int main() {
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
     wg::UniformChainPtr<falg::Mat4> light_uniform = wing.createUniformChain<falg::Mat4>();
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(cameraUniform);
-
-    wg::ResourceSetChainPtr lightSet = wing.createResourceSetChain(light_uniform);
-
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
     {
         wg::VertexAttribDesc(0, wg::ComponentType::Float32, 4, 4 * sizeof(float), 0),
@@ -78,8 +74,6 @@ int main() {
 
     wg::FramebufferTextureChainPtr shadow_framebuffer_chain = wing.createFramebufferTextureChain(
         shadow_buffer_width, shadow_buffer_height, true);
-
-    wg::ResourceSetChainPtr lightTextureSet = wing.createResourceSetChain(shadow_framebuffer_chain, light_uniform);
 
     std::vector<uint32_t> depth_vertex_shader;
     {
@@ -116,7 +110,7 @@ int main() {
     wg::DrawPassPtr shadow_draw_pass = wing.createBasicDrawPass(depth_pipeline, shadow_draw_pass_settings);
 
     shadow_draw_pass->getCommandChain().startRecording(shadow_framebuffer_chain);
-    shadow_draw_pass->getCommandChain().recordBindResourceSet(lightSet, 0);
+    shadow_draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, light_uniform }});
     shadow_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer);
     shadow_draw_pass->getCommandChain().endRecording();
 
@@ -186,8 +180,8 @@ int main() {
     wg::DrawPassPtr real_draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     real_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    real_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
-    real_draw_pass->getCommandChain().recordBindResourceSet(lightTextureSet, 1);
+    real_draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
+    real_draw_pass->getCommandChain().recordBindResourceSet(1, {{ 0, shadow_framebuffer_chain }, { 1, light_uniform }});
     real_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer);
     real_draw_pass->getCommandChain().endRecording();
 

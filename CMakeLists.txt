@@ -43,7 +43,8 @@ set(RESOURCE_SOURCES
   BasicResourceSet.cpp
   BasicResourceSetChain.cpp
   StaticResourceChain.cpp
-  WrappedDSLCI.cpp)
+  WrappedDSLCI.cpp
+  ResourceBinding.cpp)
 set(FRAMEBUFFER_SOURCES
   framebufferUtil.cpp
   IFramebuffer.cpp

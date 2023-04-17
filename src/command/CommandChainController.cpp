@@ -154,8 +154,8 @@ namespace wg::internal {
         return resource_set;
     }
 
-    void CommandChainController::recordBindResourceSet(const std::vector<ResourceBinding>& bindings,
-                                                       uint32_t set_binding) {
+    void CommandChainController::recordBindResourceSet(uint32_t set_binding,
+                                                       const std::vector<ResourceBinding>& bindings) {
         fl_assert_eq(this->is_recording, true);
 
         if (!is_recording_render_pass) {

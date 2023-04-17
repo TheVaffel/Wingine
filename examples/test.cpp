@@ -44,8 +44,6 @@ int main() {
 
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
-    // wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain({ 0, cameraUniform });
-
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         {
             wg::VertexAttribDesc(0, wg::ComponentType::Float32, 4, 4 * sizeof(float), 0),
@@ -94,7 +92,7 @@ int main() {
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordBindResourceSet({{ 0, cameraUniform }}, 0);
+    draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
     draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 

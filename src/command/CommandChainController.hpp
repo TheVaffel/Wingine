@@ -66,8 +66,7 @@ namespace wg::internal {
                         const std::shared_ptr<IIndexBuffer> ind_buf,
                         uint32_t instanceCount = 1);
 
-        // void recordBindResourceSet(const std::shared_ptr<IResourceSetChain> resource_set, uint32_t binding);
-        void recordBindResourceSet(const std::vector<ResourceBinding>& bindings, uint32_t set_binding);
+        void recordBindResourceSet(uint32_t set_binding, const std::vector<ResourceBinding>& bindings);
 
         /* NB: Syncrhonization using events is not generalized properly, usage is discouraged before cleanup */
         void recordSetEvent(std::shared_ptr<EventChain> event);

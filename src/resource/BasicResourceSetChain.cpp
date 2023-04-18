@@ -7,12 +7,27 @@
 #include <flawed_assert.hpp>
 
 namespace wg::internal {
-    std::shared_ptr<IResourceChain> BasicResourceSetChain::ensureChain(std::shared_ptr<IResourceChain> resource_chain) {
-        return resource_chain;
-    }
 
-    std::shared_ptr<IResourceChain> BasicResourceSetChain::ensureChain(std::shared_ptr<IResource> resource) {
-        return std::make_shared<StaticResourceChain>(this->getElementChainLength(), resource);
+
+    BasicResourceSetChain::BasicResourceSetChain(uint32_t chain_length,
+                                                 const std::vector<ResourceBinding>& bindings,
+                                                 const vk::DescriptorSetLayout& layout,
+                                                 const vk::DescriptorPool& pool,
+                                                 std::shared_ptr<const DeviceManager> device_manager)
+        : ElementChainBase(chain_length), device_manager(device_manager) {
+
+        for (uint32_t i = 0; i < chain_length; i++) {
+            this->resource_sets.push_back(std::make_shared<BasicResourceSet>(layout, pool, device_manager));
+        }
+
+        std::vector<std::shared_ptr<IResourceChain>> chains;
+        for (const ResourceBinding& binding : bindings) {
+            chains.push_back(binding.resource);
+        }
+
+        this->setChains(chains);
+
+        this->layout = layout;
     }
 
     IResourceSet& BasicResourceSetChain::getCurrentResourceSet() const {

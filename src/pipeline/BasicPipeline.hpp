@@ -15,10 +15,6 @@ namespace wg::internal {
         vk::Pipeline pipeline;
 
         PipelineLayoutInfo layout_info;
-        // vk::PipelineLayout pipeline_layout;
-        // std::vector<spirv::DescriptorSetLayout> set_layouts;
-
-        // std::map<uint32_t, vk::DescriptorSetLayout> descriptor_set_layouts;
 
         std::shared_ptr<DeviceManager> device_manager;
 

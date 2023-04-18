@@ -31,7 +31,7 @@ namespace wg::internal {
         void setChains(const std::vector<std::shared_ptr<IResourceChain>>& resource_chains);
 
     public:
-        template<typename... Ts>
+
         BasicResourceSetChain(uint32_t chain_length,
                               const std::vector<ResourceBinding>& bindings,
                               const vk::DescriptorSetLayout& layout,

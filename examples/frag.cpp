@@ -37,7 +37,6 @@ int main() {
     wgut::Model model({position_buffer}, index_buffer);
 
     wg::UniformChainPtr<float> time_uniform = wing.createUniformChain<float>();
-    wg::ResourceSetChainPtr time_set = wing.createResourceSetChain(time_uniform);
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc>
@@ -121,13 +120,7 @@ int main() {
                                 vec4_s::cons(r, g, b, 1.0f), black);
 
         shader.compile(fragment_spirv, out_col);
-
-        // SUtils::binaryPrettyPrint(fragment_spirv);
     }
-
-    /* for(int i = 0; i < fragment_spirv.size(); i++) {
-       printf("%d\n", fragment_spirv[i]);
-       } */
 
     wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
     wg::PipelinePtr pipeline = wing.
@@ -139,7 +132,7 @@ int main() {
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordBindResourceSet(time_set, 0);
+    draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, time_uniform }});
     draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 
@@ -150,10 +143,6 @@ int main() {
     float inc = 0.01f;
 
     while (win.isOpen()) {
-        /* if(f >= 0.01f || f <= 0.01f) {
-            inc *= -1.0f;
-        }
-        f += inc; */
         f += inc;
 
         draw_pass->awaitCurrentCommand();

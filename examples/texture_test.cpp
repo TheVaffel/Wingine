@@ -60,13 +60,11 @@ int main() {
 
     wg::ShaderPtr compute_shader = wing.createShader(wg::ShaderStage::Compute, compute_spirv);
 
-    // std::vector<uint64_t> computeSetLayout = { wg::resImage | wg::shaCompute };
     wg::ComputePipelinePtr compute_pipeline = wing.createComputePipeline({compute_shader});
 
     wg::StorageTexturePtr storage_texture = wing.createStorageTexture(texture_width, texture_height);
-    wg::ResourceSetChainPtr compute_set = wing.createResourceSetChain(storage_texture->getStorageImage());
 
-    compute_pipeline->execute({ compute_set }, texture_width, texture_height);
+    compute_pipeline->execute({ { { 0, wing.createResourceChain(storage_texture->getStorageImage()) } } }, texture_width, texture_height);
     compute_pipeline->awaitExecution();
 
     storage_texture->makeIntoTextureSync();
@@ -84,9 +82,6 @@ int main() {
 
     wg::IndexBufferPtr index_buffer = wing.createIndexBuffer(num_triangles * 3); // Num indices
     index_buffer->set(indices, 0, num_triangles * 3);
-
-
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(storage_texture->getTexture());
 
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {
@@ -136,7 +131,7 @@ int main() {
     wg::DrawPassPtr draw_pass = wing.createBasicDrawPass(pipeline, draw_pass_settings);
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, wing.createResourceChain(storage_texture->getTexture()) }});
     draw_pass->getCommandChain().recordDraw({position_buffer, tex_coord_buffer}, index_buffer);
     draw_pass->getCommandChain().endRecording();
 

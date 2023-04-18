@@ -2,6 +2,7 @@
 
 #include "./IComputePipeline.hpp"
 #include "./IShader.hpp"
+#include "./PipelineLayoutInfo.hpp"
 
 #include "../core/DeviceManager.hpp"
 #include "../core/CommandManager.hpp"
@@ -10,7 +11,7 @@
 
 namespace wg::internal {
     class BasicComputePipeline : public IComputePipeline, public SynchronizedQueueOperationBase {
-        vk::PipelineLayout layout;
+        PipelineLayoutInfo layout_info;
         vk::Pipeline pipeline;
         vk::Queue compute_queue;
 
@@ -19,7 +20,8 @@ namespace wg::internal {
         std::shared_ptr<DeviceManager> device_manager;
         std::shared_ptr<CommandManager> command_manager;
 
-        std::map<uint32_t, vk::DescriptorSetLayout> descriptor_set_layouts;
+        vk::DescriptorPool descriptor_pool;
+
 
     public:
 
@@ -27,6 +29,7 @@ namespace wg::internal {
 
         BasicComputePipeline(
             const std::shared_ptr<IShader>& shader,
+            const vk::DescriptorPool& descriptor_pool,
             std::shared_ptr<DeviceManager> device_manager,
             std::shared_ptr<CommandManager> command_manager,
             std::shared_ptr<QueueManager> queue_manager,
@@ -34,7 +37,7 @@ namespace wg::internal {
 
         ~BasicComputePipeline();
 
-        virtual void execute(const std::vector<std::shared_ptr<IResourceSetChain>>& resources,
+        virtual void execute(const std::vector<std::vector<ResourceBinding>>& resources,
                              uint32_t width,
                              uint32_t height = 1,
                              uint32_t depth = 1) final;

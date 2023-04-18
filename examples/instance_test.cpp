@@ -174,7 +174,7 @@ int main() {
     float phi = 0.0;
 
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }, { 1, storage_buffer }});
     draw_pass->getCommandChain().recordDraw({model.getVertexBuffers()[0], model.getVertexBuffers()[1], offset_buffer, color_buffer},
                                             model.getIndexBuffer(), num_instances);
     draw_pass->getCommandChain().endRecording();

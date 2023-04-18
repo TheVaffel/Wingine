@@ -19,7 +19,6 @@ int main() {
 	.scale(falg::Vec3(1.0f, 0.5f, 1.0f))
         .add(gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f))
 	     .translate(falg::Vec3(0.0f, 0.0f, 1.0f)));
-    // gn::GE scene = gn::makeBox(falg::Vec3(0.5f, 0.5f, 1.0f));
 
     gn::GE scene2 = gn::makeSphere(1.0f)
 	.translate(falg::Vec3(-0.5f, 0.0f, 0.0f))
@@ -34,13 +33,6 @@ int main() {
 
     gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), meshSetup1);
     gn::Mesh mesh2 = gn::MeshConstructor::constructMesh(scene, 0.2f, 10.0f, falg::Vec3(1.0f, 1.0f, 1.0f), meshSetup2);
-
-    // gn::Mesh mesh = gn::MeshConstructor::constructMesh(scene2, 0.3f, 1e8f, falg::Vec3(0.0f, 0.0f, 0.0f), meshSetup1);
-
-
-    /* wgut::Model model = wgut::SimpleModels::createSphere(wing, { wgut::VertexAttribute::Position,
-            wgut::VertexAttribute::Normal},
-            5); */
 
     std::vector<float> positions, normals;
     for (unsigned int i = 0; i < mesh.positions.size(); i++) {
@@ -61,8 +53,6 @@ int main() {
 
     wg::UniformChainPtr<falg::Mat4> cameraUniform = wing.createUniformChain<falg::Mat4>();
 
-    wg::ResourceSetChainPtr resourceSet = wing.createResourceSetChain(cameraUniform);
-
     std::vector<wg::VertexAttribDesc> vertAttrDesc =
         std::vector<wg::VertexAttribDesc> {
         wg::VertexAttribDesc(0, wg::ComponentType::Float32, 3, 3 * sizeof(float), 0), // Offset (bytes)
@@ -80,13 +70,10 @@ int main() {
         auto trans_bind = shader.uniformBinding<mat4_s>(0, 0);
         mat4_v trans = trans_bind.member<0>().load();
 
-        // vec3_v ss_pos = (1.0f / 50.0f) * s_pos;
         vec4_v het = vec4_s::cons(s_pos[0], s_pos[1], s_pos[2], 1.0);
         vec4_v transformed_pos = trans * het;
-        // vec4_v transformed_pos = (1.0f / 50.0f) * het - vec4_s::cons(0.0f, 0.0f, -1.0f, 0.0f);
 
         vec4_v hcol = vec4_s::cons(s_col[0], s_col[1], s_col[2], 1.0);
-        // vec4_v hcol = vec4_s::cons(1.0f, 0.0f, 0.0f, 1.0f);
 
         shader.setBuiltin<BUILTIN_POSITION>(transformed_pos);
         shader.compile(vertex_spirv, hcol);
@@ -138,12 +125,12 @@ int main() {
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 1000.0f);
 
     polygon_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    polygon_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    polygon_draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
     polygon_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     polygon_draw_pass->getCommandChain().endRecording();
 
     line_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-    line_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+    line_draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
     line_draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     line_draw_pass->getCommandChain().endRecording();
 
@@ -205,12 +192,12 @@ int main() {
             wgut::Model& curr_model = switch_state == 0 ? model : model2;
 
             polygon_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-            polygon_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+            polygon_draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
             polygon_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer());
             polygon_draw_pass->getCommandChain().endRecording();
 
             line_draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
-            line_draw_pass->getCommandChain().recordBindResourceSet(resourceSet, 0);
+            line_draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
             line_draw_pass->getCommandChain().recordDraw(curr_model.getVertexBuffers(), curr_model.getIndexBuffer());
             line_draw_pass->getCommandChain().endRecording();
         }

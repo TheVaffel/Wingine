@@ -114,22 +114,6 @@ namespace wg::internal {
                                              instance_count);
         }
     }
-
-    /* void CommandChainController::recordBindResourceSet(const std::shared_ptr<IResourceSetChain> resource_set,
-                                                       uint32_t binding) {
-        fl_assert_eq(this->is_recording, true);
-
-        if (!is_recording_render_pass) {
-            this->beginRenderPass();
-        }
-        for (uint32_t i = 0; i < this->commands.size(); i++) {
-            recordUtil::recordBindResourceSetForCommand(this->commands[i].buffer,
-                                                        resource_set,
-                                                        binding,
-                                                        this->pipeline,
-                                                        i);
-        }
-        } */
     std::shared_ptr<IResourceSetChain> CommandChainController::createResourceSet(const std::vector<ResourceBinding>& incoming_bindings,
                                                                                  const std::vector<vk::DescriptorSetLayoutBinding>& shader_bindings,
                                                                                  const vk::DescriptorSetLayout& layout) {
@@ -145,7 +129,7 @@ namespace wg::internal {
         fl_assert_eq(relevant_bindings.size(), shader_bindings.size());
 
         std::shared_ptr<IResourceSetChain> resource_set =
-            std::make_shared<BasicResourceSetChain>(this->command_index.getNumIndices(),
+            std::make_shared<BasicResourceSetChain>(relevant_bindings[0].resource->getElementChainLength(),
                                                     relevant_bindings,
                                                     layout,
                                                     this->descriptor_pool,

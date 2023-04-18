@@ -349,6 +349,7 @@ namespace wg {
 
     ComputePipelinePtr Wingine::createComputePipeline(ShaderPtr shader) {
         return std::make_shared<internal::BasicComputePipeline>(shader,
+                                                                this->descriptor_pool,
                                                                 this->device_manager,
                                                                 this->command_manager,
                                                                 this->queue_manager,

@@ -95,11 +95,6 @@ int main() {
            vec4_v v2 = vec4_s::cons(0.0f, 0.0f, 0.5f, 0.0f);
            vec4_v v3 = vec4_s::cons(0.0f, 0.0f, 0.0f, 1.0f); */
 
-        /* mat4_v scale = mat4_s::cons(1.0f, 0.0f, 0.0f, 0.0f,
-           0.0f, 0.5f, 0.0f, 0.0f,
-           0.0f, 0.0f, 0.5f, 0.0f,
-           0.0f, 0.0f, 0.0f, 1.0f); */
-
         // Just to demonstrate matrix construction for columns
         // mat4_v scale = mat4_s::cons(v0, v1, v2, v3);
 

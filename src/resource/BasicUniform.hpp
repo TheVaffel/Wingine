@@ -2,6 +2,7 @@
 
 #include "./IUniform.hpp"
 #include "../buffer/IBuffer.hpp"
+#include "./BasicRawUniform.hpp"
 
 #include "../core/DeviceManager.hpp"
 
@@ -9,8 +10,7 @@ namespace wg::internal {
     template <typename T>
     class BasicUniform : public IUniform<T> {
 
-        std::unique_ptr<IBuffer> uniform_buffer;
-        std::shared_ptr<const DeviceManager> device_manager;
+        BasicRawUniform raw_uniform;
 
     public:
 
@@ -21,7 +21,6 @@ namespace wg::internal {
 
         virtual std::unique_ptr<IResourceWriteAuxillaryData>
         writeDescriptorUpdate(vk::WriteDescriptorSet& write_info) const override;
-
     };
 };
 

@@ -3,10 +3,6 @@
 #include "./IUniform.hpp"
 #include "./IResourceChain.hpp"
 
-#include "../sync/ISynchronizedQueueOperation.hpp"
-
-#include <concepts>
-
 namespace wg::internal {
 
     template<typename T>

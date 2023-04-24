@@ -11,45 +11,16 @@ namespace wg::internal {
 
     template <typename T>
     BasicUniform<T>::BasicUniform(std::shared_ptr<const DeviceManager> device_manager)
-        : device_manager(device_manager) {
-
-        this->uniform_buffer = std::make_unique<BasicBuffer>(sizeof(T),
-                                                             vk::BufferUsageFlagBits::eUniformBuffer,
-                                                             vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                             device_manager);
-    }
+        : raw_uniform(sizeof(T), device_manager) { }
 
     template<typename T>
     void BasicUniform<T>::set(const T& val) {
-        vk::MappedMemoryRange range;
-        range.setMemory(this->uniform_buffer->getMemory())
-            .setOffset(0)
-            .setSize(VK_WHOLE_SIZE);
-
-        T* dst = memoryUtil::mapMemory<T>(this->uniform_buffer->getMemory(),
-                                          this->device_manager->getDevice());
-
-        memcpy(dst, &val, sizeof(T));
-
-        this->device_manager->getDevice().flushMappedMemoryRanges({range});
-
-        memoryUtil::unmapMemory(this->uniform_buffer->getMemory(),
-                                this->device_manager->getDevice());
+        this->raw_uniform.set(&val);
     }
 
     template <typename T>
     std::unique_ptr<IResourceWriteAuxillaryData>
     BasicUniform<T>::writeDescriptorUpdate(vk::WriteDescriptorSet& write_info) const {
-        auto aux_data = std::make_unique<ResourceWriteBufferAuxillaryData>();
-        aux_data->buffer_info.buffer = this->uniform_buffer->getBuffer();
-        aux_data->buffer_info.offset = 0;
-        aux_data->buffer_info.range = this->uniform_buffer->getByteSize();
-
-        write_info
-            .setDescriptorCount(1)
-            .setDescriptorType(vk::DescriptorType::eUniformBuffer)
-            .setPBufferInfo(&aux_data->buffer_info)
-            .setDstArrayElement(0);
-        return aux_data;
+        return this->raw_uniform.writeDescriptorUpdate(write_info);
     }
 };

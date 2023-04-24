@@ -22,6 +22,7 @@
 #include "./resource/IUniformChain.hpp"
 #include "./resource/IResourceSetChain.hpp"
 #include "./resource/ResourceBinding.hpp"
+#include "./resource/IRawUniformChain.hpp"
 
 #include "./pipeline/IShader.hpp"
 #include "./pipeline/IPipeline.hpp"
@@ -59,6 +60,8 @@ namespace wg {
 
     template<typename T>
     using UniformChainPtr = std::shared_ptr<internal::IUniformChain<T>>;
+
+    typedef std::shared_ptr<internal::IRawUniformChain> RawUniformChainPtr;
 
     typedef std::shared_ptr<internal::ITexture> TexturePtr;
     typedef std::shared_ptr<internal::InternallyStagedTexture> SettableTexturePtr;

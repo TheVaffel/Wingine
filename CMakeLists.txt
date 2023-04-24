@@ -42,6 +42,8 @@ set(RESOURCE_SOURCES
   descriptorUtil.cpp
   BasicResourceSet.cpp
   BasicResourceSetChain.cpp
+  BasicRawUniform.cpp
+  BasicRawUniformChain.cpp
   StaticResourceChain.cpp
   WrappedDSLCI.cpp
   ResourceBinding.cpp)

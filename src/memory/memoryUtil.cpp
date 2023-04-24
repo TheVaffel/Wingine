@@ -175,4 +175,10 @@ namespace wg::internal::memoryUtil {
         device.flushMappedMemoryRanges({ range });
         device.unmapMemory(memory);
     }
+
+
+    void* mapRawMemory(const vk::DeviceMemory& memory,
+                       const vk::Device& device) {
+        return device.mapMemory(memory, 0, VK_WHOLE_SIZE);
+    }
 };

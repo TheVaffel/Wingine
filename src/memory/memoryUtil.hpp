@@ -35,6 +35,9 @@ namespace wg::internal::memoryUtil {
     T* mapMemory(const vk::DeviceMemory& memory,
                  const vk::Device& device);
 
+    void* mapRawMemory(const vk::DeviceMemory& memory,
+                       const vk::Device& device);
+
     void unmapMemory(const vk::DeviceMemory& memory,
                      const vk::Device& device);
 };

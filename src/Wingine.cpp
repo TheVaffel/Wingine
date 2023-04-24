@@ -20,6 +20,7 @@
 #include "./buffer/InternallyStagedIndexBuffer.hpp"
 
 #include "./resource/StaticResourceChain.hpp"
+#include "./resource/BasicRawUniformChain.hpp"
 
 #include <exception>
 
@@ -465,17 +466,13 @@ namespace wg {
 
     }
 
-    /* ResourceSetChainPtr Wingine::createResourceSetChain(const std::vector<ResourceBinding>& resource_binding) {
-        vk::DescriptorSetLayout layout = createLayout(this->device_manager->getDevice(), resources...);
-        ResourceSetChainPtr res = std::make_shared<internal::BasicResourceSetChain>(
-                                                                                    this->getNumFramebuffers(),
-                                                                                    layout,
-                                                                                    this->descriptor_pool,
-                                                                                    this->device_manager,
-                                                                                    resources...);
-        this->current_chain_reel->addChain(res);
-        return res;
-        } */
+    RawUniformChainPtr Wingine::createRawUniformChain(uint32_t byte_size) {
+        auto uniform_chain = std::make_shared<internal::BasicRawUniformChain>(this->getNumFramebuffers(),
+                                                                              byte_size,
+                                                                              this->device_manager);
+        this->current_chain_reel->addChain(uniform_chain);
+        return uniform_chain;
+    }
 
     ResourceChainPtr Wingine::createResourceChain(std::shared_ptr<internal::IResource> resource) {
         return std::make_shared<internal::StaticResourceChain>(this->getNumFramebuffers(), resource);

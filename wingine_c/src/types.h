@@ -13,6 +13,8 @@
 
 EXTERNC
 
+#include "stdint.h"
+
 typedef struct wg_sp_t wg_sp_t;
 
 typedef struct wg_wingine_t wg_wingine_t;
@@ -32,7 +34,6 @@ struct wg_image_chain_copier_t;
 
 struct wg_resource_set_chain_t;
 struct wg_uniform_t;
-struct wg_uniform_chain_t;
 
 struct wg_texture_t;
 struct wg_settable_texture_t;

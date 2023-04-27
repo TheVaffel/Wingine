@@ -21,8 +21,14 @@ set(FLAWED_LIB ${FLAWED_ROOT}/lib)
 set(LIBS Wingine FlatAlg Winval X11 flawed vulkan)
 
 set(WINGINE_SRC
-  src/wg_wingine.cpp
-  src/wg_buffer.cpp)
+  src/wingine.cpp
+  src/buffer.cpp
+  src/attrib_desc.cpp
+  src/shader.cpp
+  src/read_spv.cpp
+  src/uniform.cpp
+  src/pipeline.cpp
+  src/draw_pass.cpp)
 
 include_directories(../include ${HCONLIB_INCLUDE} ${FLAWED_INCLUDE})
 link_directories(../build ${HCONLIB_LIB} ${FLAWED_LIB})

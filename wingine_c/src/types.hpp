@@ -1,8 +1,35 @@
 #pragma once
 
-#include <types.h>
-#include <memory>
+#include "./types.h"
 
-struct wg_generic_shared_ptr_t {
-  std::shared_ptr<void> sp;
+#include <Wingine.hpp>
+#include <Winval.hpp>
+
+struct wg_wingine_t {
+    wg::Wingine wingine;
+    std::unique_ptr<Winval> winval;
+};
+
+struct wg_vertex_buffer_t {
+    wg::VertexBufferPtr<uint8_t> v;
+};
+
+struct wg_index_buffer_t {
+    wg::IndexBufferPtr v;
+};
+
+struct wg_pipeline_t {
+    wg::PipelinePtr v;
+};
+
+struct wg_shader_t {
+    wg::ShaderPtr v;
+};
+
+struct wg_uniform_t {
+    wg::RawUniformChainPtr v;
+};
+
+struct wg_draw_pass_t {
+    wg::DrawPassPtr v;
 };

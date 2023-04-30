@@ -51,4 +51,8 @@ extern "C" {
 
         draw_pass->v->getSemaphores().setWaitSemaphores(semaphores);
     }
+
+    void wg_draw_pass_render(wg_draw_pass_t* draw_pass) {
+        draw_pass->v->render();
+    }
 };

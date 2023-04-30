@@ -12,7 +12,7 @@ wg_uniform_t* wg_create_uniform(wg_wingine_t* wing, uint32_t byte_size) {
     };
 }
 
-void wg_set_current_uniform(wg_uniform_t* uniform, void *data) {
+void wg_uniform_set_current(wg_uniform_t* uniform, void *data) {
     uniform->v->setCurrent(data);
 }
 

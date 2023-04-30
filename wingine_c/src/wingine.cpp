@@ -34,4 +34,24 @@ extern "C" {
         }
         wing->wingine.setPresentWaitForSemaphores(semaphores);
     }
+
+    void wg_wingine_present(wg_wingine_t* wing) {
+        return wing->wingine.present();
+    }
+
+    int wg_wingine_is_window_open(wg_wingine_t* wing) {
+        return (int)wing->winval->isOpen();
+    }
+
+    int wg_wingine_is_key_pressed(wg_wingine_t* wing, uint32_t key) {
+        return (int)wing->winval->isKeyPressed(key);
+    }
+
+    void wg_wingine_sleep_milliseconds(wg_wingine_t* wing, uint32_t millis) {
+        return wing->winval->sleepMilliseconds(millis);
+    }
+
+    void wg_wingine_flush_events(wg_wingine_t* wing) {
+        return wing->winval->flushEvents();
+    }
 };

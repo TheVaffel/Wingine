@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <WinvalKeys.h>
 
 int main() {
 
@@ -79,22 +80,26 @@ int main() {
   wg_semaphore_t* on_finish_semaphore = wg_draw_pass_create_on_finish_semaphore(draw_pass);
   wg_wingine_set_present_wait_semaphores(wing, 1, &on_finish_semaphore);
 
-  /* float camera_matrix[16] = { };
+  float camera_matrix[16] = { 1.73205, 0, 0, 0,
+                              0, -1.5396, 0, 0,
+                              0, 0, -1.0001, -1,
+                              0, 0, -0.010001, 0 };
 
-  while (wg_wingine_is_window_open(&wing)) {
-    wg_uniform_set_current(&camera_uniform, (void*)camera_matrix);
+  while (wg_wingine_is_window_open(wing)) {
+    wg_uniform_set_current(camera_uniform, (void*)camera_matrix);
 
-    wg_draw_pass_render(&draw_pass);
+    wg_draw_pass_render(draw_pass);
 
-    wg_wingine_present(&wing);
+    wg_wingine_present(wing);
 
-    wg_wingine_sleep_milliseconds(&wing, 40);
+    wg_wingine_sleep_milliseconds(wing, 40);
 
-    wg_wingine_flush_events(&wing);
-    if (wg_wingine_is_key_pressed(WK_ESC)) {
+    wg_wingine_flush_events(wing);
+
+    if (wg_wingine_is_key_pressed(wing, WK_ESC)) {
       break;
     }
-    } */
+  }
 
   wg_wingine_wait_idle(wing);
 

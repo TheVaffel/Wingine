@@ -402,7 +402,7 @@ namespace wg {
         return framebuffer_chain;
     }
 
-    FramebufferChain Wingine::getDefaultFramebufferChain() {
+    FramebufferChain& Wingine::getDefaultFramebufferChain() {
         return this->default_framebuffer_chain;
     }
 

@@ -1,3 +1,6 @@
+#ifndef _WG_SHADER
+#define _WG_SHADER
+
 #include "./types.h"
 
 #include <vulkan/vulkan.h>
@@ -16,3 +19,5 @@ wg_shader_t* wg_create_shader(wg_wingine_t* wing, wg_shader_stage stage, uint32_
 void wg_destroy_shader(wg_shader_t* stage);
 
 EXTERNC_END
+
+#endif

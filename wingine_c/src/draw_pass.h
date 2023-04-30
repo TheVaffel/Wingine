@@ -4,6 +4,8 @@
 #include "stdint.h"
 
 #include "./types.h"
+#include "./pipeline.h"
+#include "./semaphore.h"
 
 EXTERNC
 
@@ -28,7 +30,11 @@ wg_draw_pass_settings_t wg_default_draw_pass_settings();
 typedef struct wg_draw_pass_t wg_draw_pass_t;
 
 wg_draw_pass_t* wg_create_draw_pass(wg_wingine_t* wing, wg_pipeline_t* pipeline, wg_draw_pass_settings_t settings);
+
 void wg_destroy_draw_pass(wg_draw_pass_t* draw_pass);
+
+wg_semaphore_t* wg_draw_pass_create_on_finish_semaphore(wg_draw_pass_t* draw_pass);
+void wg_draw_pass_set_wait_semaphores(wg_draw_pass_t* draw_pass, uint32_t num_semaphores, wg_semaphore_t** semaphores);
 
 EXTERNC_END
 

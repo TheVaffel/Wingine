@@ -9,5 +9,8 @@
 #include "./src/pipeline.h"
 #include "./src/uniform.h"
 #include "./src/draw_pass.h"
+#include "./src/command.h"
+#include "./src/framebuffer.h"
+#include "./src/semaphore.h"
 
 #endif

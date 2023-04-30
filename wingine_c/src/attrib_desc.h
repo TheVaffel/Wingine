@@ -1,3 +1,6 @@
+#ifndef _WG_ATTRIB_DESC
+#define _WG_ATTRIB_DESC
+
 #include "./types.h"
 
 EXTERNC
@@ -31,3 +34,5 @@ wg_vertex_attrib_desc_t wg_create_instance_attrib_desc(uint32_t binding_num,
                                                        uint32_t offset_in_bytes);
 
 EXTERNC_END
+
+#endif

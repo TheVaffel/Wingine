@@ -55,7 +55,7 @@ int main() {
 
   wg_shader_t *shaders[2] = { vertex_shader, fragment_shader };
 
-  wg_pipeline_t *pipeline = wg_create_pipeline(wing, attrib_desc, 2, shaders, 2);
+  wg_pipeline_t *pipeline = wg_create_pipeline(wing, 2, attrib_desc, 2, shaders);
 
   wg_draw_pass_settings_t draw_pass_settings = wg_default_draw_pass_settings();
   draw_pass_settings.render_pass_settings.should_clear_color = 1;
@@ -63,23 +63,23 @@ int main() {
 
   wg_draw_pass_t* draw_pass = wg_create_draw_pass(wing, pipeline, draw_pass_settings);
 
-  /* wg_command_t* command = wg_draw_pass_get_command(&draw_pass);
+  wg_command_t* command = wg_draw_pass_get_command(draw_pass);
 
   wg_resource_binding_t bindings[1] = { { 0, camera_uniform } };
   wg_vertex_buffer_t* vertex_buffers[2] = { position_buffer, color_buffer };
 
-  wg_cmd_start_recording(command, wg_wingine_get_default_framebuffer(&wing));
+  wg_cmd_start_recording(command, wg_get_default_framebuffer(wing));
   wg_cmd_bind_resource_set(command, 0, 1, bindings);
   wg_cmd_draw(command, 2, vertex_buffers, index_buffer);
   wg_cmd_end_recording(command);
 
-  wg_semaphore_t* image_ready_semaphore = wg_wingine_create_image_ready_semaphore(&wing);
-  wg_draw_pass_set_wait_semaphores(&draw_pass, 1, &image_ready_semaphore);
+  wg_semaphore_t* image_ready_semaphore = wg_wingine_create_image_ready_semaphore(wing);
+  wg_draw_pass_set_wait_semaphores(draw_pass, 1, &image_ready_semaphore);
 
-  wg_semaphore_t* on_finish_semaphore = wg_draw_pass_create_on_finish_semaphore(&draw_pass);
-  wg_wingine_set_present_wait_semaphores(&wing, 1, &on_finish_semaphore);
+  wg_semaphore_t* on_finish_semaphore = wg_draw_pass_create_on_finish_semaphore(draw_pass);
+  wg_wingine_set_present_wait_semaphores(wing, 1, &on_finish_semaphore);
 
-  float camera_matrix[16] = { };
+  /* float camera_matrix[16] = { };
 
   while (wg_wingine_is_window_open(&wing)) {
     wg_uniform_set_current(&camera_uniform, (void*)camera_matrix);
@@ -94,12 +94,12 @@ int main() {
     if (wg_wingine_is_key_pressed(WK_ESC)) {
       break;
     }
-  }
+    } */
 
-  wg_wingine_wait_idle(&wing);
+  wg_wingine_wait_idle(wing);
 
   wg_destroy_semaphore(on_finish_semaphore);
-  wg_destroy_semaphore(image_ready_semaphore); */
+  wg_destroy_semaphore(image_ready_semaphore);
 
   wg_destroy_draw_pass(draw_pass);
 

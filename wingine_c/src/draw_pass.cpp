@@ -36,4 +36,19 @@ extern "C" {
     void wg_destroy_draw_pass(wg_draw_pass_t* draw_pass) {
         delete draw_pass;
     }
+
+    wg_semaphore_t* wg_draw_pass_create_on_finish_semaphore(wg_draw_pass_t* draw_pass) {
+        return new wg_semaphore_t {
+            .v = draw_pass->v->getSemaphores().createOnFinishSemaphore()
+        };
+    }
+
+    void wg_draw_pass_set_wait_semaphores(wg_draw_pass_t* draw_pass, uint32_t num_semaphores, wg_semaphore_t** raw_semaphores) {
+        std::vector<wg::Semaphore> semaphores(num_semaphores);
+        for (uint32_t i = 0; i < num_semaphores; i++) {
+            semaphores[i] = raw_semaphores[i]->v;
+        }
+
+        draw_pass->v->getSemaphores().setWaitSemaphores(semaphores);
+    }
 };

@@ -33,3 +33,11 @@ struct wg_uniform_t {
 struct wg_draw_pass_t {
     wg::DrawPassPtr v;
 };
+
+struct wg_framebuffer_t {
+    wg::FramebufferChain v;
+};
+
+struct wg_semaphore_t {
+    wg::Semaphore v;
+};

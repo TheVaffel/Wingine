@@ -41,6 +41,7 @@ namespace wg {
     typedef std::shared_ptr<internal::IFramebufferChain> FramebufferChain;
 
     typedef std::shared_ptr<internal::IDrawPass> DrawPassPtr;
+    typedef internal::CommandChainController CommandChainController;
     typedef internal::BasicDrawPassSettings BasicDrawPassSettings;
 
     typedef std::shared_ptr<internal::ManagedSemaphoreChain> Semaphore;

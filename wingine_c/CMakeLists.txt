@@ -28,7 +28,10 @@ set(WINGINE_SRC
   src/read_spv.cpp
   src/uniform.cpp
   src/pipeline.cpp
-  src/draw_pass.cpp)
+  src/draw_pass.cpp
+  src/framebuffer.cpp
+  src/command.cpp
+  src/semaphore.cpp)
 
 include_directories(../include ${HCONLIB_INCLUDE} ${FLAWED_INCLUDE})
 link_directories(../build ${HCONLIB_LIB} ${FLAWED_LIB})

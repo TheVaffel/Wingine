@@ -163,7 +163,7 @@ namespace wg {
         ImageCopierPtr createImageCopier();
         ImageChainCopierPtr createImageChainCopier();
 
-        FramebufferChain getDefaultFramebufferChain();
+        FramebufferChain& getDefaultFramebufferChain();
 
         TexturePtr createBasicTexture(uint32_t width, uint32_t height, const BasicTextureSetup& setup = BasicTextureSetup(internal::BasicImageSetup::createColorTextureImageSetup()));
         SettableTexturePtr createSettableTexture(uint32_t width, uint32_t height);

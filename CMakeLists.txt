@@ -167,7 +167,7 @@ link_directories(${SPURV_ROOT}/lib)
 link_directories(${GENERELLE_LIB_DIR})
 link_directories(${FLAWED_LIB_DIR})
 
-add_library(Wingine SHARED ${WINGINE_SOURCES})
+add_library(Wingine STATIC ${WINGINE_SOURCES})
 
 add_subdirectory(src/spirv)
 

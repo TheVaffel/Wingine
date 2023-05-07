@@ -39,11 +39,11 @@ extern "C" {
         return wing->wingine.present();
     }
 
-    int wg_wingine_is_window_open(wg_wingine_t* wing) {
+    uint8_t wg_wingine_is_window_open(wg_wingine_t* wing) {
         return (int)wing->winval->isOpen();
     }
 
-    int wg_wingine_is_key_pressed(wg_wingine_t* wing, uint32_t key) {
+    uint8_t wg_wingine_is_key_pressed(wg_wingine_t* wing, uint32_t key) {
         return (int)wing->winval->isKeyPressed(key);
     }
 

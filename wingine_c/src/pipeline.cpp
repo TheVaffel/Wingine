@@ -12,7 +12,7 @@ extern "C" {
 
     wg_pipeline_t* wg_create_pipeline(wg_wingine_t* wing,
                                       uint32_t num_attrib_desc,
-                                      wg_vertex_attrib_desc_t* raw_descs,
+                                      const wg_vertex_attrib_desc_t* raw_descs,
                                       uint32_t num_shaders,
                                       wg_shader_t** raw_shaders) {
         std::vector<wg::ShaderPtr> shaders;

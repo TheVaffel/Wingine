@@ -20,8 +20,8 @@ void wg_wingine_set_present_wait_semaphores(wg_wingine_t* wing, uint32_t num_sem
 
 void wg_wingine_present(wg_wingine_t* wing);
 
-int wg_wingine_is_window_open(wg_wingine_t* wing);
-int wg_wingine_is_key_pressed(wg_wingine_t* wing, uint32_t key);
+uint8_t wg_wingine_is_window_open(wg_wingine_t* wing);
+uint8_t wg_wingine_is_key_pressed(wg_wingine_t* wing, uint32_t key);
 void wg_wingine_sleep_milliseconds(wg_wingine_t* wing, uint32_t millis);
 void wg_wingine_flush_events(wg_wingine_t* wing);
 

@@ -6,10 +6,10 @@
 EXTERNC
 
 typedef enum wg_component_type {
-  WG_COMPONENT_TYPE_FLOAT32,
-  WG_COMPONENT_TYPE_FLOAT64,
-  WG_COMPONENT_TYPE_INT32,
-  WG_COMPONENT_TYPE_INT64
+  WG_COMPONENT_TYPE_FLOAT32 = 0,
+  WG_COMPONENT_TYPE_FLOAT64 = 1,
+  WG_COMPONENT_TYPE_INT32 = 2,
+  WG_COMPONENT_TYPE_INT64 = 3
 } wg_component_type;
 
 typedef struct wg_vertex_attrib_desc_t {

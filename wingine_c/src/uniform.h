@@ -2,6 +2,7 @@
 #define WG_UNIFORM
 
 #include "./types.h"
+#include "./wingine.h"
 
 EXTERNC
 

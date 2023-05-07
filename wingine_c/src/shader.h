@@ -2,6 +2,7 @@
 #define _WG_SHADER
 
 #include "./types.h"
+#include "./wingine.h"
 
 #include <vulkan/vulkan.h>
 

@@ -3,6 +3,7 @@
 
 #include "./types.h"
 
+#include "./buffer.h"
 #include "./draw_pass.h"
 #include "./framebuffer.h"
 

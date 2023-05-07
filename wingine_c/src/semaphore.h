@@ -2,7 +2,6 @@
 #define _WG_SEMAPHORE
 
 #include "./types.h"
-#include "./wingine.h"
 
 EXTERNC
 

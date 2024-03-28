@@ -3,6 +3,8 @@
 #include "./recordUtil.hpp"
 #include "../resource/BasicResourceSetChain.hpp"
 
+#include "../util/log.hpp"
+
 #include <flawed_assert.hpp>
 
 namespace wg::internal {
@@ -146,7 +148,21 @@ namespace wg::internal {
             this->beginRenderPass();
         }
 
-        vk::DescriptorSetLayoutCreateInfo shader_binding_info = this->pipeline->getPipelineInfo().set_layout_info_map.at(set_binding).getCreateInfo();
+        PipelineLayoutInfo pipeline_layout_info = this->pipeline->getPipelineInfo();
+
+        if (!pipeline_layout_info.set_layout_info_map.contains(set_binding)) {
+            _wlog_warn("No resource set consumed at binding, ignoring resource");
+            return;
+        }
+
+        vk::DescriptorSetLayoutCreateInfo shader_binding_info = pipeline_layout_info
+            .set_layout_info_map
+            .at(set_binding)
+            .getCreateInfo();
+
+        if (shader_binding_info.bindingCount == 0) {
+            _wlog_warn("No resource bindings found for this resource set, ignoring binding resource");
+        }
 
         std::vector<vk::DescriptorSetLayoutBinding> shader_bindings(shader_binding_info.pBindings, shader_binding_info.pBindings + shader_binding_info.bindingCount);
 

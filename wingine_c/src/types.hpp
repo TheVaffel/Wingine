@@ -5,9 +5,12 @@
 #include <Wingine.hpp>
 #include <Winval.hpp>
 
+struct win_winval_t {
+    Winval winval;
+};
+
 struct wg_wingine_t {
     wg::Wingine wingine;
-    std::unique_ptr<Winval> winval;
 };
 
 struct wg_vertex_buffer_t {

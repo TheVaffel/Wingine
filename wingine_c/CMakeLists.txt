@@ -1,6 +1,6 @@
-project(wingine_c)
+cmake_minimum_required(VERSION 3.5)
 
-cmake_minimum_required(VERSION 3.0)
+project(wingine_c)
 
 if(WIN32)
 else()
@@ -31,7 +31,8 @@ set(WINGINE_SRC
   src/draw_pass.cpp
   src/framebuffer.cpp
   src/command.cpp
-  src/semaphore.cpp)
+  src/semaphore.cpp
+  src/winval.cpp)
 
 include_directories(../include ${HCONLIB_INCLUDE} ${FLAWED_INCLUDE})
 link_directories(../build ${HCONLIB_LIB} ${FLAWED_LIB})

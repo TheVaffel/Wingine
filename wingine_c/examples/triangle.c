@@ -9,7 +9,8 @@ int main() {
 
   const int width = 800, height = 800;
 
-  wg_wingine_t* wing = wg_create_wingine(width, height);
+  win_winval_t* win = win_create_winval(width, height);
+  wg_wingine_t* wing = wg_create_wingine_with_winval(win, "triangle example");
 
   const int num_points = 3;
   const int num_triangles = 1;
@@ -85,18 +86,18 @@ int main() {
                               0, 0, -1.0001, -1,
                               0, 0, -0.010001, 0 };
 
-  while (wg_wingine_is_window_open(wing)) {
+  while (win_winval_is_window_open(win)) {
     wg_uniform_set_current(camera_uniform, (void*)camera_matrix);
 
     wg_draw_pass_render(draw_pass);
 
     wg_wingine_present(wing);
 
-    wg_wingine_sleep_milliseconds(wing, 40);
+    win_winval_sleep_milliseconds(win, 40);
 
-    wg_wingine_flush_events(wing);
+    win_winval_flush_events(win);
 
-    if (wg_wingine_is_key_pressed(wing, WK_ESC)) {
+    if (win_winval_is_key_pressed(win, WK_ESC)) {
       break;
     }
   }
@@ -123,4 +124,5 @@ int main() {
   wg_destroy_index_buffer(index_buffer);
 
   wg_destroy_wingine(wing);
+  win_destroy_winval(win);
 }

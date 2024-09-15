@@ -71,10 +71,8 @@ namespace wg::internal {
             }
         }
 
-        if (this->raw_semaphores_index.getNumIndices() != chain_length) {
-            this->raw_semaphores_index = IndexCounter(chain_length,
-                                                      this->raw_semaphores_index.getCurrentIndex() % chain_length);
-        }
+        this->raw_semaphores_index = IndexCounter(chain_length);
+
 
         std::vector<std::vector<vk::Semaphore>> chains(semaphore_chains[0]->getNumSemaphores());
 
@@ -155,7 +153,7 @@ namespace wg::internal {
 
         semaphore_chain->registerSignalSet();
         this->semaphore_chains.push_back(semaphore_chain);
-        this->raw_semaphores = createRawSemaphores(this->semaphore_chains);
+        this->initRawSemaphores();
 
         return semaphore_chain;
     }

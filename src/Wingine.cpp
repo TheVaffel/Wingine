@@ -110,14 +110,6 @@ namespace wg {
         this->host_visible_image->copyImageToHost(dst);
     }
 
-    Semaphore Wingine::createAndAddImageReadySemaphore() {
-        return this->default_framebuffer_chain->addSignalImageAcquiredSemaphore();
-    }
-
-    void Wingine::setImageReadySemaphores(internal::SignalSemaphoreSet&& semaphores) {
-        return this->default_framebuffer_chain->setSignalImageAcquiredSemaphores(std::move(semaphores));
-    }
-
     void Wingine::init_generic_render_pass() {
         this->compatible_render_pass_registry->ensureAndGetRenderPass(
             internal::renderPassUtil::RenderPassType::colorDepth);
@@ -481,7 +473,6 @@ namespace wg {
     void Wingine::clearAndCheckDeviceManagerRefs() {
         this->current_chain_reel->reset();
         this->default_chain_reel->reset();
-        this->default_framebuffer_chain->setSignalImageAcquiredSemaphores({});
         this->default_framebuffer_chain->setPresentWaitSemaphores({});
 
         if (this->original_device_manager_refs != this->device_manager.use_count()) {

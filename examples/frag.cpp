@@ -136,16 +136,17 @@ int main() {
     draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 
-    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
     wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
 
     float f = 0.0;
     float inc = 0.01f;
 
     while (win.isOpen()) {
+
         f += inc;
 
         draw_pass->awaitCurrentCommand();
+
 
         time_uniform->setCurrent(sin(f));
 

@@ -11,13 +11,4 @@ namespace wg::internal {
     void FramebufferChainBase::setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) {
         this->getWaitSemaphores().adoptFrom(std::move(semaphores));
     }
-
-    SemaphoreChainPtr FramebufferChainBase::addSignalImageAcquiredSemaphore() {
-        return this->getSignalSemaphores().addSignalledSemaphoreChain(this->queue_manager->getGraphicsQueue());
-    }
-
-
-    void FramebufferChainBase::setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) {
-        this->getSignalSemaphores().adoptFrom(std::move(semaphores));
-    }
 };

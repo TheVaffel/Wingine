@@ -24,12 +24,6 @@ namespace wg::internal {
                               render_pass_registry)
     {
 
-        std::shared_ptr<ManagedSemaphoreChain> semaphore_chain =
-            std::make_shared<ManagedSemaphoreChain>(num_framebuffers,
-                                                    device_manager);
-        this->inner_framebuffer_chain.setSignalImageAcquiredSemaphores({semaphore_chain});
-        this->image_copier->setWaitSemaphoreSet({semaphore_chain});
-
         std::vector<IImage*> images;
         std::vector<IBuffer*> buffers;
         for (uint32_t i = 0; i < num_framebuffers; i++) {
@@ -67,14 +61,6 @@ namespace wg::internal {
 
     void HostCopyingFramebufferChain::setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) {
         this->inner_framebuffer_chain.setPresentWaitSemaphores(std::move(semaphores));
-    }
-
-    SemaphoreChainPtr HostCopyingFramebufferChain::addSignalImageAcquiredSemaphore() {
-        return this->image_copier->addSignalSemaphore();
-    }
-
-    void HostCopyingFramebufferChain::setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) {
-        this->image_copier->setSignalSemaphoreSet(std::move(semaphores));
     }
 
     SignalAndWaitSemaphores& HostCopyingFramebufferChain::getSemaphores() {

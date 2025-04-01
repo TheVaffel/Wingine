@@ -149,9 +149,6 @@ int main() {
     bool is_switch = false;
     int switch_state = 0;
 
-    polygon_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
-
-    line_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
     wing.setPresentWaitForSemaphores({
             polygon_draw_pass->getSemaphores().createOnFinishSemaphore(),
             line_draw_pass->getSemaphores().createOnFinishSemaphore()

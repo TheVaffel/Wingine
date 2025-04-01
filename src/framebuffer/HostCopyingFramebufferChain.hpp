@@ -40,7 +40,5 @@ namespace wg::internal {
         virtual uint32_t getElementChainLength() const final;
 
         virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) final;
-        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() final;
-        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) final;
     };
 };

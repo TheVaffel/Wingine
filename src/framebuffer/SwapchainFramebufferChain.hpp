@@ -1,6 +1,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include <vector>
+#include <queue>
 
 #include "../core/DeviceManager.hpp"
 #include "../core/SwapchainManager.hpp"
@@ -9,27 +10,25 @@
 
 #include "../render_pass/CompatibleRenderPassRegistry.hpp"
 
-#include "../util/SettableIndexCounter.hpp"
+#include "../util/IndexCounter.hpp"
 
 namespace wg::internal {
     class SwapchainFramebufferChain : public FramebufferChainBase {
 
         std::shared_ptr<const SwapchainManager> swapchain_manager;
 
-        std::vector<vk::Fence> image_acquired_fences;
-        std::vector<vk::Semaphore> image_acquired_semaphores;
+        vk::Fence image_acquired_fence;
 
-        SettableIndexCounter swapchain_index_counter;
         std::vector<std::unique_ptr<IFramebuffer>> framebuffers;
 
-        void initSyncStructs(const vk::Device& device, const vk::Queue& queue);
+        std::queue<uint32_t> next_image_index_to_present_queue;
+
+        void initSyncStructs(const vk::Device& device);
 
         void stageNextImage();
         void present();
 
-        bool hasSemaphoresToSignal() const;
-        void runImageAcquisition(const vk::Semaphore& signal_semaphore);
-        void signalImageAcquisitionSemaphores(uint32_t index);
+        void runImageAcquisition();
 
     public:
 

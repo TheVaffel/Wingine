@@ -185,7 +185,6 @@ int main() {
     real_draw_pass->getCommandChain().recordDraw({ position_buffer, color_buffer }, index_buffer);
     real_draw_pass->getCommandChain().endRecording();
 
-    shadow_draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
     real_draw_pass->getSemaphores().setWaitSemaphores({ shadow_draw_pass->getSemaphores().createOnFinishSemaphore() });
     wing.setPresentWaitForSemaphores({ real_draw_pass->getSemaphores().createOnFinishSemaphore() });
 
@@ -214,6 +213,8 @@ int main() {
 
         // We need to await the draw passes here, because the draws we scheduled 3 (or 2) iterations
         // ago may still not be finished, and setting the uniform will mess them up real good if that's the case
+        // (Actually - this may not be true anymore - in present we acquire the next image, and we don't return
+        // until that image is finished in the present stage)
         shadow_draw_pass->awaitCurrentCommand();
         real_draw_pass->awaitCurrentCommand();
 

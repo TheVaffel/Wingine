@@ -135,7 +135,6 @@ int main() {
     draw_pass->getCommandChain().recordDraw({position_buffer, tex_coord_buffer}, index_buffer);
     draw_pass->getCommandChain().endRecording();
 
-    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
     wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
 
     while (win.isOpen()) {

@@ -19,7 +19,5 @@ namespace wg::internal {
 
     public:
         virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) override;
-        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() override;
-        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) override;
     };
 };

@@ -171,8 +171,6 @@ namespace wg {
         TextureChainPtr createBasicTextureChain(uint32_t width, uint32_t height, const BasicTextureSetup& setup = BasicTextureSetup(internal::BasicImageSetup::createColorTextureImageSetup()));
 
         void setPresentWaitForSemaphores(internal::WaitSemaphoreSet&& semaphores);
-        Semaphore createAndAddImageReadySemaphore();
-        void setImageReadySemaphores(internal::SignalSemaphoreSet&& semaphores);
 
         EventChainPtr createEventChain();
 

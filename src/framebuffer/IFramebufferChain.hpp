@@ -17,8 +17,6 @@ namespace wg::internal {
         IFramebuffer& getCurrentFramebuffer();
 
         virtual void setPresentWaitSemaphores(WaitSemaphoreSet&& semaphores) = 0;
-        virtual SemaphoreChainPtr addSignalImageAcquiredSemaphore() = 0;
-        virtual void setSignalImageAcquiredSemaphores(SignalSemaphoreSet&& semaphores) = 0;
 
         ~IFramebufferChain();
     };

@@ -102,8 +102,6 @@ int main() {
     draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
     draw_pass->getCommandChain().endRecording();
 
-    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
-
     wg::Semaphore semaphore0 = draw_pass->getSemaphores().createOnFinishSemaphore();
     wing.setPresentWaitForSemaphores({semaphore0});
 

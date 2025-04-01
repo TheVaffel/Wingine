@@ -179,7 +179,6 @@ int main() {
     std::chrono::high_resolution_clock clock;
     auto start = clock.now();
 
-    draw_pass->getSemaphores().setWaitSemaphores({ wing.createAndAddImageReadySemaphore() });
     wing.setPresentWaitForSemaphores({ draw_pass->getSemaphores().createOnFinishSemaphore() });
 
     while (win.isOpen()) {

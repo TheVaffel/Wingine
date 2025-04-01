@@ -195,8 +195,8 @@ namespace wg {
         Wingine(Winval& win);
 
         Wingine(uint32_t width, uint32_t height,
-                winval_type_0 arg0,
-                winval_type_1 arg1,
+                winval_type_0 arg0, // In X: Window, in Windows: HINSTANCE
+                winval_type_1 arg1, // In X: Display, in Windows: HWND
                 const std::string& app_name = "Wingine");
 #endif
 

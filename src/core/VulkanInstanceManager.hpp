@@ -44,7 +44,7 @@ namespace wg::internal {
 
         vk::Instance instance;
         vk::SurfaceKHR surface = nullptr;
-        vk::DispatchLoaderDynamic dispatcher;
+        vk::detail::DispatchLoaderDynamic dispatcher;
 
 #ifdef DEBUG
         vk::DebugReportCallbackEXT debug_callback;
@@ -62,7 +62,7 @@ namespace wg::internal {
     public:
 
         vk::Instance getInstance();
-        vk::DispatchLoaderDynamic getDispatcher();
+        vk::detail::DispatchLoaderDynamic getDispatcher();
 
         bool hasSurface() const;
         vk::SurfaceKHR getSurface() const;

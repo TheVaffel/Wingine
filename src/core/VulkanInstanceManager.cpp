@@ -136,7 +136,7 @@ namespace wg::internal {
 
     void VulkanInstanceManager::init_dispatcher() {
 
-        vk::DynamicLoader dl;
+        vk::detail::DynamicLoader dl;
         PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
         this->dispatcher.init(vkGetInstanceProcAddr);
         this->dispatcher.init(this->instance);
@@ -190,7 +190,7 @@ namespace wg::internal {
         return this->instance;
     }
 
-    vk::DispatchLoaderDynamic VulkanInstanceManager::getDispatcher() {
+    vk::detail::DispatchLoaderDynamic VulkanInstanceManager::getDispatcher() {
         return this->dispatcher;
     }
 

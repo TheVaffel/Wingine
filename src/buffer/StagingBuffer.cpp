@@ -26,7 +26,7 @@ namespace wg::internal {
         fl_assert_le(dst_byte_offset + byte_size, dst.getByteSize());
         fl_assert_le(byte_size, this->buffer.getByteSize());
 
-        uint32_t required_size_multiple = this->device_manager->getDeviceProperties().limits.nonCoherentAtomSize;
+        uint32_t required_size_multiple = this->device_manager->getDeviceProperties().limits.minMemoryMapAlignment;
 
         vk::MappedMemoryRange range = memoryUtil::getMappedMemoryRangeForCopy(byte_size,
                                                                               0,

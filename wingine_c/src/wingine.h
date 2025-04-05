@@ -11,6 +11,11 @@ typedef struct wg_wingine_t wg_wingine_t;
 
 wg_wingine_t* wg_create_wingine_headless(uint32_t width, uint32_t height, const char* app_name);
 wg_wingine_t* wg_create_wingine_with_winval(win_winval_t* winval, const char* app_name);
+wg_wingine_t* wg_create_wingine_with_handles(uint32_t width,
+                                             uint32_t height,
+                                             void* handle_0, // In X: Window, in Windows: HINSTANCE
+                                             void* handle_1, // In X: Display, in Windows: HWND
+                                             const char* app_name);
 void wg_destroy_wingine(wg_wingine_t* wing);
 
 void wg_wingine_wait_idle(wg_wingine_t* wing);

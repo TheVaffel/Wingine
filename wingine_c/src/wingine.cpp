@@ -22,10 +22,24 @@ extern "C" {
         }));
     }
 
-    void wg_destroy_wingine(wg_wingine_t* wing) {
-        delete wing;
+    wg_wingine_t* wg_create_wingine_with_handles(uint32_t width,
+                                                 uint32_t height,
+                                                 void* handle_0, // In X: Window, in Windows: HINSTANCE
+                                                 void* handle_1, // In X: Display, in Windows: HWND
+                                                 const char* app_name) {
+        return exitOnFail(([&width, &height, handle_0, handle_1, &app_name] {
+            return new wg_wingine_t {
+                .wingine = wg::Wingine(width,
+                                       height,
+                                       *(winval_type_0*)handle_0,
+                                       *(winval_type_1*)handle_1,
+                                       app_name)
+            };
+        }));
     }
 
+    void wg_destroy_wingine(wg_wingine_t* wing) {
+        delete wing;
     }
 
     void wg_wingine_wait_idle(wg_wingine_t* wing) {

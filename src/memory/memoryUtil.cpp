@@ -2,8 +2,6 @@
 
 #include "../util/math.hpp"
 
-#include <optional>
-
 namespace wg::internal::memoryUtil {
 
     namespace {

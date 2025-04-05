@@ -26,10 +26,6 @@ extern "C" {
         delete wing;
     }
 
-    wg_semaphore_t* wg_wingine_create_image_ready_semaphore(wg_wingine_t* wing) {
-        return new wg_semaphore_t {
-            .v = exitOnFail(( [&wing] { return wing->wingine.createAndAddImageReadySemaphore(); }))
-        };
     }
 
     void wg_wingine_wait_idle(wg_wingine_t* wing) {

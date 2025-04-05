@@ -75,9 +75,6 @@ int main() {
   wg_cmd_draw(command, 2, vertex_buffers, index_buffer);
   wg_cmd_end_recording(command);
 
-  wg_semaphore_t* image_ready_semaphore = wg_wingine_create_image_ready_semaphore(wing);
-  wg_draw_pass_set_wait_semaphores(draw_pass, 1, &image_ready_semaphore);
-
   wg_semaphore_t* on_finish_semaphore = wg_draw_pass_create_on_finish_semaphore(draw_pass);
   wg_wingine_set_present_wait_semaphores(wing, 1, &on_finish_semaphore);
 
@@ -105,7 +102,6 @@ int main() {
   wg_wingine_wait_idle(wing);
 
   wg_destroy_semaphore(on_finish_semaphore);
-  wg_destroy_semaphore(image_ready_semaphore);
 
   wg_destroy_draw_pass(draw_pass);
 

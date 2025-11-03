@@ -8,6 +8,8 @@
 
 #include "./types.hpp"
 
+#include "./catch.hpp"
+
 extern "C" {
 
     wg_pipeline_t* wg_create_pipeline(wg_wingine_t* wing,
@@ -32,11 +34,11 @@ extern "C" {
         }
 
         return new wg_pipeline_t {
-            .v = wing->wingine.createBasicPipeline(descs, shaders)
+            .v = catch_error(wing->wingine.createBasicPipeline(descs, shaders))
         };
     }
 
     void wg_destroy_pipeline(wg_pipeline_t* pipeline) {
-        delete pipeline;
+        catch_error(delete pipeline);
     }
 };

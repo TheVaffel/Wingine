@@ -3,6 +3,8 @@
 #include "./types.hpp"
 #include <Wingine.hpp>
 
+#include "./catch.hpp"
+
 struct generic_resource_t {
     wg::ResourceChainPtr resource;
 };
@@ -16,7 +18,7 @@ extern "C" {
     void wg_cmd_start_recording(wg_command_t* command, wg_framebuffer_t* framebuffer) {
         wg::CommandChainController& c = *(wg::CommandChainController*)command;
 
-        c.startRecording(*(wg::FramebufferChain*)framebuffer);
+        catch_error(c.startRecording(*(wg::FramebufferChain*)framebuffer));
     }
 
     void wg_cmd_bind_resource_set(wg_command_t* command, uint32_t binding_index, uint32_t num_bindings, wg_resource_binding_t *raw_bindings) {
@@ -27,7 +29,7 @@ extern "C" {
             bindings.push_back({ raw_bindings[i].binding, ((generic_resource_t*)(raw_bindings[i].resource_binding))->resource });
         }
 
-        c.recordBindResourceSet(binding_index, bindings);
+        catch_error(c.recordBindResourceSet(binding_index, bindings));
     }
 
     void wg_cmd_draw(wg_command_t* command, uint32_t num_buffers, wg_vertex_buffer_t **raw_buffers, wg_index_buffer_t *index_buffer) {
@@ -38,11 +40,11 @@ extern "C" {
             vertex_buffers.push_back(raw_buffers[i]->v);
         }
 
-        c.recordDraw(vertex_buffers, index_buffer->v);
+        catch_error(c.recordDraw(vertex_buffers, index_buffer->v));
     }
 
     void wg_cmd_end_recording(wg_command_t *command) {
         wg::CommandChainController& c = *(wg::CommandChainController*)command;
-        c.endRecording();
+        catch_error(c.endRecording());
     }
 };

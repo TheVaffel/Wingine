@@ -5,6 +5,7 @@
 
 #include "./wingine.h"
 #include "./types.hpp"
+#include "./catch.hpp"
 
 EXTERNC
 
@@ -23,16 +24,17 @@ wg_shader_t* wg_create_shader(wg_wingine_t* wing, wg_shader_stage stage, const u
         shader_flag = VK_SHADER_STAGE_COMPUTE_BIT;
         break;
     default:
+	std::cerr << "[wingine_c::shader.cpp] Missing case for shader flag" << std::endl;
         throw std::runtime_error("[wingine_c::shader.cpp] Missing case for shader flag");
     }
 
     return new wg_shader_t {
-        .v = wing->wingine.createShader((wg::ShaderStage)shader_flag, spirv)
+        .v = catch_error(wing->wingine.createShader((wg::ShaderStage)shader_flag, spirv))
     };
 }
 
 void wg_destroy_shader(wg_shader_t* shader) {
-    delete shader;
+    catch_error(delete shader);
 }
 
 EXTERNC_END

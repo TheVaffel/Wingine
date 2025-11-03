@@ -3,11 +3,12 @@
 #include <stdint.h>
 
 #include "./common.hpp"
+#include "./catch.hpp"
 
 extern "C" {
     win_winval_t* win_create_winval(uint32_t width, uint32_t height) {
         return new win_winval_t {
-            .winval = Winval(width, height)
+            .winval = catch_error(Winval(width, height))
         };
     }
 
@@ -28,6 +29,6 @@ extern "C" {
     }
 
     void win_destroy_winval(win_winval_t* winval) {
-        delete winval;
+        catch_error(delete winval);
     }
 }

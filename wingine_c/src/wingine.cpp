@@ -4,6 +4,7 @@
 #include "./types.hpp"
 
 #include "./common.hpp"
+#include "./catch.hpp"
 
 extern "C" {
     wg_wingine_t* wg_create_wingine_headless(uint32_t width, uint32_t height, const char* app_name) {
@@ -33,13 +34,13 @@ extern "C" {
                                        height,
                                        *(winval_type_0*)handle_0,
                                        *(winval_type_1*)handle_1,
-                                       app_name)
+						   app_name)
             };
         }));
     }
 
     void wg_destroy_wingine(wg_wingine_t* wing) {
-        delete wing;
+        catch_error(delete wing);
     }
 
     void wg_wingine_wait_idle(wg_wingine_t* wing) {

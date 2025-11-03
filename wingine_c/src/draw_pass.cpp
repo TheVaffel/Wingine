@@ -1,10 +1,13 @@
 #include "./draw_pass.h"
 
 #include <Wingine.hpp>
+#include <stdexcept>
 
 #include "./types.hpp"
 #include "./wingine.h"
 #include "./pipeline.h"
+
+#include "./catch.hpp"
 
 extern "C" {
     wg_draw_pass_settings_t wg_default_draw_pass_settings() {
@@ -26,20 +29,21 @@ extern "C" {
                                         wg_pipeline_t* pipeline,
                                         wg_draw_pass_settings_t raw_settings) {
         static_assert(sizeof(wg_draw_pass_settings_t) == sizeof(wg::BasicDrawPassSettings));
-        wg::BasicDrawPassSettings& settings = *(wg::BasicDrawPassSettings*)&raw_settings;
+        wg::BasicDrawPassSettings &settings =
+            *(wg::BasicDrawPassSettings *)&raw_settings;
 
         return new wg_draw_pass_t {
-            .v = wing->wingine.createBasicDrawPass(pipeline->v, settings)
+            .v = catch_error(wing->wingine.createBasicDrawPass(pipeline->v, settings))
         };
     }
 
     void wg_destroy_draw_pass(wg_draw_pass_t* draw_pass) {
-        delete draw_pass;
+        catch_error(delete draw_pass);
     }
 
     wg_semaphore_t* wg_draw_pass_create_on_finish_semaphore(wg_draw_pass_t* draw_pass) {
         return new wg_semaphore_t {
-            .v = draw_pass->v->getSemaphores().createOnFinishSemaphore()
+            .v = catch_error(draw_pass->v->getSemaphores().createOnFinishSemaphore())
         };
     }
 
@@ -49,10 +53,11 @@ extern "C" {
             semaphores[i] = raw_semaphores[i]->v;
         }
 
-        draw_pass->v->getSemaphores().setWaitSemaphores(semaphores);
+        catch_error(draw_pass->v->getSemaphores().setWaitSemaphores(semaphores););
     }
 
-    void wg_draw_pass_render(wg_draw_pass_t* draw_pass) {
-        draw_pass->v->render();
+    void wg_draw_pass_render(wg_draw_pass_t *draw_pass) {
+
+        catch_error(draw_pass->v->render());
     }
 };

@@ -5,7 +5,6 @@
 #include "./framebuffer/BasicFramebuffer.hpp"
 #include "./framebuffer/HostCopyingFramebufferChain.hpp"
 
-#include "./image/BasicImage.hpp"
 #include "./image/ImageCopier.hpp"
 
 #include "./draw_pass/BasicDrawPass.hpp"

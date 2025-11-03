@@ -22,6 +22,9 @@ namespace wg::internal {
         std::vector<vk::Semaphore> semaphores;
         std::shared_ptr<const DeviceManager> device_manager;
 
+        bool canSwapSignalSemaphore();
+	bool canSwapWaitSemaphore();
+
     public:
 
         ManagedSemaphoreChain(uint32_t num_semaphores,

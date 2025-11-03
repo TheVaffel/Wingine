@@ -27,7 +27,7 @@ namespace wg::internal {
     }
 
     void ManagedSemaphoreChain::swapSignalSemaphore() {
-        if (this->signal_index.getCurrentIndex() != this->wait_index.getCurrentIndex()) {
+        if (!this->canSwapSignalSemaphore()) {
             throw std::runtime_error("Wait/signal for semaphore chain not in sync,"
                                      "did you create semaphore after starting rendering within a frame?");
         }
@@ -43,15 +43,24 @@ namespace wg::internal {
     }
 
     void ManagedSemaphoreChain::swapWaitSemaphore() {
-        // fl_assert_eq(this->has_signal_set, true);
-        // fl_assert_eq(this->has_wait_set, true);
-
-        this->wait_index.incrementIndex();
-
-        if (this->signal_index.getCurrentIndex() != this->wait_index.getCurrentIndex()) {
+        if (!this->canSwapWaitSemaphore()) {
             throw std::runtime_error("Wait/signal for semaphore chain not in sync, "
                                      "did you create semaphore after starting rendering within a frame?");
-        }
+
+	}
+        // fl_assert_eq(this->has_signal_set, true);
+        // fl_assert_eq(this->has_wait_set, true);
+        this->wait_index.incrementIndex();
+    }
+
+    bool ManagedSemaphoreChain::canSwapSignalSemaphore() {
+        return this->signal_index.getCurrentIndex() == this->wait_index.getCurrentIndex() ||
+	    this->signal_index.getNextIndex() == this->wait_index.getCurrentIndex();
+    }
+
+    bool ManagedSemaphoreChain::canSwapWaitSemaphore() {
+        return this->wait_index.getCurrentIndex() == this->signal_index.getCurrentIndex() ||
+	    this->wait_index.getNextIndex() == this->signal_index.getCurrentIndex();
 
     }
 

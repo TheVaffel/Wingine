@@ -5,6 +5,8 @@
 
 #include <spurv.hpp>
 
+#include <fstream>
+
 int main() {
     const int width = 800, height = 800;
     Winval win(width, height);
@@ -66,6 +68,12 @@ int main() {
         shader.compile(vertex_spirv, s_col);
     }
 
+    {
+        std::ofstream ofs("vertex.spv", std::ofstream::out);
+        ofs.write((char*)vertex_spirv.data(), vertex_spirv.size() * sizeof(uint32_t));
+        ofs.close();
+    }
+
     wg::ShaderPtr vertex_shader = wing.createShader(wg::ShaderStage::Vertex, vertex_spirv);
 
     std::vector<uint32_t> fragment_spirv;
@@ -76,6 +84,12 @@ int main() {
         vec4_v in_col = shader.input<0>();
 
         shader.compile(fragment_spirv, in_col);
+    }
+
+    {
+        std::ofstream ofs("frag.spv", std::ofstream::out);
+        ofs.write((char*)fragment_spirv.data(), fragment_spirv.size() * sizeof(uint32_t));
+        ofs.close();
     }
 
     wg::ShaderPtr fragment_shader = wing.createShader(wg::ShaderStage::Fragment, fragment_spirv);
@@ -91,6 +105,8 @@ int main() {
 
     wgut::Camera camera(F_PI / 3.f, 9.0 / 8.0, 0.01f, 100.0f);
 
+    std::cout << "Camera matrix: " << camera.getRenderMatrix().str() << std::endl;
+
     draw_pass->getCommandChain().startRecording(wing.getDefaultFramebufferChain());
     draw_pass->getCommandChain().recordBindResourceSet(0, {{ 0, cameraUniform }});
     draw_pass->getCommandChain().recordDraw(model.getVertexBuffers(), model.getIndexBuffer());
@@ -100,8 +116,6 @@ int main() {
 
     while (win.isOpen()) {
         falg::Mat4 renderMatrix = camera.getRenderMatrix();
-
-        draw_pass->awaitCurrentCommand();
 
         cameraUniform->setCurrent(renderMatrix);
         draw_pass->render();

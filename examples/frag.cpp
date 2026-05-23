@@ -64,7 +64,7 @@ int main() {
 
         vec2_v coord = vec2_s::cons(pv0, pv1) * exp((- time - 1) / 2 * 10) + vec2_s::cons(offx, offy);
 
-        shader.setBuiltin<BUILTIN_POSITION>(s_pos);
+        shader.setBuiltin<BUILTIN_POSITION>(vec4_s::cons(pv0, pv1, 0.0f, 1.0f));
         shader.compile(vertex_spirv, coord);
 
     }

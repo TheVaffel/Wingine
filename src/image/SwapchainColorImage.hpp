@@ -27,8 +27,9 @@ namespace wg::internal {
 
         virtual const vk::ImageLayout getIntendedLayout() const;
 
-        SwapchainColorImage(const vk::Extent2D& dimensions,
-                            const vk::Image& image,
+        SwapchainColorImage(const vk::Extent2D &dimensions,
+                            const vk::Image &image,
+			    const vk::Format image_format,
                             std::shared_ptr<const DeviceManager> device_manager);
 
         ~SwapchainColorImage();

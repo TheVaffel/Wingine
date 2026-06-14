@@ -18,7 +18,8 @@ namespace wg::internal {
         vk::Framebuffer framebuffer;
         std::shared_ptr<const DeviceManager> device_manager;
 
-        SwapchainFramebuffer(const vk::Image& image,
+        SwapchainFramebuffer(const vk::Image &image,
+			     const vk::Format image_format,
                              std::shared_ptr<const SwapchainManager> swapchain_manager,
                              std::shared_ptr<const DeviceManager> device_manager,
                              CompatibleRenderPassRegistry& render_pass_registry);
@@ -28,6 +29,7 @@ namespace wg::internal {
 
         static std::unique_ptr<IFramebuffer>
         createSwapchainFramebuffer(const vk::Image& image,
+				   const vk::Format image_format,
                                    std::shared_ptr<const SwapchainManager> swapchain_manager,
                                    std::shared_ptr<const DeviceManager> device_manager,
                                    CompatibleRenderPassRegistry& render_pass_registry);

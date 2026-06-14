@@ -11,6 +11,7 @@ namespace wg::internal {
         vk::SwapchainKHR swapchain;
         std::vector<vk::Image> swapchain_images;
         vk::Extent2D window_dimensions;
+	vk::Format image_format;
 
         std::shared_ptr<const DeviceManager> device_manager;
 
@@ -25,7 +26,9 @@ namespace wg::internal {
         SwapchainManager(const SwapchainManager& swapchain_manager) = delete;
 
         const vk::SwapchainKHR& getSwapchain() const;
-        const vk::Extent2D& getDimensions() const;
+        const vk::Extent2D &getDimensions() const;
+
+	const vk::Format getImageFormat() const;
 
         const std::vector<vk::Image>& getImages() const;
         uint32_t getNumImages() const;

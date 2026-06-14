@@ -2,6 +2,7 @@
 
 #include "../image/imageUtil.hpp"
 #include "./constants.hpp"
+#include "vulkan/vulkan.hpp"
 
 namespace wg::internal {
 
@@ -10,12 +11,20 @@ namespace wg::internal {
                                               const vk::SurfaceKHR& surface) {
             std::vector<vk::SurfaceFormatKHR> surfaceFormats = phDev.getSurfaceFormatsKHR(surface);
 
-            if(surfaceFormats.size() == 1 &&
-               surfaceFormats[0].format == vk::Format::eUndefined) {
+            if (surfaceFormats.size() == 1 &&
+                surfaceFormats[0].format == vk::Format::eUndefined) {
                 return imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT;
-            } else {
-                return surfaceFormats[0];
             }
+
+            for (auto format : surfaceFormats) {
+                if (format ==
+                    imageUtil::DEFAULT_FRAMEBUFFER_DEPTH_IMAGE_FORMAT) {
+		    return format;
+		}
+	    }
+
+
+	    return surfaceFormats[0];
         }
 
         vk::Extent2D getSurfaceDimensions(const vk::Extent2D& preferred_dimensions,
@@ -94,15 +103,13 @@ namespace wg::internal {
             return vk::PresentModeKHR::eFifo;
         }
 
-        vk::SwapchainKHR createSwapchain(const DeviceManager& device_manager,
-                                         const QueueManager& queue_manager,
-                                         const vk::SurfaceKHR& surface,
-                                         const vk::Extent2D& swapchain_extent,
-                                         const vk::SurfaceCapabilitiesKHR& caps) {
-
-            auto [ format, colorSpace ] = getSurfaceFormat(device_manager.getPhysicalDevice(),
-                                                                   surface);
-            vk::Format surface_format = format;
+        vk::SwapchainKHR createSwapchain(const DeviceManager &device_manager,
+                                         const QueueManager &queue_manager,
+                                         const vk::SurfaceKHR &surface,
+                                         const vk::Extent2D &swapchain_extent,
+                                         const vk::SurfaceCapabilitiesKHR &caps,
+                                         const vk::Format image_format,
+					 const vk::ColorSpaceKHR colorSpace) {
 
             uint32_t num_swapchain_images = getNumSwapchainImages(caps);
             vk::SurfaceTransformFlagBitsKHR preTransform = getPreTransform(caps);
@@ -114,7 +121,7 @@ namespace wg::internal {
             vk::SwapchainCreateInfoKHR sci;
             sci.setSurface(surface)
                 .setMinImageCount(num_swapchain_images)
-                .setImageFormat(surface_format)
+                .setImageFormat(image_format)
                 .setImageExtent(swapchain_extent)
                 .setPreTransform(preTransform)
                 .setCompositeAlpha(compositeAlpha)
@@ -161,11 +168,14 @@ namespace wg::internal {
         vk::Extent2D swapchain_extent = getSurfaceDimensions(preferred_dimensions, caps);
         this->window_dimensions = swapchain_extent;
 
-        this->swapchain = createSwapchain(*device_manager,
-                                          queue_manager,
-                                          surface,
-                                          swapchain_extent,
-                                          caps);
+
+
+	auto [ format, colorSpace ] = getSurfaceFormat(device_manager->getPhysicalDevice(),
+						       surface);
+	this->image_format = format;
+        this->swapchain = createSwapchain(*device_manager, queue_manager,
+                                          surface, swapchain_extent, caps, this->image_format, colorSpace
+                                          );
 
         this->swapchain_images = device.getSwapchainImagesKHR(swapchain);
 
@@ -181,6 +191,10 @@ namespace wg::internal {
 
     const std::vector<vk::Image>& SwapchainManager::getImages() const {
         return this->swapchain_images;
+    }
+
+    const vk::Format SwapchainManager::getImageFormat() const {
+	return this->image_format;
     }
 
     uint32_t SwapchainManager::getNumImages() const {

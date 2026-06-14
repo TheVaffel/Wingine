@@ -4,13 +4,14 @@
 
 namespace wg::internal {
 
-    SwapchainColorImage::SwapchainColorImage(const vk::Extent2D& dimensions,
-                                             const vk::Image& image,
-                                             std::shared_ptr<const DeviceManager> device_manager)
+SwapchainColorImage::SwapchainColorImage(const vk::Extent2D &dimensions,
+                                         const vk::Image &image,
+					 const vk::Format image_format,
+					 std::shared_ptr<const DeviceManager> device_manager)
         :
           image(image),
           view(imageUtil::createColorImageView(image,
-                                               imageUtil::DEFAULT_FRAMEBUFFER_COLOR_IMAGE_FORMAT,
+                                               image_format,
                                                device_manager->getDevice())),
           dimensions(dimensions),
           intended_layout(vk::ImageLayout::ePresentSrcKHR),

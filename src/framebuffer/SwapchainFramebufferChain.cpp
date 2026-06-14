@@ -24,8 +24,10 @@ namespace wg::internal {
         this->initSyncStructs(device_manager->getDevice());
 
         for (uint32_t i = 0; i < swapchain_manager->getNumImages(); i++) {
-            this->framebuffers.push_back(SwapchainFramebuffer::createSwapchainFramebuffer(
-                                             swapchain_manager->getImages()[i],
+            this->framebuffers.push_back(
+                SwapchainFramebuffer::createSwapchainFramebuffer(
+                    swapchain_manager->getImages()[i],
+		    swapchain_manager->getImageFormat(),
                                              swapchain_manager,
                                              device_manager,
                                              render_pass_registry));
